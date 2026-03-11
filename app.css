@@ -110,6 +110,10 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,san
 .stb-btn{background:var(--bg3);border:1px solid var(--border);border-radius:3px;padding:3px 9px;color:var(--text-dim);font-size:11px;cursor:pointer;white-space:nowrap}
 .stb-btn:hover{color:var(--text);border-color:#555}
 .stb-sep{width:1px;height:14px;background:var(--border);margin:0 2px}
+.gsrc-refs-label{font-size:10px;color:var(--text-dim);margin-right:5px}
+.src-class-ref{color:var(--accent2);font-family:monospace;font-size:11px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);border-radius:3px;padding:1px 6px;margin-right:4px;text-decoration:none}
+.src-class-ref:hover{border-color:var(--accent2);text-decoration:underline}
+#globals-src-refs{display:flex;align-items:center;flex-wrap:wrap;gap:0}
 
 /* source code */
 #source-loading{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:var(--text-dim);font-size:13px}

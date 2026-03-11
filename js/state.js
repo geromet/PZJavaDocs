@@ -23,3 +23,6 @@ let foldDepth = Infinity;         // Infinity = fully open
 
 // Detail panel: whether non-callable method groups are shown
 let showNonCallable = false;
+
+// Simple-name → FQN(s) lookup, built after API loads
+let classBySimpleName = {};

@@ -94,6 +94,44 @@ async function showGlobalSource(javaMethod) {
   scrollToMethod(text, javaMethod,
     document.getElementById('globals-src-pre'),
     document.getElementById('globals-src-code'));
+  showGlobalSourceRefs(text, javaMethod);
+}
+
+function showGlobalSourceRefs(sourceText, methodName) {
+  const refsEl = document.getElementById('globals-src-refs');
+  const sepEl  = document.getElementById('gsrc-refs-sep');
+  if (!refsEl || !sepEl) return;
+
+  // Find the method start line
+  const lines = sourceText.split('\n');
+  const re = new RegExp(`\\b${methodName}\\s*\\(`);
+  const startIdx = lines.findIndex(l => re.test(l));
+  if (startIdx === -1) { refsEl.innerHTML = ''; sepEl.style.display = 'none'; return; }
+
+  // Scan up to 25 lines of method body for UpperCamelCase. references
+  const body = lines.slice(startIdx, startIdx + 25).join('\n');
+  const found = [];
+  const seen  = new Set();
+  for (const [, name] of body.matchAll(/\b([A-Z][A-Za-z0-9_]+)\s*[.(]/g)) {
+    const fqns = classBySimpleName[name];
+    if (!fqns) continue;
+    for (const fqn of fqns) {
+      if (!seen.has(fqn)) { seen.add(fqn); found.push({fqn, name}); }
+    }
+  }
+
+  if (!found.length) { refsEl.innerHTML = ''; sepEl.style.display = 'none'; return; }
+
+  sepEl.style.display = '';
+  refsEl.innerHTML =
+    `<span class="gsrc-refs-label">refs:</span>` +
+    found.map(({fqn, name}) =>
+      `<a class="src-class-ref" data-fqn="${esc(fqn)}" title="${esc(fqn)}">${esc(name)}</a>`
+    ).join('');
+
+  refsEl.querySelectorAll('.src-class-ref').forEach(a => {
+    a.addEventListener('click', () => { switchTab('classes'); selectClass(a.dataset.fqn); });
+  });
 }
 
 function backToGlobalsTable() {
@@ -101,4 +139,8 @@ function backToGlobalsTable() {
   document.getElementById('globals-nav').classList.remove('visible');
   document.getElementById('globals-table-wrap').style.display = '';
   document.getElementById('globals-source-wrap').classList.remove('visible');
+  const refsEl = document.getElementById('globals-src-refs');
+  if (refsEl) refsEl.innerHTML = '';
+  const sepEl = document.getElementById('gsrc-refs-sep');
+  if (sepEl) sepEl.style.display = 'none';
 }

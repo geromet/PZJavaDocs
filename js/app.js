@@ -19,6 +19,14 @@ function init() {
   document.getElementById('stat-exposed').textContent = m.set_exposed_count;
   document.getElementById('stat-tagged').textContent  = m.lua_tagged_count;
   document.getElementById('stat-globals').textContent = `${m.total_global_functions} globals`;
+
+  // Build simple-name → [fqn, …] lookup for global source ref detection
+  for (const fqn of Object.keys(API.classes)) {
+    const simple = fqn.split('.').pop();
+    if (!classBySimpleName[simple]) classBySimpleName[simple] = [];
+    classBySimpleName[simple].push(fqn);
+  }
+
   buildClassList();
   setupEvents();
   if (location.hash) {
