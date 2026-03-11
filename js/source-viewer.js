@@ -130,6 +130,9 @@ function injectFoldRegions(codeEl, regions) {
 }
 
 function renderFoldableSource(rawText, codeEl) {
+  // hljs sets data-highlighted="yes" and skips re-highlighting if present —
+  // remove it so reused elements are highlighted fresh on every load.
+  codeEl.removeAttribute('data-highlighted');
   codeEl.textContent = rawText;
   hljs.highlightElement(codeEl);
   codeEl.innerHTML = wrapLines(codeEl.innerHTML);

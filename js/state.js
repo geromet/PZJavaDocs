@@ -23,3 +23,8 @@ let foldDepth = Infinity;         // Infinity = fully open
 
 // Detail panel: whether non-callable method groups are shown
 let showNonCallable = false;
+
+// Navigation history
+const navHistory = [];
+let navIndex   = -1;
+let navJumping = false; // true while back/forward is restoring state

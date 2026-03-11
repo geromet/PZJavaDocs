@@ -29,7 +29,39 @@ function init() {
   }
 }
 
-// ── Navigation ────────────────────────────────────────────────────────────
+// ── Page history ──────────────────────────────────────────────────────────
+function navPush(state) {
+  if (navJumping) return;
+  // Drop any forward entries after current position
+  navHistory.splice(navIndex + 1);
+  // Skip duplicate of the current top entry
+  const top = navHistory[navHistory.length - 1];
+  if (top && top.type === state.type && top.fqn === state.fqn) return;
+  navHistory.push(state);
+  navIndex = navHistory.length - 1;
+  updateNavButtons();
+}
+
+function navGo(delta) {
+  const next = navIndex + delta;
+  if (next < 0 || next >= navHistory.length) return;
+  navIndex   = next;
+  navJumping = true;
+  const s = navHistory[navIndex];
+  if (s.type === 'globals') switchTab('globals');
+  else { switchTab('classes'); selectClass(s.fqn); }
+  navJumping = false;
+  updateNavButtons();
+}
+
+function updateNavButtons() {
+  const back    = document.getElementById('btn-nav-back');
+  const forward = document.getElementById('btn-nav-forward');
+  if (back)    back.disabled    = navIndex <= 0;
+  if (forward) forward.disabled = navIndex >= navHistory.length - 1;
+}
+
+// ── List keyboard navigation ───────────────────────────────────────────────
 function navigateList(dir) {
   if (!filteredResults.length || currentTab !== 'classes') return;
   const idx  = filteredResults.findIndex(r => r.fqn === currentClass);
@@ -44,6 +76,8 @@ function navigateList(dir) {
 function selectClass(fqn, matchInfo) {
   if (!API.classes[fqn]) return;
   currentClass = fqn;
+
+  navPush({type: 'class', fqn});
 
   // Auto-expand the package path in tree mode
   if (!currentSearch.trim()) {
@@ -84,8 +118,11 @@ function switchTab(tab) {
   currentTab = tab;
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
   document.getElementById('sidebar').style.display = tab === 'classes' ? 'flex' : 'none';
-  if (tab === 'globals') { initGlobals(); location.hash = 'globals'; }
-  else {
+  if (tab === 'globals') {
+    initGlobals();
+    location.hash = 'globals';
+    navPush({type: 'globals'});
+  } else {
     showGlobalsPanel(false);
     if (currentClass) renderClassDetail(currentClass);
     else document.getElementById('placeholder').style.display = 'flex';
@@ -94,6 +131,10 @@ function switchTab(tab) {
 
 // ── Events ────────────────────────────────────────────────────────────────
 function setupEvents() {
+  // Back / forward buttons
+  document.getElementById('btn-nav-back').addEventListener('click',    () => navGo(-1));
+  document.getElementById('btn-nav-forward').addEventListener('click', () => navGo(+1));
+
   // Local folder picker
   document.getElementById('btn-folder').addEventListener('click', async () => {
     if (!('showDirectoryPicker' in window)) {
@@ -194,6 +235,9 @@ function setupEvents() {
       if (e.key === 'ArrowDown') { e.preventDefault(); navigateList(+1); }
       if (e.key === 'ArrowUp')   { e.preventDefault(); navigateList(-1); }
     }
+    // Alt+Left / Alt+Right for back/forward (common browser convention)
+    if (e.altKey && e.key === 'ArrowLeft')  { e.preventDefault(); navGo(-1); }
+    if (e.altKey && e.key === 'ArrowRight') { e.preventDefault(); navGo(+1); }
   });
 
   // Delegated click for detail panel: method links + group label folding
