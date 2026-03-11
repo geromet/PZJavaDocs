@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Project Zomboid Lua API</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1/themes/prism-one-dark.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11/styles/atom-one-dark.min.css">
 <style>
   :root {
     --bg:#1a1a1a; --bg2:#242424; --bg3:#2e2e2e; --border:#3a3a3a;
@@ -120,8 +120,8 @@
 
   /* source code */
   #source-loading{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:var(--text-dim);font-size:13px}
-  #source-pre{flex:1;overflow:auto;margin:0!important;border-radius:0!important;min-width:0}
-  #source-pre code,#globals-src-pre code{font-size:12.5px;line-height:1.55;font-family:'Cascadia Code','Fira Code','Consolas',monospace;display:block;min-width:max-content;counter-reset:line-num}
+  #source-pre{flex:1;overflow:auto;margin:0!important;border-radius:0!important;min-width:0;background:#1e2127}
+  #source-pre code,#globals-src-pre code{font-size:12.5px;line-height:1.55;font-family:'Cascadia Code','Fira Code','Consolas',monospace;display:block;min-width:max-content;counter-reset:line-num;padding:12px 0!important;background:transparent!important}
 
   /* ── Source folding & line numbers ── */
   .src-line{display:block;white-space:pre;position:relative;counter-increment:line-num}
@@ -197,8 +197,7 @@
   #globals-src-title{font-family:monospace;font-size:13px;color:var(--accent2)}
   #globals-source-wrap{display:none;flex:1;flex-direction:column;overflow:hidden;min-width:0}
   #globals-source-wrap.visible{display:flex}
-  #globals-src-pre{flex:1;overflow:auto;margin:0!important;border-radius:0!important;min-width:0}
-  #globals-src-pre code{font-size:12.5px;line-height:1.55;font-family:'Cascadia Code','Fira Code','Consolas',monospace;display:block;min-width:max-content}
+  #globals-src-pre{flex:1;overflow:auto;margin:0!important;border-radius:0!important;min-width:0;background:#1e2127}
 
   ::-webkit-scrollbar{width:6px;height:6px}
   ::-webkit-scrollbar-track{background:var(--bg2)}
@@ -301,8 +300,7 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/prismjs@1/prism.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-java.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11/highlight.min.js"></script>
 <script>
 'use strict';
 
@@ -423,7 +421,7 @@ function classifyLine(line) {
 }
 
 function wrapLines(html) {
-  // Track open Prism token spans so we can close/reopen them at each line break,
+  // Track open token spans so we can close/reopen them at each line break,
   // which ensures multi-line comments and strings are highlighted correctly.
   const openSpans = [];
   let result = `<span class="src-line" id="L1">`;
@@ -492,8 +490,10 @@ function injectFoldRegions(codeEl, regions) {
     }
   }
 
-  // Single delegated click handler
-  codeEl.addEventListener('click', e => {
+  // Single delegated click handler — remove old one first to avoid duplicates
+  // when the same codeEl is reused across multiple source loads
+  if (codeEl._foldHandler) codeEl.removeEventListener('click', codeEl._foldHandler);
+  codeEl._foldHandler = e => {
     const btn = e.target.closest('.fold-btn');
     if (!btn) return;
     const id   = parseInt(btn.dataset.foldId);
@@ -503,12 +503,13 @@ function injectFoldRegions(codeEl, regions) {
     const folded = region.classList.toggle('folded');
     btn.textContent = folded ? '▶' : '▼';
     if (hdr) hdr.classList.toggle('folded', folded);
-  });
+  };
+  codeEl.addEventListener('click', codeEl._foldHandler);
 }
 
 function renderFoldableSource(rawText, codeEl) {
   codeEl.textContent = rawText;
-  Prism.highlightElement(codeEl);
+  hljs.highlightElement(codeEl);
   codeEl.innerHTML = wrapLines(codeEl.innerHTML);
   const regions = buildFoldRegions(rawText);
   if (regions.length) injectFoldRegions(codeEl, regions);
@@ -559,7 +560,7 @@ async function showSource(cls, jumpToMethod) {
   } catch (e) {
     loadingEl.style.display = 'none';
     codeEl.textContent = `// Source not available.\n// Run prepare_sources.py, or click "📁 Local sources"\n// and pick your projectzomboid folder.\n\n// Error: ${e.message}`;
-    Prism.highlightElement(codeEl);
+    hljs.highlightElement(codeEl);
     return;
   }
 
@@ -1129,7 +1130,7 @@ async function showGlobalSource(javaMethod) {
   try { text = await fetchSource(relPath); }
   catch(e) {
     codeEl.textContent = `// Source not available.\n// Error: ${e.message}`;
-    Prism.highlightElement(codeEl);
+    hljs.highlightElement(codeEl);
     return;
   }
 
