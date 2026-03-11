@@ -6,10 +6,13 @@ function passesCurrentFilter(fqn, cls) {
   if (currentFilter === 'tagged'             && !(cls.lua_tagged && !cls.set_exposed))   return false;
   if (currentFilter === 'enum'               && !cls.is_enum)                            return false;
   if (currentFilter === 'has-tagged-methods' && !hasTaggedMethods(cls))                  return false;
+  if (currentFilter === 'callable'           && !hasCallableMethods(cls))                return false;
   return true;
 }
 
 function hasTaggedMethods(cls) { return cls.methods.some(m => m.lua_tagged); }
+
+function hasCallableMethods(cls) { return cls.set_exposed || cls.methods.some(m => m.lua_tagged); }
 
 function scoreClass(fqn, cls, search) {
   if (!search) return 1;

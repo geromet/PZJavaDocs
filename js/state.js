@@ -20,3 +20,6 @@ const foldedGlobalGroups = new Set();
 const foldedPackages = new Set(); // manually closed
 const openedPackages = new Set(); // manually opened beyond foldDepth
 let foldDepth = Infinity;         // Infinity = fully open
+
+// Detail panel: whether non-callable method groups are shown
+let showNonCallable = false;

@@ -50,6 +50,8 @@ function selectClass(fqn, matchInfo) {
     buildClassList();
   }
 
+  showNonCallable = false;
+
   if (matchInfo && currentSearch) {
     const s   = currentSearch.toLowerCase();
     const cls = API.classes[fqn];
@@ -193,11 +195,21 @@ function setupEvents() {
     }
   });
 
-  // Delegated click for method/constructor links in detail panel
+  // Delegated click for detail panel: method links + group label folding
   document.getElementById('detail-panel').addEventListener('click', e => {
+    // Method / constructor source links
     const a = e.target.closest('a.method-link[data-method]');
-    if (!a) return;
-    e.preventDefault();
-    showSource(API.classes[currentClass], a.dataset.method);
+    if (a) { e.preventDefault(); showSource(API.classes[currentClass], a.dataset.method); return; }
+
+    // Group label → fold/unfold that group
+    const groupLabel = e.target.closest('.method-group .group-label');
+    if (groupLabel) {
+      const group = groupLabel.closest('.method-group');
+      if (group) {
+        group.classList.toggle('folded');
+        const arrow = groupLabel.querySelector('.group-arrow');
+        if (arrow) arrow.textContent = group.classList.contains('folded') ? '▶' : '▼';
+      }
+    }
   });
 }

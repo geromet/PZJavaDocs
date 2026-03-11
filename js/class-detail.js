@@ -26,6 +26,7 @@ function renderClassDetail(fqn) {
     <div class="section">
       <div class="section-header">
         <h3>Methods</h3><span class="count" id="method-count">${cls.methods.length}</span>
+        <span id="noncallable-btn-wrap"></span>
         ${cls.methods.length ? `<input class="inline-search" id="method-search-inp" type="text" placeholder="Filter…" value="${esc(methodSearch)}" autocomplete="off">` : ''}
       </div>
       <div id="methods-wrap"></div>
@@ -52,8 +53,35 @@ function refreshMethods(cls) {
   const s      = methodSearch.toLowerCase();
   const tagged = cls.methods.filter(m =>  m.lua_tagged && (!s || m.name.toLowerCase().includes(s)));
   const other  = cls.methods.filter(m => !m.lua_tagged && (!s || m.name.toLowerCase().includes(s)));
+
+  // Non-callable = static other methods + instance other methods when not setExposed
+  const nonCallableCount = other.filter(m => m.static || !cls.set_exposed).length;
+
   document.getElementById('method-count').textContent = tagged.length + other.length;
-  document.getElementById('methods-wrap').innerHTML   = renderMethodGroups(tagged, other, cls.set_exposed);
+
+  const wrap = document.getElementById('methods-wrap');
+  wrap.innerHTML = renderMethodGroups(tagged, other, cls.set_exposed);
+  wrap.classList.toggle('hide-noncallable', !showNonCallable);
+
+  // Update non-callable toggle button
+  const btnWrap = document.getElementById('noncallable-btn-wrap');
+  if (btnWrap) {
+    if (nonCallableCount > 0) {
+      const btn = document.createElement('button');
+      btn.id = 'btn-noncallable-toggle';
+      btn.className = 'noncallable-toggle';
+      btn.textContent = `${showNonCallable ? 'Hide' : 'Show'} non-callable (${nonCallableCount})`;
+      btn.addEventListener('click', () => {
+        showNonCallable = !showNonCallable;
+        wrap.classList.toggle('hide-noncallable', !showNonCallable);
+        btn.textContent = `${showNonCallable ? 'Hide' : 'Show'} non-callable (${nonCallableCount})`;
+      });
+      btnWrap.innerHTML = '';
+      btnWrap.appendChild(btn);
+    } else {
+      btnWrap.innerHTML = '';
+    }
+  }
 }
 
 function refreshFields(cls) {
@@ -81,29 +109,30 @@ function renderConstructorsTable(cls) {
 
 function renderMethodGroups(tagged, other, setExposed) {
   if (!tagged.length && !other.length) return `<div class="empty-msg">No methods</div>`;
-  // Split each group into instance vs static
   const taggedInst   = tagged.filter(m => !m.static);
   const taggedStatic = tagged.filter(m =>  m.static);
   const otherInst    = other.filter(m => !m.static);
   const otherStatic  = other.filter(m =>  m.static);
+
+  // callable=true → visible by default; callable=false → hidden by .hide-noncallable
+  const mkGroup = (labelClass, content, tableHtml, callable) =>
+    `<div class="method-group${callable ? '' : ' non-callable-group'}">
+      <div class="group-label ${labelClass}"><span class="group-arrow">▼</span>${content}</div>
+      <div class="group-body">${tableHtml}</div>
+    </div>`;
+
   let html = '';
-  let topMargin = false;
-  if (taggedInst.length) {
-    html += `<div class="group-label tagged-label"><span class="dot dot-tagged"></span> @UsedFromLua (${taggedInst.length})</div>` + renderMethodsTable(taggedInst);
-    topMargin = true;
-  }
-  if (taggedStatic.length) {
-    html += `<div class="group-label tagged-label" style="margin-top:${topMargin ? 8 : 0}px"><span class="dot dot-tagged"></span> @UsedFromLua — static (${taggedStatic.length})</div>` + renderMethodsTable(taggedStatic);
-    topMargin = true;
-  }
+  if (taggedInst.length)
+    html += mkGroup('tagged-label', `<span class="dot dot-tagged"></span> @UsedFromLua (${taggedInst.length})`, renderMethodsTable(taggedInst), true);
+  if (taggedStatic.length)
+    html += mkGroup('tagged-label', `<span class="dot dot-tagged"></span> @UsedFromLua — static (${taggedStatic.length})`, renderMethodsTable(taggedStatic), true);
   if (otherInst.length) {
     const lbl = setExposed ? `setExposed — callable (${otherInst.length})` : `Not setExposed (${otherInst.length})`;
-    html += `<div class="group-label other-label" style="margin-top:${topMargin ? 12 : 0}px"><span class="dot dot-empty"></span> ${lbl}</div>` + renderMethodsTable(otherInst);
-    topMargin = true;
+    html += mkGroup('other-label', `<span class="dot dot-empty"></span> ${lbl}`, renderMethodsTable(otherInst), setExposed);
   }
   if (otherStatic.length) {
     const lbl = setExposed ? `setExposed — static, not Lua-callable (${otherStatic.length})` : `Not setExposed — static (${otherStatic.length})`;
-    html += `<div class="group-label other-label" style="margin-top:${topMargin ? 8 : 0}px"><span class="dot dot-empty"></span> ${lbl}</div>` + renderMethodsTable(otherStatic);
+    html += mkGroup('other-label', `<span class="dot dot-empty"></span> ${lbl}`, renderMethodsTable(otherStatic), false);
   }
   return html;
 }

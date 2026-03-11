@@ -43,6 +43,7 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,san
 .filter-btn[data-filter="tagged"].active{background:#1a2e1a;border-color:var(--col-tagged);color:var(--col-tagged)}
 .filter-btn[data-filter="enum"].active{background:#1a1a2e;border-color:#8888ff;color:#8888ff}
 .filter-btn[data-filter="has-tagged-methods"].active{background:#1a2e2a;border-color:var(--accent2);color:var(--accent2)}
+.filter-btn[data-filter="callable"].active{background:#1a2e28;border-color:#50c8a0;color:#50c8a0}
 
 /* ── Fold depth controls ── */
 #fold-depth-controls{padding:4px 8px;display:flex;align-items:center;gap:4px;border-bottom:1px solid var(--border)}
@@ -144,9 +145,17 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,san
 .inline-search{background:var(--bg3);border:1px solid var(--border);border-radius:3px;padding:4px 8px;color:var(--text);font-size:12px;outline:none;margin-left:auto;width:150px}
 .inline-search:focus{border-color:var(--accent2)}
 .inline-search::placeholder{color:var(--text-dim)}
-.group-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:7px 10px 3px;display:flex;align-items:center;gap:6px}
+.group-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:7px 10px 3px;display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none}
+.group-label:hover{opacity:.8}
 .group-label.tagged-label{color:var(--col-tagged)}
 .group-label.other-label{color:#555}
+.group-arrow{font-size:9px;width:10px;flex-shrink:0;font-family:monospace}
+.method-group.folded .group-body{display:none}
+#methods-wrap.hide-noncallable .non-callable-group{display:none}
+
+/* Non-callable toggle button */
+.noncallable-toggle{background:var(--bg3);border:1px solid var(--border);border-radius:3px;padding:2px 8px;color:var(--text-dim);font-size:11px;cursor:pointer;white-space:nowrap}
+.noncallable-toggle:hover{color:var(--text);border-color:#555}
 
 table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:2px}
 th{text-align:left;padding:5px 10px;font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border)}
