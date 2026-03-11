@@ -121,10 +121,11 @@
   /* source code */
   #source-loading{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:var(--text-dim);font-size:13px}
   #source-pre{flex:1;overflow:auto;margin:0!important;border-radius:0!important;min-width:0}
-  #source-pre code{font-size:12.5px;line-height:1.55;font-family:'Cascadia Code','Fira Code','Consolas',monospace;display:block;min-width:max-content}
+  #source-pre code,#globals-src-pre code{font-size:12.5px;line-height:1.55;font-family:'Cascadia Code','Fira Code','Consolas',monospace;display:block;min-width:max-content;counter-reset:line-num}
 
-  /* ── Source folding ── */
-  .src-line{display:block;white-space:pre;position:relative}
+  /* ── Source folding & line numbers ── */
+  .src-line{display:block;white-space:pre;position:relative;counter-increment:line-num}
+  .src-line::before{content:counter(line-num);display:inline-block;min-width:3em;text-align:right;padding-right:.8em;margin-right:.5em;color:#444;border-right:1px solid #2a2a2a;user-select:none;pointer-events:none;font-size:11px}
   .fold-btn{display:inline-block;width:13px;color:#444;cursor:pointer;user-select:none;font-size:9px;font-family:monospace;vertical-align:middle;margin-right:1px;text-align:center;flex-shrink:0}
   .fold-btn:hover{color:var(--accent2)}
   .fold-region.folded{display:none}
@@ -180,6 +181,8 @@
   .gfold-btn:hover{color:var(--text);border-color:#555}
   #globals-table-wrap{flex:1;overflow-y:auto;padding:0 20px 20px}
   .gfn-name{color:var(--accent);font-family:monospace;font-weight:600}
+  .gfn-link{color:var(--accent);font-family:monospace;font-weight:600;cursor:pointer;text-decoration:none}
+  .gfn-link:hover{text-decoration:underline;color:var(--accent2)}
   .globals-group-header{padding:9px 10px 4px!important;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border)!important;background:var(--bg2)!important;cursor:pointer;user-select:none}
   .globals-group-header:hover{background:var(--bg3)!important}
   .ggh-arrow{display:inline-block;width:12px;color:#555;font-size:9px;font-family:monospace}
@@ -420,14 +423,28 @@ function classifyLine(line) {
 }
 
 function wrapLines(html) {
+  // Track open Prism token spans so we can close/reopen them at each line break,
+  // which ensures multi-line comments and strings are highlighted correctly.
+  const openSpans = [];
   let result = `<span class="src-line" id="L1">`;
-  let n = 1, inTag = false;
+  let n = 1, inTag = false, tagBuf = '';
   for (let i = 0; i < html.length; i++) {
     const c = html[i];
-    if      (c === '<') { inTag = true;  result += c; }
-    else if (c === '>') { inTag = false; result += c; }
-    else if (c === '\n' && !inTag) { result += `</span><span class="src-line" id="L${++n}">`; }
-    else result += c;
+    if (c === '<') { inTag = true; tagBuf = c; }
+    else if (inTag) {
+      tagBuf += c;
+      if (c === '>') {
+        inTag = false;
+        result += tagBuf;
+        if (tagBuf.startsWith('</span')) { openSpans.pop(); }
+        else if (tagBuf.startsWith('<span') && !tagBuf.endsWith('/>')) { openSpans.push(tagBuf); }
+        tagBuf = '';
+      }
+    } else if (c === '\n') {
+      const closes  = '</span>'.repeat(openSpans.length);
+      const reopens = openSpans.join('');
+      result += closes + `</span><span class="src-line" id="L${++n}">` + reopens;
+    } else { result += c; }
   }
   return result + '</span>';
 }
@@ -886,6 +903,13 @@ function renderClassDetail(fqn) {
       </div>
       <div class="source-path">${esc(cls.source_file)}</div>
     </div>
+    ${(cls.constructors||[]).length ? `
+    <div class="section">
+      <div class="section-header">
+        <h3>Constructors</h3><span class="count">${(cls.constructors||[]).length}</span>
+      </div>
+      <div id="constructors-wrap">${renderConstructorsTable(cls)}</div>
+    </div>` : ''}
     <div class="section">
       <div class="section-header">
         <h3>Methods</h3><span class="count" id="method-count">${cls.methods.length}</span>
@@ -904,6 +928,13 @@ function renderClassDetail(fqn) {
   switchCtab('detail');
   refreshMethods(cls);
   refreshFields(cls);
+
+  // Bind constructor source links
+  setTimeout(() => {
+    document.querySelectorAll('#constructors-wrap a.method-link[data-is-ctor]').forEach(a => {
+      a.addEventListener('click', e => { e.preventDefault(); showSource(cls, a.dataset.method); });
+    });
+  }, 0);
 
   const mi = document.getElementById('method-search-inp');
   if (mi) { mi.addEventListener('input', () => { methodSearch = mi.value; refreshMethods(cls); }); if (methodSearch) mi.focus(); }
@@ -924,6 +955,23 @@ function refreshFields(cls) {
   const fields = cls.fields.filter(f => !s || f.name.toLowerCase().includes(s) || f.type.toLowerCase().includes(s));
   document.getElementById('field-count').textContent = fields.length;
   document.getElementById('fields-wrap').innerHTML   = renderFieldsTable(fields, cls.is_enum);
+}
+
+function renderConstructorsTable(cls) {
+  const ctors = cls.constructors || [];
+  if (!ctors.length) return '<div class="empty-msg">No public constructors</div>';
+  const simple = cls.simple_name;
+  const rows = ctors.map(c => {
+    const params = c.params.map(p =>
+      `<span class="param-type">${esc(p.type)}</span> <span class="param-name">${esc(p.name)}</span>`
+    ).join(', ');
+    const dot = c.lua_tagged ? `<span class="dot dot-tagged" style="display:inline-block;margin-left:5px;vertical-align:middle" title="@UsedFromLua"></span>` : '';
+    return `<tr>
+      <td><a class="method-link" data-method="${esc(simple)}" data-is-ctor="1">${esc(simple)}</a>${dot}</td>
+      <td><span class="params-cell">(${params||''})</span></td>
+    </tr>`;
+  }).join('');
+  return `<table><thead><tr><th>Constructor</th><th>Parameters</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
 function renderMethodGroups(tagged, other, setExposed, cls) {
@@ -1041,15 +1089,14 @@ function updateGlobalsTable(filter) {
     const alias = g.java_method !== g.lua_name
       ? `<span style="color:var(--text-dim);font-size:11px;margin-left:8px">← ${esc(g.java_method)}</span>` : '';
     rows += `<tr data-group="${esc(group)}"${folded?' style="display:none"':''}>
-      <td><span class="gfn-name">${esc(g.lua_name)}</span>${alias}</td>
+      <td><a class="gfn-link" data-method="${esc(g.java_method)}">${esc(g.lua_name)}</a>${alias}</td>
       <td><span class="return-type">${esc(g.return_type||'?')}</span></td>
       <td><span class="params-cell">${params||'<span style="color:#444">—</span>'}</span></td>
-      <td><button class="src-btn" data-method="${esc(g.java_method)}" title="View source">{ }</button></td>
     </tr>`;
   }
 
   document.getElementById('globals-table-wrap').innerHTML =
-    `<table style="margin-top:4px"><thead><tr><th>Lua name</th><th>Returns</th><th>Parameters</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+    `<table style="margin-top:4px"><thead><tr><th>Lua name</th><th>Returns</th><th>Parameters</th></tr></thead><tbody>${rows}</tbody></table>`;
 
   document.querySelectorAll('#globals-table-wrap .globals-group-header').forEach(hdr => {
     hdr.addEventListener('click', () => {
@@ -1062,8 +1109,8 @@ function updateGlobalsTable(filter) {
       wrap.querySelectorAll(`tr[data-group="${group}"]`).forEach(r => r.style.display = folded ? 'none' : '');
     });
   });
-  document.querySelectorAll('#globals-table-wrap .src-btn').forEach(btn => {
-    btn.addEventListener('click', () => showGlobalSource(btn.dataset.method));
+  document.querySelectorAll('#globals-table-wrap .gfn-link').forEach(a => {
+    a.addEventListener('click', e => { e.preventDefault(); showGlobalSource(a.dataset.method); });
   });
 }
 
