@@ -26,6 +26,17 @@ api = json.loads(API_FILE.read_text(encoding="utf-8"))
 copied = 0
 missing = 0
 
+# Always include LuaManager.java (source for all global functions)
+for rel in ["zombie/Lua/LuaManager.java"]:
+    src = SRC_ROOT / rel
+    dest = SOURCES_DIR / rel
+    if src.exists():
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src, dest)
+        copied += 1
+    else:
+        missing += 1
+
 for fqn, cls in api["classes"].items():
     src_rel = cls.get("source_file")
     if not src_rel:
