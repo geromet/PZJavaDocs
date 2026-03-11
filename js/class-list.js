@@ -12,7 +12,9 @@ function passesCurrentFilter(fqn, cls) {
 
 function hasTaggedMethods(cls) { return cls.methods.some(m => m.lua_tagged); }
 
-function hasCallableMethods(cls) { return cls.set_exposed || cls.methods.some(m => m.lua_tagged); }
+function hasCallableMethods(cls) {
+  return cls.methods.some(m => m.lua_tagged || (!m.static && cls.set_exposed));
+}
 
 function scoreClass(fqn, cls, search) {
   if (!search) return 1;
