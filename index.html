@@ -223,8 +223,8 @@ function buildClassList() {
   const search = currentSearch.toLowerCase();
   const entries = Object.entries(API.classes).filter(([fqn, cls]) => {
     if (currentFilter === 'both'    && !(cls.set_exposed && cls.lua_tagged)) return false;
-    if (currentFilter === 'exposed' && !cls.set_exposed) return false;
-    if (currentFilter === 'tagged'  && !cls.lua_tagged)  return false;
+    if (currentFilter === 'exposed' && !cls.set_exposed  && !cls.lua_tagged) return false;
+    if (currentFilter === 'tagged'  && !cls.lua_tagged   && !cls.set_exposed)  return false;
     if (currentFilter === 'enum'    && !cls.is_enum)      return false;
     if (search) {
       if (fqn.toLowerCase().includes(search)) return true;
