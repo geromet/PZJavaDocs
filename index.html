@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Zomboid Lua API</title>
+<style>
+  :root {
+    --bg: #1a1a1a;
+    --bg2: #242424;
+    --bg3: #2e2e2e;
+    --border: #3a3a3a;
+    --text: #d4d4d4;
+    --text-dim: #888;
+    --accent: #c17f24;
+    --accent2: #4a9eff;
+    --green: #6abf69;
+    --tag-lua: #3a5a3a;
+    --tag-lua-text: #6abf69;
+    --tag-enum: #3a3a5a;
+    --tag-enum-text: #8888ff;
+    --sidebar-w: 320px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* Header */
+  #header { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 10px 16px; display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
+  #header h1 { font-size: 16px; font-weight: 600; color: var(--accent); white-space: nowrap; }
+  #header .stats { color: var(--text-dim); font-size: 12px; white-space: nowrap; }
+  #global-search { flex: 1; background: var(--bg3); border: 1px solid var(--border); border-radius: 4px; padding: 6px 10px; color: var(--text); font-size: 13px; outline: none; }
+  #global-search:focus { border-color: var(--accent); }
+  #global-search::placeholder { color: var(--text-dim); }
+
+  /* Tabs */
+  #tabs { display: flex; background: var(--bg2); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .tab { padding: 8px 20px; cursor: pointer; border-bottom: 2px solid transparent; color: var(--text-dim); font-size: 13px; user-select: none; }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* Layout */
+  #main { display: flex; flex: 1; overflow: hidden; }
+
+  /* Sidebar */
+  #sidebar { width: var(--sidebar-w); min-width: var(--sidebar-w); background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+  #sidebar-filters { padding: 8px; display: flex; gap: 6px; flex-wrap: wrap; border-bottom: 1px solid var(--border); }
+  .filter-btn { background: var(--bg3); border: 1px solid var(--border); border-radius: 3px; padding: 3px 8px; font-size: 11px; cursor: pointer; color: var(--text-dim); user-select: none; }
+  .filter-btn:hover { color: var(--text); }
+  .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  #class-count { padding: 4px 8px; font-size: 11px; color: var(--text-dim); border-bottom: 1px solid var(--border); }
+  #class-list { flex: 1; overflow-y: auto; }
+  .class-item { padding: 7px 12px; cursor: pointer; border-bottom: 1px solid #1e1e1e; display: flex; align-items: center; gap: 6px; user-select: none; }
+  .class-item:hover { background: var(--bg3); }
+  .class-item.active { background: #2a2a1a; border-left: 3px solid var(--accent); }
+  .class-item .name { flex: 1; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .class-item .pkg { font-size: 10px; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tag { font-size: 10px; border-radius: 3px; padding: 1px 5px; white-space: nowrap; flex-shrink: 0; }
+  .tag-lua { background: var(--tag-lua); color: var(--tag-lua-text); }
+  .tag-enum { background: var(--tag-enum); color: var(--tag-enum-text); }
+
+  /* Content */
+  #content { flex: 1; overflow-y: auto; padding: 20px; }
+  #placeholder { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-dim); font-size: 15px; }
+
+  /* Class detail */
+  .class-header { margin-bottom: 16px; }
+  .class-header h2 { font-size: 20px; font-weight: 600; color: var(--accent); margin-bottom: 4px; }
+  .class-header .fqn { font-size: 12px; color: var(--text-dim); font-family: monospace; margin-bottom: 8px; }
+  .class-header .meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .class-header .source { font-size: 11px; color: var(--text-dim); font-family: monospace; }
+
+  .section { margin-bottom: 24px; }
+  .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  .section-header h3 { font-size: 14px; font-weight: 600; color: var(--text); }
+  .section-header .count { font-size: 12px; color: var(--text-dim); }
+  .method-search { background: var(--bg3); border: 1px solid var(--border); border-radius: 3px; padding: 4px 8px; color: var(--text); font-size: 12px; outline: none; margin-left: auto; width: 180px; }
+  .method-search:focus { border-color: var(--accent2); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 6px 10px; font-size: 11px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg); }
+  td { padding: 5px 10px; border-bottom: 1px solid #222; vertical-align: top; }
+  tr:hover td { background: var(--bg2); }
+  .method-name { color: var(--accent2); font-family: monospace; }
+  .return-type { color: #b5cea8; font-family: monospace; font-size: 12px; }
+  .params { font-family: monospace; font-size: 12px; color: var(--text-dim); }
+  .params .param-type { color: #ce9178; }
+  .params .param-name { color: var(--text); }
+  .field-name { color: var(--green); font-family: monospace; }
+  .field-type { color: #b5cea8; font-family: monospace; font-size: 12px; }
+  .dot-lua { width: 6px; height: 6px; border-radius: 50%; background: var(--tag-lua-text); display: inline-block; flex-shrink: 0; }
+
+  /* Global functions tab */
+  #globals-panel { display: none; }
+  #globals-search { background: var(--bg3); border: 1px solid var(--border); border-radius: 4px; padding: 6px 10px; color: var(--text); font-size: 13px; outline: none; width: 300px; margin-bottom: 16px; }
+  #globals-search:focus { border-color: var(--accent); }
+  #globals-search::placeholder { color: var(--text-dim); }
+  .global-fn { padding: 6px 10px; border-bottom: 1px solid #222; font-family: monospace; font-size: 13px; display: flex; align-items: center; gap: 8px; }
+  .global-fn:hover { background: var(--bg2); }
+  .gfn-lua { color: var(--accent); }
+  .gfn-java { color: var(--text-dim); font-size: 11px; }
+
+  /* Loading */
+  #loading { display: flex; align-items: center; justify-content: center; height: 100%; flex-direction: column; gap: 12px; color: var(--text-dim); }
+  .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg2); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+  .empty { color: var(--text-dim); font-style: italic; padding: 12px 0; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <h1>PZ Lua API</h1>
+  <input id="global-search" type="text" placeholder="Search classes, methods, fields…" autocomplete="off">
+  <span class="stats" id="header-stats">Loading…</span>
+</div>
+
+<div id="tabs">
+  <div class="tab active" data-tab="classes">Classes</div>
+  <div class="tab" data-tab="globals">Global Functions</div>
+</div>
+
+<div id="main">
+  <div id="sidebar">
+    <div id="sidebar-filters">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="lua">@UsedFromLua</button>
+      <button class="filter-btn" data-filter="enum">Enums</button>
+      <button class="filter-btn" data-filter="methods">Has Methods</button>
+    </div>
+    <div id="class-count"></div>
+    <div id="class-list"></div>
+  </div>
+
+  <div id="content">
+    <div id="loading"><div class="spinner"></div><span>Loading lua_api.json…</span></div>
+    <div id="placeholder" style="display:none">Select a class from the list</div>
+    <div id="class-detail" style="display:none"></div>
+    <div id="globals-panel"></div>
+  </div>
+</div>
+
+<script>
+let API = null;
+let currentTab = 'classes';
+let currentFilter = 'all';
+let currentSearch = '';
+let currentClass = null;
+let methodSearch = '';
+let filteredClasses = [];
+
+// ── Load data ──────────────────────────────────────────────────────────────
+fetch('./lua_api.json')
+  .then(r => { if (!r.ok) throw new Error(r.statusText); return r.json(); })
+  .then(data => {
+    API = data;
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('placeholder').style.display = 'flex';
+    init();
+  })
+  .catch(e => {
+    document.getElementById('loading').innerHTML =
+      `<div style="color:#e06c75;text-align:center">Failed to load lua_api.json<br><small>${e.message}</small><br><small style="color:var(--text-dim);margin-top:8px">Make sure lua_api.json is in the same directory as index.html</small></div>`;
+  });
+
+function init() {
+  const meta = API._meta;
+  const classes = Object.keys(API.exposed_classes);
+  document.getElementById('header-stats').textContent =
+    `${classes.length} classes · ${meta.total_global_functions} globals · ${countMethods()} methods`;
+  buildClassList();
+  setupEvents();
+  // Restore hash
+  if (location.hash) {
+    const fqn = decodeURIComponent(location.hash.slice(1));
+    if (fqn.startsWith('global:')) {
+      switchTab('globals');
+    } else {
+      selectClass(fqn);
+    }
+  }
+}
+
+function countMethods() {
+  return Object.values(API.exposed_classes).reduce((s, c) => s + c.methods.length, 0);
+}
+
+// ── Class list ─────────────────────────────────────────────────────────────
+function buildClassList() {
+  const search = currentSearch.toLowerCase();
+  filteredClasses = Object.entries(API.exposed_classes).filter(([fqn, cls]) => {
+    if (currentFilter === 'lua' && !cls.lua_tagged) return false;
+    if (currentFilter === 'enum' && !cls.is_enum) return false;
+    if (currentFilter === 'methods' && cls.methods.length === 0) return false;
+    if (search) {
+      // Search in class name, fqn, method names, field names
+      if (fqn.toLowerCase().includes(search)) return true;
+      if (cls.methods.some(m => m.name.toLowerCase().includes(search))) return true;
+      if (cls.fields.some(f => f.name.toLowerCase().includes(search))) return true;
+      return false;
+    }
+    return true;
+  }).sort(([a], [b]) => {
+    const sa = a.split('.').pop(), sb = b.split('.').pop();
+    return sa.localeCompare(sb);
+  });
+
+  document.getElementById('class-count').textContent = `${filteredClasses.length} classes`;
+
+  const list = document.getElementById('class-list');
+  list.innerHTML = '';
+  const frag = document.createDocumentFragment();
+  for (const [fqn, cls] of filteredClasses) {
+    const parts = fqn.split('.');
+    const simple = parts.pop();
+    const pkg = parts.join('.');
+    const div = document.createElement('div');
+    div.className = 'class-item' + (fqn === currentClass ? ' active' : '');
+    div.dataset.fqn = fqn;
+    div.innerHTML =
+      `<div style="flex:1;min-width:0">` +
+        `<div class="name">${simple}${cls.is_enum ? ' <span class="tag tag-enum">enum</span>' : ''}</div>` +
+        `<div class="pkg">${pkg}</div>` +
+      `</div>` +
+      (cls.lua_tagged ? `<span class="dot-lua" title="@UsedFromLua"></span>` : '');
+    div.addEventListener('click', () => selectClass(fqn));
+    frag.appendChild(div);
+  }
+  list.appendChild(frag);
+}
+
+// ── Class detail ───────────────────────────────────────────────────────────
+function selectClass(fqn) {
+  if (!API.exposed_classes[fqn]) return;
+  currentClass = fqn;
+  methodSearch = '';
+  location.hash = encodeURIComponent(fqn);
+
+  // Update sidebar selection
+  document.querySelectorAll('.class-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.fqn === fqn);
+  });
+
+  // Scroll active into view
+  const active = document.querySelector('.class-item.active');
+  if (active) active.scrollIntoView({ block: 'nearest' });
+
+  renderClassDetail(fqn);
+}
+
+function renderClassDetail(fqn) {
+  const cls = API.exposed_classes[fqn];
+  document.getElementById('placeholder').style.display = 'none';
+  document.getElementById('globals-panel').style.display = 'none';
+  const detail = document.getElementById('class-detail');
+  detail.style.display = 'block';
+
+  const simple = fqn.split('.').pop();
+  const tags = [
+    cls.lua_tagged ? `<span class="tag tag-lua">@UsedFromLua</span>` : '',
+    cls.is_enum ? `<span class="tag tag-enum">enum</span>` : '',
+  ].filter(Boolean).join('');
+
+  detail.innerHTML = `
+    <div class="class-header">
+      <h2>${simple}</h2>
+      <div class="fqn">${fqn}</div>
+      <div class="meta">
+        ${tags}
+        <span class="source">${cls.source_file}</span>
+      </div>
+    </div>
+
+    <div class="section" id="methods-section">
+      <div class="section-header">
+        <h3>Methods</h3>
+        <span class="count" id="method-count">${cls.methods.length}</span>
+        ${cls.methods.length > 0 ? `<input class="method-search" type="text" placeholder="Filter methods…" id="method-search-input" autocomplete="off">` : ''}
+      </div>
+      <div id="methods-table-wrap">${renderMethodsTable(cls.methods, '')}</div>
+    </div>
+
+    <div class="section" id="fields-section">
+      <div class="section-header">
+        <h3>${cls.is_enum ? 'Constants' : 'Fields'}</h3>
+        <span class="count">${cls.fields.length}</span>
+      </div>
+      ${renderFieldsTable(cls.fields, cls.is_enum)}
+    </div>
+  `;
+
+  const msInput = document.getElementById('method-search-input');
+  if (msInput) {
+    msInput.addEventListener('input', () => {
+      methodSearch = msInput.value;
+      const filtered = cls.methods.filter(m => m.name.toLowerCase().includes(methodSearch.toLowerCase()));
+      document.getElementById('method-count').textContent = filtered.length;
+      document.getElementById('methods-table-wrap').innerHTML = renderMethodsTable(filtered, methodSearch);
+    });
+  }
+}
+
+function renderMethodsTable(methods, search) {
+  if (methods.length === 0) return `<div class="empty">No methods</div>`;
+  const rows = methods.map(m => {
+    const params = m.params.map(p =>
+      `<span class="param-type">${esc(p.type)}</span> <span class="param-name">${esc(p.name)}</span>`
+    ).join(', ');
+    return `<tr>
+      <td><span class="method-name">${esc(m.name)}</span>${m.lua_tagged ? ' <span class="dot-lua" title="@UsedFromLua"></span>' : ''}</td>
+      <td><span class="return-type">${esc(m.return_type)}</span></td>
+      <td><span class="params">${params || '<span style="color:#555">—</span>'}</span></td>
+    </tr>`;
+  }).join('');
+  return `<table><thead><tr><th>Method</th><th>Returns</th><th>Parameters</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function renderFieldsTable(fields, isEnum) {
+  if (fields.length === 0) return `<div class="empty">No ${isEnum ? 'constants' : 'fields'}</div>`;
+  if (isEnum) {
+    const items = fields.map(f => `<span style="color:var(--green);font-family:monospace;margin-right:12px">${esc(f.name)}</span>`).join('');
+    return `<div style="padding:8px 0;line-height:2">${items}</div>`;
+  }
+  const rows = fields.map(f =>
+    `<tr>
+      <td><span class="field-name">${esc(f.name)}</span>${f.lua_tagged ? ' <span class="dot-lua" title="@UsedFromLua"></span>' : ''}</td>
+      <td><span class="field-type">${esc(f.type)}</span></td>
+    </tr>`
+  ).join('');
+  return `<table><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+// ── Globals panel ──────────────────────────────────────────────────────────
+function renderGlobals(filter) {
+  filter = filter || '';
+  const fns = API.global_functions.filter(g =>
+    !filter || g.lua_name.toLowerCase().includes(filter.toLowerCase()) || g.java_method.toLowerCase().includes(filter.toLowerCase())
+  );
+  const panel = document.getElementById('globals-panel');
+  panel.style.display = 'block';
+  document.getElementById('class-detail').style.display = 'none';
+  document.getElementById('placeholder').style.display = 'none';
+
+  panel.innerHTML = `
+    <div style="margin-bottom:16px">
+      <input id="globals-search" type="text" placeholder="Search global functions…" value="${esc(filter)}" autocomplete="off">
+      <span style="color:var(--text-dim);font-size:12px">${fns.length} functions</span>
+    </div>
+    <div id="globals-list">
+      ${fns.map(g =>
+        `<div class="global-fn">
+          <span class="gfn-lua">${esc(g.lua_name)}</span>
+          ${g.java_method !== g.lua_name ? `<span class="gfn-java">← ${esc(g.java_method)}</span>` : ''}
+        </div>`
+      ).join('')}
+    </div>
+  `;
+  document.getElementById('globals-search').addEventListener('input', e => renderGlobals(e.target.value));
+}
+
+// ── Events ─────────────────────────────────────────────────────────────────
+function setupEvents() {
+  // Tab switching
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+  });
+
+  // Filter buttons
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentFilter = btn.dataset.filter;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      buildClassList();
+    });
+  });
+
+  // Global search
+  let searchTimer;
+  document.getElementById('global-search').addEventListener('input', e => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+      currentSearch = e.target.value;
+      buildClassList();
+    }, 150);
+  });
+
+  // Keyboard shortcut: / to focus search
+  document.addEventListener('keydown', e => {
+    if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
+      e.preventDefault();
+      document.getElementById('global-search').focus();
+    }
+  });
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.getElementById('sidebar').style.display = tab === 'classes' ? 'flex' : 'none';
+  if (tab === 'globals') {
+    renderGlobals('');
+    location.hash = 'global:functions';
+  } else {
+    document.getElementById('globals-panel').style.display = 'none';
+    if (currentClass) {
+      renderClassDetail(currentClass);
+    } else {
+      document.getElementById('placeholder').style.display = 'flex';
+    }
+  }
+}
+
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>
