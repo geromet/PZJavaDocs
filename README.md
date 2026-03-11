@@ -34,3 +34,7 @@ Run `extract_lua_api.py` from the `projectzomboid/` source directory, then copy 
 - Browse 745 global Lua functions
 - URL hash navigation (shareable links to specific classes)
 - Press `/` to focus the search box
+
+
+## Project Zomboid Terms-Conditions
+https://projectzomboid.com/blog/support/terms-conditions/
