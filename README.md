@@ -1,7 +1,7 @@
 # PZ Lua API Viewer
 
 A static web app for browsing the Project Zomboid Lua API extracted from decompiled Java sources.
-
+https://geromet.github.io/PZJavaDocs/
 ## Files
 
 - `index.html` — the viewer app
