@@ -24,6 +24,9 @@ let foldDepth = Infinity;         // Infinity = fully open
 // Detail panel: whether non-callable method groups are shown
 let showNonCallable = false;
 
+// Simple-name → [fqn, …] lookup for source class-ref linking
+let classBySimpleName = {};
+
 // Navigation history
 const navHistory = [];
 let navIndex   = -1;

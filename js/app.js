@@ -20,6 +20,12 @@ function init() {
   document.getElementById('stat-tagged').textContent  = m.lua_tagged_count;
   document.getElementById('stat-globals').textContent = `${m.total_global_functions} globals`;
 
+  // Build simple-name → [fqn, …] lookup for source class-ref linking
+  for (const fqn of Object.keys(API.classes)) {
+    const simple = fqn.split('.').pop();
+    (classBySimpleName[simple] = classBySimpleName[simple] || []).push(fqn);
+  }
+
   buildClassList();
   setupEvents();
   if (location.hash) {
@@ -238,6 +244,12 @@ function setupEvents() {
     // Alt+Left / Alt+Right for back/forward (common browser convention)
     if (e.altKey && e.key === 'ArrowLeft')  { e.preventDefault(); navGo(-1); }
     if (e.altKey && e.key === 'ArrowRight') { e.preventDefault(); navGo(+1); }
+  });
+
+  // Delegated click for source class refs (both source panels)
+  document.getElementById('content').addEventListener('click', e => {
+    const a = e.target.closest('a.src-class-ref[data-fqn]');
+    if (a) { e.preventDefault(); switchTab('classes'); selectClass(a.dataset.fqn); }
   });
 
   // Delegated click for detail panel: method links + group label folding

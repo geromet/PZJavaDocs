@@ -129,6 +129,36 @@ function injectFoldRegions(codeEl, regions) {
   codeEl.addEventListener('click', codeEl._foldHandler);
 }
 
+function linkClassRefs(codeEl) {
+  if (!Object.keys(classBySimpleName).length) return;
+  const walker = document.createTreeWalker(codeEl, NodeFilter.SHOW_TEXT, null);
+  const textNodes = [];
+  let node;
+  while ((node = walker.nextNode())) textNodes.push(node);
+  for (const textNode of textNodes) {
+    const text = textNode.textContent;
+    if (!/[A-Z]/.test(text)) continue;
+    const parts = text.split(/\b/);
+    let changed = false;
+    const frag = document.createDocumentFragment();
+    for (const part of parts) {
+      const fqns = part.length > 1 && /^[A-Z]/.test(part) ? classBySimpleName[part] : null;
+      if (fqns) {
+        const a = document.createElement('a');
+        a.className = 'src-class-ref';
+        a.textContent = part;
+        a.dataset.fqn = fqns[0];
+        a.title = fqns[0];
+        frag.appendChild(a);
+        changed = true;
+      } else {
+        frag.appendChild(document.createTextNode(part));
+      }
+    }
+    if (changed) textNode.parentNode.replaceChild(frag, textNode);
+  }
+}
+
 function renderFoldableSource(rawText, codeEl) {
   // hljs sets data-highlighted="yes" and skips re-highlighting if present —
   // remove it so reused elements are highlighted fresh on every load.
@@ -138,6 +168,7 @@ function renderFoldableSource(rawText, codeEl) {
   codeEl.innerHTML = wrapLines(codeEl.innerHTML);
   const regions = buildFoldRegions(rawText);
   if (regions.length) injectFoldRegions(codeEl, regions);
+  linkClassRefs(codeEl);
 }
 
 function foldAllInEl(codeEl, mode) {

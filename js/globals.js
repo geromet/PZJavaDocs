@@ -94,30 +94,6 @@ async function showGlobalSource(javaMethod) {
   scrollToMethod(text, javaMethod,
     document.getElementById('globals-src-pre'),
     document.getElementById('globals-src-code'));
-  showGlobalSourceRefs(javaMethod);
-}
-
-function showGlobalSourceRefs(javaMethod) {
-  const refsEl = document.getElementById('globals-src-refs');
-  const sepEl  = document.getElementById('gsrc-refs-sep');
-  if (!refsEl || !sepEl) return;
-
-  const fn   = API.global_functions.find(g => g.java_method === javaMethod);
-  const refs = fn?.refs || [];
-
-  if (!refs.length) { refsEl.innerHTML = ''; sepEl.style.display = 'none'; return; }
-
-  sepEl.style.display = '';
-  refsEl.innerHTML =
-    `<span class="gsrc-refs-label">refs:</span>` +
-    refs.map(fqn => {
-      const name = fqn.split('.').pop();
-      return `<a class="src-class-ref" data-fqn="${esc(fqn)}" title="${esc(fqn)}">${esc(name)}</a>`;
-    }).join('');
-
-  refsEl.querySelectorAll('.src-class-ref').forEach(a => {
-    a.addEventListener('click', () => { switchTab('classes'); selectClass(a.dataset.fqn); });
-  });
 }
 
 function backToGlobalsTable() {
@@ -125,8 +101,4 @@ function backToGlobalsTable() {
   document.getElementById('globals-nav').classList.remove('visible');
   document.getElementById('globals-table-wrap').style.display = '';
   document.getElementById('globals-source-wrap').classList.remove('visible');
-  const refsEl = document.getElementById('globals-src-refs');
-  if (refsEl) refsEl.innerHTML = '';
-  const sepEl = document.getElementById('gsrc-refs-sep');
-  if (sepEl) sepEl.style.display = 'none';
 }
