@@ -76,6 +76,60 @@ GROUPS = [
     (729, 744, "Teleport, Debug & Timers"),
 ]
 
+# Rename entire groups after range assignment.
+# None = dissolve (functions must be covered by RENAMES below).
+GROUP_RENAMES = {
+    "Audio & Radio":              "Radio & Broadcast",
+    "Players, Sound & World":     "Player Management & World",
+    "Keyboard Input & Sound":     "Keyboard Input",
+    "Sound, XP & Player Stats":   "XP & Player Stats",
+    "Sprites":                    "Sprite Manager",
+    "Mod Data & Controller Type": None,   # all 3 functions covered in RENAMES
+    "Anim Events, Sync & Containers": "Actions, Sync & Containers",
+}
+
+# Override group for specific functions by lua_name.
+# Applied after GROUP_RENAMES — takes highest priority.
+RENAMES = {
+    # Sound functions scattered across multiple groups → unified "Sound & Audio"
+    "getSLSoundManager":      "Sound & Audio",
+    "getAmbientStreamManager":"Sound & Audio",
+    "playServerSound":        "Sound & Audio",
+    "getWorldSoundManager":   "Sound & Audio",
+    "AddWorldSound":          "Sound & Audio",
+    "AddNoiseToken":          "Sound & Audio",
+    "pauseSoundAndMusic":     "Sound & Audio",
+    "resumeSoundAndMusic":    "Sound & Audio",
+    "getBaseSoundBank":       "Sound & Audio",
+    "getFMODSoundBank":       "Sound & Audio",
+    "isSoundPlaying":         "Sound & Audio",
+    "stopSound":              "Sound & Audio",
+    "getSoundManager":        "Sound & Audio",
+    "testSound":              "Sound & Audio",
+    "getFMODEventPathList":   "Sound & Audio",
+    "reloadSoundFiles":       "Sound & Audio",
+    "addSound":               "Sound & Audio",
+    "sendPlaySound":          "Sound & Audio",
+    # Zoom belongs with rendering
+    "screenZoomIn":           "Rendering & Performance",
+    "screenZoomOut":          "Rendering & Performance",
+    # Radio belongs with radio
+    "getZomboidRadio":        "Radio & Broadcast",
+    # File I/O
+    "getMyDocumentFolder":    "Sandbox & File I/O",
+    # Dissolved "Mod Data & Controller Type" (3 functions)
+    "isXBOXController":       "Controller Settings",
+    "isPlaystationController":"Controller Settings",
+    "getServerModData":       "Mod Management",
+    # Misc fixes
+    "checkStringPattern":     "Trading & String Utilities",
+    "doKeyPress":             "Keyboard Input",
+    "detectBadWords":         "Chat Processing",
+    "profanityFilterCheck":   "Chat Processing",
+    "showDebugInfoInChat":    "Chat Processing",
+    "querySteamWorkshopItemDetails": "Steam & Social",
+}
+
 def get_group(idx):
     for start, end, name in GROUPS:
         if start <= idx <= end:
@@ -87,6 +141,19 @@ fns = api["global_functions"]
 print(f"Patching {len(fns)} global functions...")
 for i, fn in enumerate(fns):
     fn["group"] = get_group(i)
+
+# Apply group-level renames
+for fn in fns:
+    new = GROUP_RENAMES.get(fn["group"])
+    if new is not None:
+        fn["group"] = new
+    elif fn["group"] in GROUP_RENAMES:  # dissolved group, leave for RENAMES
+        fn["group"] = fn["group"]
+
+# Apply per-function overrides (highest priority)
+for fn in fns:
+    if fn["lua_name"] in RENAMES:
+        fn["group"] = RENAMES[fn["lua_name"]]
 
 # Verify full coverage
 ungrouped = [i for i in range(len(fns)) if fns[i]["group"] == "Other"]
