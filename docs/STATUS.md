@@ -23,7 +23,7 @@ This is the live tracker. Update it when:
 | ~~TASK-013~~ | ~~Archived~~ | ~~Done~~ | ~~Search highlight + clear buttons (FEAT-013)~~ |
 | ~~TASK-014~~ | ~~Archived~~ | ~~Done~~ | ~~Globals sticky headers + fold memory (FEAT-011, FEAT-012)~~ |
 | ~~TASK-015~~ | ~~Archived~~ | ~~Done~~ | ~~Wildcard import fallback for class-ref linking (FEAT-009 Problem B)~~ |
-| TASK-016 | [TASK-016](Tasks/TASK-016-javadoc-extraction.md) | Medium | Extract and display Javadoc comments (FEAT-010) |
+| TASK-016 | [TASK-016](Tasks/TASK-016-javadoc-extraction.md) | **Blocked** | Javadoc extraction — decompiled sources have 0 Javadoc blocks |
 | TASK-017 | [TASK-017](Tasks/TASK-017-build-time-precomputation.md) | Low | Build-time precomputation for faster startup (FEAT-008) |
 | TASK-018 | [TASK-018](Tasks/TASK-018-version-selector.md) | Low–Medium | Version selector + multi-version API storage (FEAT-005) |
 
