@@ -108,13 +108,18 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,san
 /* panel container — column in single mode, row in split mode */
 #panels{display:flex;flex:1;flex-direction:column;overflow:hidden;min-width:0}
 #content.split-layout #panels{flex-direction:row}
-#content.split-layout #detail-panel.visible{flex:1;min-width:0;overflow-y:auto}
+#content.split-layout #detail-panel.visible{flex:0 0 260px;min-width:150px;overflow-y:auto}
 #content.split-layout #source-panel.visible{flex:1;min-width:0}
-#content.split-layout #detail-panel{border-right:1px solid var(--border)}
 #content.split-layout #content-tabs .ctab{display:none}
 
+/* splitter */
+.splitter{width:4px;cursor:col-resize;flex-shrink:0;background:var(--border);transition:background .15s;z-index:1}
+.splitter:hover,.splitter.dragging{background:var(--accent2)}
+#panels .splitter{display:none}
+#content.split-layout #panels .splitter{display:block}
+
 /* detail panel */
-#detail-panel{flex:1;overflow-y:auto;padding:18px 20px;display:none}
+#detail-panel{flex:1;overflow-y:auto;padding:10px 8px;display:none}
 #detail-panel.visible{display:block}
 
 /* source panel */
@@ -156,7 +161,7 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,san
 .badge-enum{background:#1a1a3a;color:#8888ff;border:1px solid #8888ff}
 .source-path{font-size:11px;color:var(--text-dim);font-family:monospace}
 
-.section{margin-bottom:24px}
+.section{margin-bottom:14px}
 .section-header{display:flex;align-items:center;gap:10px;margin-bottom:7px;padding-bottom:5px;border-bottom:1px solid var(--border)}
 .section-header h3{font-size:13px;font-weight:600}
 .section-header .count{font-size:12px;color:var(--text-dim)}
@@ -176,8 +181,8 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,san
 .noncallable-toggle:hover{color:var(--text);border-color:#555}
 
 table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:2px}
-th{text-align:left;padding:5px 10px;font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border)}
-td{padding:4px 10px;border-bottom:1px solid #222;vertical-align:top}
+th{text-align:left;padding:4px 6px;font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border)}
+td{padding:3px 6px;border-bottom:1px solid #222;vertical-align:top}
 tr:hover td{background:var(--bg2)}
 .method-link,.inherit-method-link{color:var(--accent2);font-family:monospace;cursor:pointer;text-decoration:none}
 .method-link:hover,.inherit-method-link:hover{text-decoration:underline}
@@ -197,7 +202,7 @@ tr:hover td{background:var(--bg2)}
 #globals-count{font-size:12px;color:var(--text-dim);white-space:nowrap}
 .gfold-btn{background:var(--bg3);border:1px solid var(--border);border-radius:3px;padding:3px 7px;color:var(--text-dim);font-size:11px;cursor:pointer;font-family:monospace;white-space:nowrap}
 .gfold-btn:hover{color:var(--text);border-color:#555}
-#globals-table-wrap{flex:1;overflow-y:auto;padding:0 20px 20px}
+#globals-table-wrap{flex:1;overflow-y:auto;padding:0 4px 12px}
 .gfn-link{color:var(--accent);font-family:monospace;font-weight:600;cursor:pointer;text-decoration:none}
 .gfn-link:hover{text-decoration:underline;color:var(--accent2)}
 .globals-group-header{padding:9px 10px 4px!important;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border)!important;background:var(--bg2)!important;cursor:pointer;user-select:none}
@@ -206,7 +211,7 @@ tr:hover td{background:var(--bg2)}
 .globals-group-header .ggh-name{color:var(--text-dim)}
 
 #globals-body{display:flex;flex:1;flex-direction:row;overflow:hidden;min-width:0}
-#globals-left{display:flex;flex-direction:column;flex:1;overflow:hidden;min-width:0;border-right:1px solid var(--border)}
+#globals-left{display:flex;flex-direction:column;flex:0 0 300px;overflow:hidden;min-width:150px}
 #globals-source-wrap{display:flex;flex:1;flex-direction:column;overflow:hidden;min-width:0}
 #globals-src-title{font-family:monospace;font-size:13px;color:var(--accent2);margin-right:auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #globals-src-placeholder{flex:1;display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:13px}

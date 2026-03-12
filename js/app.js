@@ -35,6 +35,8 @@ function init() {
 
   buildClassList();
   setupEvents();
+  initSplitter('classes-splitter', 'detail-panel', 'splitW-classes');
+  initSplitter('globals-splitter', 'globals-left',  'splitW-globals');
   if (localStorage.getItem('splitLayout') === '1') applySplitLayout(true);
   // Seed history with a placeholder entry so Alt+Left from the first class
   // can always navigate back to the "no class selected" state.
@@ -46,6 +48,36 @@ function init() {
     if (val === 'globals') switchTab('globals');
     else selectClass(val);
   }
+}
+
+// ── Resizable splitters ───────────────────────────────────────────────────
+function initSplitter(splitterId, leftId, storageKey) {
+  const splitter = document.getElementById(splitterId);
+  const leftEl   = document.getElementById(leftId);
+  if (!splitter || !leftEl) return;
+  const saved = localStorage.getItem(storageKey);
+  if (saved) leftEl.style.flex = `0 0 ${saved}px`;
+  let startX, startW;
+  splitter.addEventListener('mousedown', e => {
+    startX = e.clientX;
+    startW = leftEl.getBoundingClientRect().width;
+    splitter.classList.add('dragging');
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'col-resize';
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', e => {
+    if (!splitter.classList.contains('dragging')) return;
+    const w = Math.max(150, Math.min(startW + e.clientX - startX, window.innerWidth - 200));
+    leftEl.style.flex = `0 0 ${w}px`;
+    localStorage.setItem(storageKey, w);
+  });
+  document.addEventListener('mouseup', () => {
+    if (!splitter.classList.contains('dragging')) return;
+    splitter.classList.remove('dragging');
+    document.body.style.userSelect = '';
+    document.body.style.cursor = '';
+  });
 }
 
 // ── Page history ──────────────────────────────────────────────────────────

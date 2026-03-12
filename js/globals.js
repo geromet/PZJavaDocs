@@ -71,14 +71,14 @@ function updateGlobalsTable(filter) {
     }
     if (section !== lastSection) {
       rows += `<tr class="globals-sec-header" data-domkey="${esc(domKey)}" data-seckey="${esc(secKey)}"${domFolded ? ' style="display:none"' : ''}>
-        <td colspan="3" style="padding-left:16px"><span class="ggh-arrow">${secFolded ? '▶' : '▼'}</span>
+        <td colspan="3" style="padding-left:10px"><span class="ggh-arrow">${secFolded ? '▶' : '▼'}</span>
         <span class="ggh-name" style="font-weight:600">${esc(section)}</span></td></tr>`;
       lastSection = section; lastGroup = null;
     }
     if (group !== lastGroup) {
       const grpHidden = domFolded || secFolded;
       rows += `<tr class="globals-grp-header" data-domkey="${esc(domKey)}" data-seckey="${esc(secKey)}" data-grpkey="${esc(grpKey)}"${grpHidden ? ' style="display:none"' : ''}>
-        <td colspan="3" style="padding-left:32px"><span class="ggh-arrow">${grpFolded ? '▶' : '▼'}</span>
+        <td colspan="3" style="padding-left:20px"><span class="ggh-arrow">${grpFolded ? '▶' : '▼'}</span>
         <span class="ggh-name" style="font-weight:normal;color:var(--accent)">${esc(group)}</span></td></tr>`;
       lastGroup = group;
     }
@@ -87,7 +87,7 @@ function updateGlobalsTable(filter) {
       ? `<span style="color:var(--text-dim);font-size:11px;margin-left:8px">← ${esc(g.java_method)}</span>`
       : '';
     rows += `<tr class="gfn-row" data-domkey="${esc(domKey)}" data-seckey="${esc(secKey)}" data-grpkey="${esc(grpKey)}"${fnHidden ? ' style="display:none"' : ''}>
-      <td style="padding-left:48px"><a class="gfn-link" data-method="${esc(g.java_method)}">${esc(g.lua_name)}</a>${alias}</td>
+      <td style="padding-left:30px"><a class="gfn-link" data-method="${esc(g.java_method)}">${esc(g.lua_name)}</a>${alias}</td>
       <td><span class="return-type">${esc(g.return_type || '?')}</span></td>
       <td><span class="params-cell">${renderParams(g.params) || '<span style="color:#444">—</span>'}</span></td>
     </tr>`;
