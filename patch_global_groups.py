@@ -877,11 +877,118 @@ FUNCTION_GROUPS = {
     'getVehicleZoneAt':              'Zone Queries',
 }
 
+# Mid-level sections and top-level domains derived from group.
+# Structure: group → (domain, section)
+HIERARCHY = {
+    # ── World ─────────────────────────────────────────────────────────────
+    'World & Map Dimensions':   ('World', 'Map & Navigation'),
+    'Zone Queries':             ('World', 'Map & Navigation'),
+    'Coordinate Conversion':    ('World', 'Map & Navigation'),
+    'Overhead Map':             ('World', 'Map & Navigation'),
+    'Timestamps':               ('World', 'Map & Navigation'),
+
+    'Environment & Climate':    ('World', 'Environment'),
+    'World Effects':            ('World', 'Environment'),
+    'World Info Queries':       ('World', 'Environment'),
+
+    'Animal Spawning':          ('World', 'Spawning'),
+    'Animal Hutch & Transport': ('World', 'Spawning'),
+    'Zombie & Horde Spawning':  ('World', 'Spawning'),
+    'Vehicle Management':       ('World', 'Spawning'),
+    'Vehicle Placement':        ('World', 'Spawning'),
+
+    # ── Player ────────────────────────────────────────────────────────────
+    'Player Management':        ('Player', 'Player State'),
+    'Player Data Sync':         ('Player', 'Player State'),
+    'Player Database':          ('Player', 'Player State'),
+    'XP & Player Stats':        ('Player', 'Player State'),
+
+    'Character Customization':  ('Player', 'Character'),
+    'Game Actions':             ('Player', 'Character'),
+    'Hit & Combat Events':      ('Player', 'Character'),
+
+    # ── Networking ────────────────────────────────────────────────────────
+    'Multiplayer Connection':   ('Networking', 'Connection'),
+    'Server / Client State':    ('Networking', 'Connection'),
+    'Client/Server Commands':   ('Networking', 'Connection'),
+    'Game Client':              ('Networking', 'Connection'),
+
+    'Server Config & Runtime':  ('Networking', 'Server Admin'),
+    'Server List & Accounts':   ('Networking', 'Server Admin'),
+    'Admin: Bans & Tickets':    ('Networking', 'Server Admin'),
+    'User & Role Management':   ('Networking', 'Server Admin'),
+
+    'Factions & Safehouses':    ('Networking', 'Social'),
+    'Chat Processing':          ('Networking', 'Social'),
+    'Radio & Broadcast':        ('Networking', 'Social'),
+    'Trading':                  ('Networking', 'Social'),
+
+    'Steam & Social':           ('Networking', 'Steam'),
+    'Steam Server Browser':     ('Networking', 'Steam'),
+
+    # ── Input & Rendering ─────────────────────────────────────────────────
+    'Keyboard Input':           ('Input & Rendering', 'Input Devices'),
+    'Key Events':               ('Input & Rendering', 'Input Devices'),
+    'Gamepad Input':            ('Input & Rendering', 'Input Devices'),
+    'Mouse Input':              ('Input & Rendering', 'Input Devices'),
+    'Controller Settings':      ('Input & Rendering', 'Input Devices'),
+
+    'Rendering & Performance':  ('Input & Rendering', 'Rendering'),
+    '3D Model Loading':         ('Input & Rendering', 'Rendering'),
+    'Textures':                 ('Input & Rendering', 'Rendering'),
+    'Sprite Manager':           ('Input & Rendering', 'Rendering'),
+
+    'Sound & Audio':            ('Input & Rendering', 'Audio'),
+
+    'Text & Localization':      ('Input & Rendering', 'Text'),
+
+    # ── Game Systems ──────────────────────────────────────────────────────
+    'Item Information':         ('Game Systems', 'Items'),
+    'Item Scripting':           ('Game Systems', 'Items'),
+    'Item Sync':                ('Game Systems', 'Items'),
+    'Item Transactions & Actions': ('Game Systems', 'Items'),
+    'Container Operations':     ('Game Systems', 'Items'),
+    'Inventory Management':     ('Game Systems', 'Items'),
+
+    'Game Configuration':       ('Game Systems', 'Configuration'),
+    'Game Speed & Pause':       ('Game Systems', 'Configuration'),
+    'Event System':             ('Game Systems', 'Configuration'),
+    'System Info':              ('Game Systems', 'Configuration'),
+
+    'Game Saves':               ('Game Systems', 'Saves & Logs'),
+    'Save Info':                ('Game Systems', 'Saves & Logs'),
+    'Save Management':          ('Game Systems', 'Saves & Logs'),
+    'User Logs':                ('Game Systems', 'Saves & Logs'),
+
+    'File I/O':                 ('Game Systems', 'Files & Mods'),
+    'File System':              ('Game Systems', 'Files & Mods'),
+    'Lua File I/O':             ('Game Systems', 'Files & Mods'),
+    'Mod Management':           ('Game Systems', 'Files & Mods'),
+    'Mod Utilities':            ('Game Systems', 'Files & Mods'),
+
+    # ── Scripting & Debug ─────────────────────────────────────────────────
+    'Debug Tools':              ('Scripting & Debug', 'Debug'),
+    'Debugger & Lua Inspector': ('Scripting & Debug', 'Debug'),
+    'Debug Editor Views':       ('Scripting & Debug', 'Debug'),
+    'Debug Rendering':          ('Scripting & Debug', 'Debug'),
+
+    'Entity & Script Reload':   ('Scripting & Debug', 'Lua'),
+    'Lua Runtime':              ('Scripting & Debug', 'Lua'),
+    'Lua Stack Introspection':  ('Scripting & Debug', 'Lua'),
+
+    'Java Reflection':          ('Scripting & Debug', 'Utilities'),
+    'String Utilities':         ('Scripting & Debug', 'Utilities'),
+    'Timers':                   ('Scripting & Debug', 'Utilities'),
+    'Miscellaneous Utilities':  ('Scripting & Debug', 'Utilities'),
+    'Authentication':           ('Scripting & Debug', 'Utilities'),
+}
+
 api = json.loads(API_FILE.read_text(encoding="utf-8"))
 fns = api["global_functions"]
 print(f"Patching {len(fns)} global functions...")
 
 ungrouped = []
+no_hierarchy = []
 for fn in fns:
     grp = FUNCTION_GROUPS.get(fn["lua_name"])
     if grp:
@@ -890,13 +997,27 @@ for fn in fns:
         fn["group"] = "Other"
         ungrouped.append(fn["lua_name"])
 
+    h = HIERARCHY.get(fn["group"])
+    if h:
+        fn["domain"], fn["section"] = h
+    else:
+        fn["domain"] = "Other"
+        fn["section"] = "Other"
+        if fn["group"] != "Other":
+            no_hierarchy.append(fn["group"])
+
 if ungrouped:
     print(f"WARNING: {len(ungrouped)} functions not in FUNCTION_GROUPS (add them manually):")
     for name in ungrouped:
         print(f"  {name!r}")
+elif no_hierarchy:
+    missing = sorted(set(no_hierarchy))
+    print(f"WARNING: {len(missing)} groups missing from HIERARCHY: {missing}")
 else:
     groups_used = sorted(set(f["group"] for f in fns))
-    print(f"OK: {len(groups_used)} groups assigned")
+    sections_used = sorted(set(f["section"] for f in fns))
+    domains_used = sorted(set(f["domain"] for f in fns))
+    print(f"OK: {len(domains_used)} domains / {len(sections_used)} sections / {len(groups_used)} groups")
 
 API_FILE.write_text(json.dumps(api, indent=2), encoding="utf-8")
 print("Done.")
