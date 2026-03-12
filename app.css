@@ -166,8 +166,8 @@ table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:2px}
 th{text-align:left;padding:5px 10px;font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border)}
 td{padding:4px 10px;border-bottom:1px solid #222;vertical-align:top}
 tr:hover td{background:var(--bg2)}
-.method-link{color:var(--accent2);font-family:monospace;cursor:pointer;text-decoration:none}
-.method-link:hover{text-decoration:underline}
+.method-link,.inherit-method-link{color:var(--accent2);font-family:monospace;cursor:pointer;text-decoration:none}
+.method-link:hover,.inherit-method-link:hover{text-decoration:underline}
 .return-type{color:#b5cea8;font-family:monospace;font-size:12px}
 .params-cell{font-family:monospace;font-size:12px;color:var(--text-dim)}
 .param-type{color:#ce9178}.param-name{color:var(--text)}

@@ -310,13 +310,13 @@ function setupEvents() {
     const inheritLink = e.target.closest('a.inherit-link[data-fqn]');
     if (inheritLink) { e.preventDefault(); selectClass(inheritLink.dataset.fqn); return; }
 
-    // Inherited method links — navigate to ancestor and scroll to method in source
+    // Inherited method links — show ancestor source without pushing nav
     const inheritMethod = e.target.closest('a.inherit-method-link[data-fqn]');
     if (inheritMethod) {
       e.preventDefault();
       const targetFqn = inheritMethod.dataset.fqn;
       const method    = inheritMethod.dataset.method;
-      selectClass(targetFqn);
+      selectClass(targetFqn, null, /*noPush*/true);
       showSource(API.classes[targetFqn], method);
       return;
     }
