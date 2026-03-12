@@ -1,6 +1,8 @@
+> **COMPLETED 2026-03-12** — Added `jumpToMethod` parameter to `selectClass`; removed the duplicate `showSource` call in the `#content` click handler. Single source load now carries the jump target.
+
 # TASK-019: Fix inherit-method-link click navigation in source panels
 
-**Status:** Ready
+**Status:** Done
 **Estimated scope:** Tiny
 **Touches:** `js/app.js` (`selectClass`, `#content` click handler)
 **Fixes:** [BUG-010](../Bugs/BUG-010-method-link-navigation-not-working.md)

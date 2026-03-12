@@ -1,6 +1,8 @@
+> **FIXED 2026-03-12** — `showSource` returns early with a friendly message when `cls.source_file` is empty. `fetchSource` rejects `text/html` responses with an error. Root cause: `zombie.characters.skills.Perk` / `.Perks` are nested types with no standalone `.java` file. Fixed in TASK-021.
+
 # BUG-013: Source panel displays a directory listing HTML page instead of source code
 
-**Status:** Open
+**Status:** Fixed (2026-03-12)
 **Severity:** High
 **Touches:** `js/source-viewer.js` (source fetch logic), possibly `prepare_sources.py` or `sources/` directory structure
 

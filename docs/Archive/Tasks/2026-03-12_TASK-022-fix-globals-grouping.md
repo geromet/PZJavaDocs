@@ -1,6 +1,8 @@
+> **COMPLETED 2026-03-12** — Extractor now writes `category` (7 broad buckets derived from verb prefix) per global function. `patch_global_groups.py` already writes `group` (64 semantic labels). `globals.js` renders a 2-level nested hierarchy: top level = `category`, sub-level = `group`. Fold/unfold buttons operate on top-level categories. `lua_api.json` regenerated and patched.
+
 # TASK-022: Fix global functions not grouped
 
-**Status:** Ready
+**Status:** Done
 **Estimated scope:** Small
 **Touches:** `extract_lua_api.py`, `js/globals.js`
 **Fixes:** [BUG-014](../Bugs/BUG-014-globals-not-grouped.md)

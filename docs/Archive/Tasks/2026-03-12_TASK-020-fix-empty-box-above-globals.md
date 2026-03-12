@@ -1,6 +1,8 @@
+> **COMPLETED 2026-03-12** — Added `document.getElementById('panels').style.display = show ? 'none' : ''` to `showGlobalsPanel` in `globals.js`.
+
 # TASK-020: Fix empty box visible above global functions view
 
-**Status:** Ready
+**Status:** Done
 **Estimated scope:** Tiny
 **Touches:** `js/globals.js` (`showGlobalsPanel`)
 **Fixes:** [BUG-011](../Bugs/BUG-011-empty-box-above-globals-view.md)

@@ -139,7 +139,7 @@ function navigateList(dir) {
 }
 
 // ── Class selection ───────────────────────────────────────────────────────
-function selectClass(fqn, matchInfo) {
+function selectClass(fqn, matchInfo, jumpToMethod) {
   if (!API.classes[fqn]) return;
   currentClass = fqn;
 
@@ -168,7 +168,8 @@ function selectClass(fqn, matchInfo) {
   showGlobalsPanel(false);
   document.getElementById('content-tabs').classList.add('visible');
   renderClassDetail(fqn);
-  if (currentCtab === 'source' || splitLayout) showSource(API.classes[fqn]);
+  if (currentCtab === 'source' || splitLayout) showSource(API.classes[fqn], jumpToMethod || undefined);
+  else if (jumpToMethod) showSource(API.classes[fqn], jumpToMethod);
 }
 
 // ── Content tab switching ─────────────────────────────────────────────────
@@ -280,8 +281,8 @@ function setupEvents() {
 
   // Global group fold buttons
   document.getElementById('btn-fold-groups').addEventListener('click', () => {
-    document.querySelectorAll('#globals-table-wrap .globals-group-header').forEach(hdr => {
-      foldedGlobalGroups.add(hdr.dataset.group);
+    document.querySelectorAll('#globals-table-wrap .globals-cat-header').forEach(hdr => {
+      foldedGlobalGroups.add(hdr.dataset.catkey);
     });
     updateGlobalsTable(document.getElementById('globals-search')?.value || '');
   });
@@ -353,8 +354,7 @@ function setupEvents() {
     const ma = e.target.closest('a.inherit-method-link[data-fqn]');
     if (ma && !ma.closest('#detail-panel')) {
       e.preventDefault();
-      selectClass(ma.dataset.fqn);
-      showSource(API.classes[ma.dataset.fqn], ma.dataset.method);
+      selectClass(ma.dataset.fqn, null, ma.dataset.method);
     }
   });
 

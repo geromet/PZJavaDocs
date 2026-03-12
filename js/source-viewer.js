@@ -277,8 +277,16 @@ async function showSource(cls, jumpToMethod) {
   const preEl     = document.getElementById('source-pre');
 
   toolbar.style.display = 'none';
-  loadingEl.style.display = 'block';
+  loadingEl.style.display = 'none';
   codeEl.textContent = '';
+
+  if (!cls.source_file) {
+    codeEl.textContent = `// No source file available for this class.\n// It may be a nested type whose parent class has the source.`;
+    hljs.highlightElement(codeEl);
+    return;
+  }
+
+  loadingEl.style.display = 'block';
 
   let text;
   try {

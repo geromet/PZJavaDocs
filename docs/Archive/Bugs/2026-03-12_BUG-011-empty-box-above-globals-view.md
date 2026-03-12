@@ -1,6 +1,8 @@
+> **FIXED 2026-03-12** — `showGlobalsPanel` now hides `#panels` wrapper when showing globals. Fixed in TASK-020.
+
 # BUG-011: Empty box visible above global functions view
 
-**Status:** Open
+**Status:** Fixed (2026-03-12)
 **Severity:** Low
 **Touches:** `index.html`, `app.css`, `js/globals.js` or `js/app.js`
 

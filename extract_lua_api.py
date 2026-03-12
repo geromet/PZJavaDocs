@@ -50,13 +50,50 @@ lua_method_blocks = re.findall(
     r'@LuaMethod\(([^)]+)\)\s*\n\s*(?:public\s+)?(?:static\s+)?[\w<>\[\]]+\s+(\w+)\s*\(',
     lua_mgr_src
 )
+_CATEGORY_MAP = {
+    # Query
+    'get': 'Query', 'is': 'Query', 'has': 'Query', 'can': 'Query',
+    'check': 'Query', 'find': 'Query', 'count': 'Query', 'list': 'Query',
+    # Mutation
+    'set': 'Mutation', 'add': 'Mutation', 'remove': 'Mutation',
+    'delete': 'Mutation', 'create': 'Mutation', 'update': 'Mutation',
+    'clear': 'Mutation', 'reset': 'Mutation', 'clone': 'Mutation',
+    'replace': 'Mutation', 'change': 'Mutation', 'insert': 'Mutation',
+    # Network
+    'send': 'Network', 'sync': 'Network', 'request': 'Network',
+    'ban': 'Network', 'kick': 'Network', 'connect': 'Network',
+    'disconnect': 'Network', 'broadcast': 'Network',
+    # Storage
+    'load': 'Storage', 'save': 'Storage', 'reload': 'Storage',
+    'cache': 'Storage', 'read': 'Storage', 'write': 'Storage',
+    # UI
+    'show': 'UI', 'hide': 'UI', 'toggle': 'UI', 'screen': 'UI',
+    'render': 'UI', 'draw': 'UI', 'display': 'UI',
+    # System
+    'do': 'System', 'stop': 'System', 'start': 'System', 'end': 'System',
+    'instance': 'System', 'process': 'System', 'execute': 'System',
+    'run': 'System', 'init': 'System', 'debug': 'System', 'back': 'System',
+    'activate': 'System', 'deactivate': 'System', 'enable': 'System',
+    'disable': 'System', 'trigger': 'System', 'call': 'System',
+    'steam': 'System', 'breakpoint': 'System',
+}
+
+def _method_group(lua_name):
+    """Return (category, subgroup) for a global function's display grouping.
+    Category is a broad bucket; subgroup is the verb prefix of the method name."""
+    m = re.match(r'^([a-z]+)', lua_name)
+    prefix = m.group(1) if m else 'other'
+    category = _CATEGORY_MAP.get(prefix, 'Other')
+    return category, prefix
+
 global_functions = []
 for attrs, java_name in lua_method_blocks:
     if 'global=true' not in attrs.replace(' ', ''):
         continue
     name_match = re.search(r'name\s*=\s*"([^"]+)"', attrs)
     lua_name = name_match.group(1) if name_match else java_name
-    global_functions.append({"lua_name": lua_name, "java_method": java_name})
+    cat, _sub = _method_group(lua_name)
+    global_functions.append({"lua_name": lua_name, "java_method": java_name, "category": cat})
 print(f"  @LuaMethod global functions: {len(global_functions)}")
 
 # ---------------------------------------------------------------------------

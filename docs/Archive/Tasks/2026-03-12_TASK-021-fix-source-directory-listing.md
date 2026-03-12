@@ -1,6 +1,8 @@
+> **COMPLETED 2026-03-12** — Added content-type guard in `fetchSource` (`utils.js`) to reject HTML responses. Added early-return in `showSource` (`source-viewer.js`) when `cls.source_file` is empty, showing a friendly message instead. Root cause: `zombie.characters.skills.Perk` and `.Perks` are nested types with no standalone `.java` file.
+
 # TASK-021: Fix source panel showing directory listing HTML
 
-**Status:** Ready
+**Status:** Done
 **Estimated scope:** Small
 **Touches:** `js/utils.js` or `js/source-viewer.js` (`fetchSource`), possibly `pz-lua-api-viewer/extract_lua_api.py`
 **Fixes:** [BUG-013](../Bugs/BUG-013-source-panel-shows-directory-listing.md)

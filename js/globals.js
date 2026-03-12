@@ -3,6 +3,7 @@
 function showGlobalsPanel(show) {
   document.getElementById('globals-panel').classList.toggle('visible', show);
   document.getElementById('content-tabs').classList.toggle('visible', !show && currentClass !== null);
+  document.getElementById('panels').style.display = show ? 'none' : '';
   document.getElementById('detail-panel').classList.toggle('visible', !show && currentCtab === 'detail' && currentClass !== null);
   document.getElementById('source-panel').classList.toggle('visible', !show && currentCtab === 'source' && currentClass !== null);
 }
@@ -26,28 +27,45 @@ function updateGlobalsTable(filter) {
   const s   = filter.toLowerCase();
   const fns = API.global_functions
     .map((g, i) => ({g, i}))
-    .filter(({g}) => !s || g.lua_name.toLowerCase().includes(s) || g.java_method.toLowerCase().includes(s));
+    .filter(({g}) => !s || g.lua_name.toLowerCase().includes(s) || g.java_method.toLowerCase().includes(s))
+    .sort((a, b) => {
+      const ca = a.g.category || 'Other', cb = b.g.category || 'Other';
+      const ga = a.g.group    || '',      gb = b.g.group    || '';
+      return ca.localeCompare(cb) || ga.localeCompare(gb) || a.g.lua_name.localeCompare(b.g.lua_name);
+    });
 
   document.getElementById('globals-count').textContent = `${fns.length} functions`;
 
-  let lastGroup = null;
+  let lastGroup = null, lastSubgroup = null;
   let rows = '';
   for (const {g} of fns) {
-    const group = g.group || '';
+    const group    = g.category || 'Other';
+    const subgroup = g.group    || group;
+    const catKey   = 'CAT:' + group;
+    const subKey   = 'SUB:' + subgroup;
+    const catFolded = foldedGlobalGroups.has(catKey);
+    const subFolded = foldedGlobalGroups.has(subKey);
+
     if (group !== lastGroup) {
-      const folded = foldedGlobalGroups.has(group);
-      rows += `<tr><td colspan="4" class="globals-group-header" data-group="${esc(group)}">
-        <span class="ggh-arrow">${folded ? '▶' : '▼'}</span>
-        <span class="ggh-name">${esc(group)}</span>
-      </td></tr>`;
+      rows += `<tr class="globals-cat-header" data-catkey="${esc(catKey)}">
+        <td colspan="3"><span class="ggh-arrow">${catFolded ? '▶' : '▼'}</span>
+        <span class="ggh-name">${esc(group)}</span></td></tr>`;
       lastGroup = group;
+      lastSubgroup = null; // force subgroup header re-emit
     }
-    const folded = foldedGlobalGroups.has(group);
+    if (subgroup !== lastSubgroup) {
+      const hidden = catFolded;
+      rows += `<tr class="globals-sub-header" data-catkey="${esc(catKey)}" data-subkey="${esc(subKey)}"${hidden ? ' style="display:none"' : ''}>
+        <td colspan="3" style="padding-left:18px"><span class="ggh-arrow">${subFolded ? '▶' : '▼'}</span>
+        <span class="ggh-name" style="font-weight:normal;color:var(--text-dim)">${esc(subgroup)}</span></td></tr>`;
+      lastSubgroup = subgroup;
+    }
+    const hidden = catFolded || subFolded;
     const alias  = g.java_method !== g.lua_name
       ? `<span style="color:var(--text-dim);font-size:11px;margin-left:8px">← ${esc(g.java_method)}</span>`
       : '';
-    rows += `<tr data-group="${esc(group)}"${folded ? ' style="display:none"' : ''}>
-      <td><a class="gfn-link" data-method="${esc(g.java_method)}">${esc(g.lua_name)}</a>${alias}</td>
+    rows += `<tr class="gfn-row" data-catkey="${esc(catKey)}" data-subkey="${esc(subKey)}"${hidden ? ' style="display:none"' : ''}>
+      <td style="padding-left:28px"><a class="gfn-link" data-method="${esc(g.java_method)}">${esc(g.lua_name)}</a>${alias}</td>
       <td><span class="return-type">${esc(g.return_type || '?')}</span></td>
       <td><span class="params-cell">${renderParams(g.params) || '<span style="color:#444">—</span>'}</span></td>
     </tr>`;
@@ -56,19 +74,39 @@ function updateGlobalsTable(filter) {
   document.getElementById('globals-table-wrap').innerHTML =
     `<table style="margin-top:4px"><thead><tr><th>Lua name</th><th>Returns</th><th>Parameters</th></tr></thead><tbody>${rows}</tbody></table>`;
 
-  document.querySelectorAll('#globals-table-wrap .globals-group-header').forEach(hdr => {
+  const wrap = document.getElementById('globals-table-wrap');
+
+  wrap.querySelectorAll('.globals-cat-header').forEach(hdr => {
     hdr.addEventListener('click', () => {
-      const group = hdr.dataset.group;
-      if (foldedGlobalGroups.has(group)) foldedGlobalGroups.delete(group);
-      else foldedGlobalGroups.add(group);
-      const folded = foldedGlobalGroups.has(group);
+      const catKey = hdr.dataset.catkey;
+      if (foldedGlobalGroups.has(catKey)) foldedGlobalGroups.delete(catKey);
+      else foldedGlobalGroups.add(catKey);
+      const folded = foldedGlobalGroups.has(catKey);
       hdr.querySelector('.ggh-arrow').textContent = folded ? '▶' : '▼';
-      const wrap = document.getElementById('globals-table-wrap');
-      wrap.querySelectorAll(`tr[data-group="${group}"]`).forEach(r => r.style.display = folded ? 'none' : '');
+      // Hide/show all rows and sub-headers in this category
+      wrap.querySelectorAll(`[data-catkey="${catKey}"]`).forEach(r => {
+        if (r === hdr) return;
+        r.style.display = folded ? 'none' : '';
+        // If showing, respect sub-header fold state
+        if (!folded && r.classList.contains('gfn-row') && foldedGlobalGroups.has(r.dataset.subkey)) {
+          r.style.display = 'none';
+        }
+      });
     });
   });
 
-  document.querySelectorAll('#globals-table-wrap .gfn-link').forEach(a => {
+  wrap.querySelectorAll('.globals-sub-header').forEach(hdr => {
+    hdr.addEventListener('click', () => {
+      const subKey = hdr.dataset.subkey;
+      if (foldedGlobalGroups.has(subKey)) foldedGlobalGroups.delete(subKey);
+      else foldedGlobalGroups.add(subKey);
+      const folded = foldedGlobalGroups.has(subKey);
+      hdr.querySelector('.ggh-arrow').textContent = folded ? '▶' : '▼';
+      wrap.querySelectorAll(`.gfn-row[data-subkey="${subKey}"]`).forEach(r => r.style.display = folded ? 'none' : '');
+    });
+  });
+
+  wrap.querySelectorAll('.gfn-link').forEach(a => {
     a.addEventListener('click', e => {
       e.preventDefault();
       showGlobalSource(a.dataset.method);

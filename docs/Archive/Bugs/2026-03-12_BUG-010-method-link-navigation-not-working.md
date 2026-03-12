@@ -1,6 +1,8 @@
+> **FIXED 2026-03-12** — `selectClass` now accepts `jumpToMethod`; handler passes it directly. Eliminates the double `showSource` race. Fixed in TASK-019.
+
 # BUG-010: ClassName.methodName( links emitted in source view but do not navigate
 
-**Status:** Open
+**Status:** Fixed (2026-03-12)
 **Severity:** Medium
 **Touches:** `js/source-viewer.js` (`linkClassRefs`), `js/app.js` (`inherit-method-link` handler)
 **Related feature:** [FEAT-002](../Archive/Features/2026-03-12_FEAT-002-method-call-linking-in-source.md), [FEAT-009](../Planned_Features/FEAT-009-deep-java-analysis.md)
