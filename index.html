@@ -83,19 +83,21 @@
 
     <!-- Globals panel replaces detail/source when globals tab active -->
     <div id="globals-panel">
-      <div id="globals-header">
-        <input id="globals-search" type="text" placeholder="Search global functions…" autocomplete="off">
-        <span id="globals-count"></span>
-        <button class="gfold-btn" id="btn-unfold-groups" title="Unfold all groups">▼▼</button>
-        <button class="gfold-btn" id="btn-fold-groups" title="Fold all groups">▶▶</button>
-        <button class="gfold-btn" id="btn-luamgr-src" title="View LuaManager.java — source of all global functions">LuaManager</button>
-      </div>
       <div id="globals-nav">
         <button id="globals-back-btn">← Back to functions</button>
         <span id="globals-src-title"></span>
       </div>
       <div id="globals-body">
-        <div id="globals-table-wrap"></div>
+        <div id="globals-left">
+          <div id="globals-header">
+            <input id="globals-search" type="text" placeholder="Search global functions…" autocomplete="off">
+            <span id="globals-count"></span>
+            <button class="gfold-btn" id="btn-unfold-groups" title="Unfold all groups">▼▼</button>
+            <button class="gfold-btn" id="btn-fold-groups" title="Fold all groups">▶▶</button>
+            <button id="btn-globals-split-toggle" title="Switch to split panel">⊞</button>
+          </div>
+          <div id="globals-table-wrap"></div>
+        </div>
         <div id="globals-source-wrap">
           <div class="source-toolbar">
             <button class="stb-btn" id="gsrc-fold-all">Fold All</button>

@@ -19,8 +19,6 @@ function initGlobals() {
   fresh.value = '';
   fresh.addEventListener('input', () => updateGlobalsTable(fresh.value));
   fresh.focus();
-  document.getElementById('btn-luamgr-src').onclick = () =>
-    showSourceByPath('zombie/Lua/LuaManager.java');
 }
 
 function updateGlobalsTable(filter) {
@@ -173,9 +171,8 @@ async function showGlobalSource(javaMethod) {
   const relPath = 'zombie/Lua/LuaManager.java';
   document.getElementById('globals-src-title').textContent = javaMethod;
   if (!splitLayout) {
-    document.getElementById('globals-header').style.display     = 'none';
+    document.getElementById('globals-left').style.display = 'none';
     document.getElementById('globals-nav').classList.add('visible');
-    document.getElementById('globals-table-wrap').style.display = 'none';
   }
   document.getElementById('globals-source-wrap').classList.add('visible');
 
@@ -198,9 +195,8 @@ async function showGlobalSource(javaMethod) {
 
 function backToGlobalsTable() {
   if (!splitLayout) {
-    document.getElementById('globals-header').style.display     = '';
+    document.getElementById('globals-left').style.display = '';
     document.getElementById('globals-nav').classList.remove('visible');
-    document.getElementById('globals-table-wrap').style.display = '';
   }
   document.getElementById('globals-source-wrap').classList.remove('visible');
 }
