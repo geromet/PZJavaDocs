@@ -58,7 +58,10 @@ In the **feature/task file**, add:
 | Bug | Related Feature | Status |
 |-----|----------------|--------|
 | [BUG-008](../Bugs/BUG-008-scrolltomethod-finds-call-site.md) | [FEAT-009](../Planned_Features/FEAT-009-deep-java-analysis.md) Problem C, [FEAT-002](../Planned_Features/FEAT-002-method-call-linking-in-source.md) | **Fixed 2026-03-12** — bundled into TASK-009 |
-| [BUG-009](../Bugs/BUG-009-placeholder-visible-over-panels.md) | [FEAT-006](../Planned_Features/FEAT-006-tab-bar-system.md) (would fix as side-effect) | Fix independently — FEAT-006 too large to block on |
+| [BUG-009](../Bugs/BUG-009-placeholder-visible-over-panels.md) | [FEAT-006](../Planned_Features/FEAT-006-tab-bar-system.md) (would fix as side-effect) | **Fixed 2026-03-12** — bundled into TASK-010 |
+| [BUG-010](../Bugs/BUG-010-method-link-navigation-not-working.md) | [FEAT-002](../Archive/Features/2026-03-12_FEAT-002-method-call-linking-in-source.md), [FEAT-009](../Planned_Features/FEAT-009-deep-java-analysis.md) | Open — fix independently, TASK-009 emits links but handler is broken |
+| [BUG-012](../Bugs/BUG-012-globals-split-view-missing.md) | [FEAT-011](../Planned_Features/FEAT-011-globals-list-redesign.md), TASK-014 | Open — fold into TASK-014 or create a new task |
+| [BUG-014](../Bugs/BUG-014-globals-not-grouped.md) | [FEAT-011](../Planned_Features/FEAT-011-globals-list-redesign.md), TASK-014 | Open — investigate extractor first; fold into TASK-014 |
 
 ## When to Update This File
 
