@@ -9,6 +9,7 @@ Stable reference documents about how this project works, why it works that way, 
 
 | File | Contents |
 |------|---------|
+| `Bug-Feature-Triage.md` | Workflow: check if a planned feature covers a new bug before filing a standalone bug task. Includes current bug↔feature relationship table. |
 | `Decisions.md` | Architectural Decision Records (ADR-001 and onwards) |
 | `Domain-Language.md` | Project-specific terminology and what things mean |
 | `Design-Patterns.md` | Recurring code patterns used in this codebase |

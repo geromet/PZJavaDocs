@@ -77,6 +77,8 @@ Quick reference:
 
 **Do NOT pile up Tasks.** If work isn't imminent, it belongs in Bugs or Planned_Features. A task file means "we are working on this now."
 
+**When filing a new bug:** check `docs/Knowledge_Base/Bug-Feature-Triage.md` first — it has a decision tree for whether to create a standalone bug task or bundle the fix into an existing planned feature task.
+
 ## Working Through Tasks
 
 When the user says "work on the tasks" (or similar), do this without further clarification:

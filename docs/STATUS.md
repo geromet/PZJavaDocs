@@ -12,13 +12,18 @@ This is the live tracker. Update it when:
 
 ## Open Bugs
 
-*(none)*
+| ID | File | Severity | Summary |
+|----|------|----------|---------|
+| BUG-008 | [BUG-008](Bugs/BUG-008-scrolltomethod-finds-call-site.md) | Medium | scrollToMethod scrolls to call site instead of declaration — fix bundled into TASK-009 |
+| BUG-009 | [BUG-009](Bugs/BUG-009-placeholder-visible-over-panels.md) | Low | Placeholder visible over Detail/Source panels when navigating back to initial state |
 
 ---
 
 ## Active Tasks
 
-*(none — all tasks resolved; pick from Planned Features)*
+| ID | File | Summary |
+|----|------|---------|
+| TASK-009 | [TASK-009](Tasks/TASK-009-method-call-linking-in-source.md) | Method-call linking in source viewer (FEAT-002 + FEAT-009 Problem C; fixes BUG-008) |
 
 ---
 

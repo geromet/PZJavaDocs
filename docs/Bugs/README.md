@@ -8,7 +8,9 @@ One file per confirmed defect. File a bug here when something is reproducibly br
 
 ## Before Working on Bugs
 
-Do not work on a bug directly. First create a Task in `docs/Tasks/`:
+**First: check if a planned feature covers this bug.** See [`docs/Knowledge_Base/Bug-Feature-Triage.md`](../Knowledge_Base/Bug-Feature-Triage.md) for the full decision tree. If an unblocked medium+ priority feature would fix the bug as a natural consequence, create a task for the feature (not the bug), and bundle the fix into that task's plan.
+
+If no feature applies, do not work on a bug directly. First create a Task in `docs/Tasks/`:
 
 1. Read the bug file(s) fully.
 2. Read the relevant source code to confirm the root cause.
