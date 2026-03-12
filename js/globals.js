@@ -25,13 +25,23 @@ function initGlobals() {
 
 function updateGlobalsTable(filter) {
   const s   = filter.toLowerCase();
+  // Build group source-order map: semantic group name → index of first occurrence in original array.
+  // This preserves the natural source order of LuaManager.java when sorting.
+  const groupOrder = {};
+  API.global_functions.forEach((g, i) => {
+    const grp = g.group || '';
+    if (!(grp in groupOrder)) groupOrder[grp] = i;
+  });
+
   const fns = API.global_functions
     .map((g, i) => ({g, i}))
     .filter(({g}) => !s || g.lua_name.toLowerCase().includes(s) || g.java_method.toLowerCase().includes(s))
     .sort((a, b) => {
-      const ca = a.g.category || 'Other', cb = b.g.category || 'Other';
-      const ga = a.g.group    || '',      gb = b.g.group    || '';
-      return ca.localeCompare(cb) || ga.localeCompare(gb) || a.g.lua_name.localeCompare(b.g.lua_name);
+      const ga = a.g.group || '', gb = b.g.group || '';
+      const orderA = groupOrder[ga] ?? a.i, orderB = groupOrder[gb] ?? b.i;
+      return orderA - orderB
+        || (a.g.category || 'Other').localeCompare(b.g.category || 'Other')
+        || a.g.lua_name.localeCompare(b.g.lua_name);
     });
 
   document.getElementById('globals-count').textContent = `${fns.length} functions`;
@@ -39,8 +49,8 @@ function updateGlobalsTable(filter) {
   let lastGroup = null, lastSubgroup = null;
   let rows = '';
   for (const {g} of fns) {
-    const group    = g.category || 'Other';
-    const subgroup = g.group    || group;
+    const group    = g.group    || 'Other';  // semantic label → top level
+    const subgroup = g.category || 'Other';  // verb-prefix category → sub level
     const catKey   = 'CAT:' + group;
     const subKey   = 'SUB:' + group + '/' + subgroup; // category-scoped to avoid cross-category collisions
     const catFolded = foldedGlobalGroups.has(catKey);
