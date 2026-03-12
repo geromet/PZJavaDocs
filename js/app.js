@@ -209,9 +209,16 @@ function applySplitLayout(enabled) {
   }
   if (currentTab === 'globals') {
     const srcWrap = document.getElementById('globals-source-wrap');
-    if (splitLayout && srcWrap?.classList.contains('visible')) {
-      document.getElementById('globals-left').style.display = '';
-      document.getElementById('globals-nav').classList.remove('visible');
+    if (srcWrap?.classList.contains('visible')) {
+      if (splitLayout) {
+        // Entering split: restore left panel, hide single-mode nav
+        document.getElementById('globals-left').style.display = '';
+        document.getElementById('globals-nav').classList.remove('visible');
+      } else {
+        // Leaving split: hide left panel, show single-mode nav
+        document.getElementById('globals-left').style.display = 'none';
+        document.getElementById('globals-nav').classList.add('visible');
+      }
     }
   }
 }
