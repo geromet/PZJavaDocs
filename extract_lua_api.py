@@ -390,12 +390,69 @@ for entry_fqn, entry in list(all_classes.items()):
         if impls:
             entry['implements'] = impls
 
-# Build subclasses inverse map (must run after _global_simple_to_fqn is populated,
-# which happens in step 5 — but we only need all_classes keys here so it's fine)
+# ---------------------------------------------------------------------------
+# Step 4.6: Build _extends_map for non-API intermediate classes in chains
+# ---------------------------------------------------------------------------
+# BFS from any extends value not in all_classes, walking upward until we hit
+# a known class or a stdlib/unresolvable root.
+from collections import deque
+
+_extends_map = {}  # non-API fqn → parent fqn
+_resolve_queue = deque()
+_resolve_visited = set()
+
+for entry in all_classes.values():
+    parent = entry.get('extends')
+    if parent and parent not in all_classes:
+        _resolve_queue.append(parent)
+
+while _resolve_queue:
+    fqn_r = _resolve_queue.popleft()
+    if fqn_r in _resolve_visited or fqn_r in all_classes:
+        continue
+    _resolve_visited.add(fqn_r)
+
+    java_file_r, inner_path_r = fqn_to_path(fqn_r)
+    if java_file_r is None:
+        continue
+
+    tree_r = file_cache.get(java_file_r)
+    if tree_r is None:
+        src_r = java_file_r.read_text(errors="ignore")
+        tree_r = parse_java(src_r)
+        if tree_r is not None:
+            file_cache[java_file_r] = tree_r
+    if tree_r is None:
+        continue
+
+    all_types_r = {}
+    for _, node in tree_r.filter(javalang.tree.ClassDeclaration):
+        all_types_r[node.name] = node
+
+    cls_name_r = inner_path_r[-1] if inner_path_r else fqn_r.rsplit('.', 1)[-1]
+    cls_r = all_types_r.get(cls_name_r)
+    if cls_r is None or not isinstance(cls_r, javalang.tree.ClassDeclaration) or not cls_r.extends:
+        continue
+
+    imap_r  = get_file_import_map(java_file_r)
+    pkg_r   = '.'.join(fqn_r.split('.')[:-1])
+    parent_r = resolve_simple(cls_r.extends.name, imap_r, pkg_r, all_classes)
+    if parent_r not in ('java.lang.Object', 'Object'):
+        _extends_map[fqn_r] = parent_r
+        if parent_r not in all_classes:
+            _resolve_queue.append(parent_r)
+
+print(f"  Non-API extends-map entries: {len(_extends_map)}")
+
+# Build subclasses inverse map — include both API children and non-API intermediates
 for entry_fqn, entry in all_classes.items():
     parent = entry.get('extends')
     if parent and parent in all_classes:
         all_classes[parent].setdefault('subclasses', []).append(entry_fqn)
+# Also add non-API intermediates as subclasses of their API parents
+for child_fqn, parent_fqn in _extends_map.items():
+    if parent_fqn in all_classes:
+        all_classes[parent_fqn].setdefault('subclasses', []).append(child_fqn)
 for entry in all_classes.values():
     if 'subclasses' in entry:
         entry['subclasses'].sort()
@@ -438,6 +495,7 @@ api = {
     "classes": all_classes,
     "global_functions": global_functions,
     "_source_index": source_index,
+    "_extends_map": _extends_map,
     "unresolved": unresolved,
     "_meta": {
         "total_classes": len(all_classes),

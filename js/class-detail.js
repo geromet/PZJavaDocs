@@ -46,7 +46,7 @@ function renderClassDetail(fqn) {
   refreshFields(cls);
 
   const mi = document.getElementById('method-search-inp');
-  if (mi) { mi.addEventListener('input', () => { methodSearch = mi.value; refreshMethods(cls); }); if (methodSearch) mi.focus(); }
+  if (mi) { mi.addEventListener('input', () => { methodSearch = mi.value; refreshMethods(cls, fqn); }); if (methodSearch) mi.focus(); }
   const fi = document.getElementById('field-search-inp');
   if (fi) { fi.addEventListener('input', () => { fieldSearch  = fi.value; refreshFields(cls);  }); if (fieldSearch && !methodSearch) fi.focus(); }
 }
@@ -171,7 +171,7 @@ function renderInheritHeader(cls, fqn) {
     while (cur && !visited.has(cur)) {
       chain.unshift(cur);
       visited.add(cur);
-      cur = API.classes[cur]?.extends;
+      cur = API.classes[cur]?.extends ?? API._extends_map?.[cur];
     }
     if (cur && !visited.has(cur)) chain.unshift(cur); // root not in API
 
@@ -207,7 +207,9 @@ function renderInheritHeader(cls, fqn) {
   if (hasSubclasses) {
     const subs    = cls.subclasses;
     const MAX     = 10;
-    const mkLink  = f => `<a class="inherit-link" data-fqn="${esc(f)}">${esc(f.split('.').pop())}</a>`;
+    const mkLink  = f => API.classes[f]
+      ? `<a class="inherit-link" data-fqn="${esc(f)}">${esc(f.split('.').pop())}</a>`
+      : `<span class="inherit-tree-item-ext" title="${esc(f)}">${esc(f.split('.').pop())}</span>`;
     let subHtml;
     if (subs.length <= MAX) {
       subHtml = subs.map(mkLink).join(', ');
@@ -233,9 +235,14 @@ function renderInheritedMethods(cls, fqn, filterStr) {
   let ancestorFqn = cls.extends;
   const visited = new Set([fqn]);
 
-  while (ancestorFqn && !visited.has(ancestorFqn) && API.classes[ancestorFqn]) {
+  while (ancestorFqn && !visited.has(ancestorFqn)) {
     visited.add(ancestorFqn);
     const anc = API.classes[ancestorFqn];
+    if (!anc) {
+      // Non-API intermediate: follow chain via _extends_map without rendering
+      ancestorFqn = API._extends_map?.[ancestorFqn];
+      continue;
+    }
 
     // Only callable: lua_tagged, or (setExposed and not static)
     let inherited = anc.methods.filter(m =>
