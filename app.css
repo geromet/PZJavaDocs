@@ -205,3 +205,23 @@ tr:hover td{background:var(--bg2)}
 ::-webkit-scrollbar-track{background:var(--bg2)}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 ::-webkit-scrollbar-thumb:hover{background:#555}
+
+/* ── Inheritance header ── */
+.inherit-header{margin:0 0 12px;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:4px;font-size:12px}
+.inherit-tree{font-family:monospace;line-height:1.7;margin-bottom:4px}
+.inherit-tree-item{white-space:pre}
+.inherit-tree-current{font-weight:600;color:var(--text)}
+.inherit-tree-item-ext{color:var(--text-dim)}
+.inherit-meta{margin-top:4px;line-height:1.7}
+.inherit-label{color:var(--text-dim);margin-right:4px}
+.inherit-link{color:var(--accent2);text-decoration:none;cursor:pointer}
+.inherit-link:hover{text-decoration:underline}
+.inherit-more-toggle{color:var(--accent2);cursor:pointer}
+.inherit-more-toggle:hover{text-decoration:underline}
+.inherit-more{display:none}
+
+/* ── Inherited method groups ── */
+.method-group.inherited .group-label{color:var(--text-dim);font-style:italic}
+.inherited-methods-list{padding:4px 8px;font-size:12px;line-height:2}
+.inherited-methods-list a{color:var(--accent2);text-decoration:none;margin-right:6px}
+.inherited-methods-list a:hover{text-decoration:underline}

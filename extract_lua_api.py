@@ -312,6 +312,97 @@ for i, java_file in enumerate(all_java_files):
 print(f"  @UsedFromLua-only (not setExposed): {lua_tagged_only}")
 
 # ---------------------------------------------------------------------------
+# Step 4.5: Extract inheritance info (extends, implements) and build subclasses
+# ---------------------------------------------------------------------------
+print("Extracting inheritance info...")
+
+def get_file_import_map(java_file):
+    """Build simple_name → FQN from the file's explicit (non-wildcard) imports."""
+    tree = file_cache.get(java_file)
+    if tree is None:
+        return {}
+    imap = {}
+    for imp in (tree.imports or []):
+        if not imp.static and not getattr(imp, 'wildcard', False):
+            fqn_i = imp.path
+            imap[fqn_i.rsplit('.', 1)[-1]] = fqn_i
+    return imap
+
+def resolve_simple(name, imap, pkg, all_cls):
+    """Resolve a simple/short class name to FQN."""
+    base = name.split('<')[0].strip()   # strip generics
+    if base in imap:
+        return imap[base]
+    same_pkg = (pkg + '.' + base) if pkg else base
+    if same_pkg in all_cls:
+        return same_pkg
+    if base in _global_simple_to_fqn:
+        return _global_simple_to_fqn[base]
+    return base  # stdlib / unknown — return as-is
+
+# Global simple→FQN from path structure: zombie/network/GameClient.java → zombie.network.GameClient
+# Built now (before step 5) by scanning source files directly.
+_global_simple_to_fqn = {}
+for _path in SRC_ROOT.rglob("*.java"):
+    try:
+        _path.relative_to(SRC_ROOT / "pz-lua-api-viewer")
+        continue
+    except ValueError:
+        pass
+    _rel = str(_path.relative_to(SRC_ROOT)).replace("\\", "/")
+    _simple = _path.stem
+    if _simple not in _global_simple_to_fqn:
+        _global_simple_to_fqn[_simple] = _rel.removesuffix(".java").replace("/", ".")
+
+for entry_fqn, entry in list(all_classes.items()):
+    java_file, inner_path = fqn_to_path(entry_fqn)
+    if java_file is None:
+        continue
+    tree = file_cache.get(java_file)
+    if tree is None:
+        continue
+
+    all_types = {}
+    for _, node in tree.filter(javalang.tree.ClassDeclaration):   all_types[node.name] = node
+    for _, node in tree.filter(javalang.tree.InterfaceDeclaration): all_types[node.name] = node
+    for _, node in tree.filter(javalang.tree.EnumDeclaration):     all_types[node.name] = node
+
+    cls_name = inner_path[-1] if inner_path else entry['simple_name']
+    cls = all_types.get(cls_name)
+    if cls is None:
+        continue
+
+    imap = get_file_import_map(java_file)
+    pkg  = '.'.join(entry_fqn.split('.')[:-1])
+
+    # extends (ClassDeclaration only — not enums, not interfaces)
+    if isinstance(cls, javalang.tree.ClassDeclaration) and cls.extends:
+        resolved = resolve_simple(cls.extends.name, imap, pkg, all_classes)
+        if resolved not in ('java.lang.Object', 'Object'):
+            entry['extends'] = resolved
+
+    # implements
+    impl_list = getattr(cls, 'implements', None) or []
+    if impl_list:
+        impls = [resolve_simple(i.name, imap, pkg, all_classes) for i in impl_list]
+        if impls:
+            entry['implements'] = impls
+
+# Build subclasses inverse map (must run after _global_simple_to_fqn is populated,
+# which happens in step 5 — but we only need all_classes keys here so it's fine)
+for entry_fqn, entry in all_classes.items():
+    parent = entry.get('extends')
+    if parent and parent in all_classes:
+        all_classes[parent].setdefault('subclasses', []).append(entry_fqn)
+for entry in all_classes.values():
+    if 'subclasses' in entry:
+        entry['subclasses'].sort()
+
+print(f"  Classes with extends:    {sum(1 for v in all_classes.values() if 'extends' in v)}")
+print(f"  Classes with implements: {sum(1 for v in all_classes.values() if 'implements' in v)}")
+print(f"  Classes with subclasses: {sum(1 for v in all_classes.values() if 'subclasses' in v)}")
+
+# ---------------------------------------------------------------------------
 # Step 5: Build _source_index — source-linkable classes NOT in the API
 # ---------------------------------------------------------------------------
 print("Building source index...")

@@ -300,11 +300,40 @@ function setupEvents() {
     }
   });
 
-  // Delegated click for detail panel: method links + group label folding
+  // Delegated click for detail panel: method links, inherit links, group folding
   document.getElementById('detail-panel').addEventListener('click', e => {
     // Method / constructor source links
     const a = e.target.closest('a.method-link[data-method]');
     if (a) { e.preventDefault(); showSource(API.classes[currentClass], a.dataset.method); return; }
+
+    // Inheritance header — class links
+    const inheritLink = e.target.closest('a.inherit-link[data-fqn]');
+    if (inheritLink) { e.preventDefault(); selectClass(inheritLink.dataset.fqn); return; }
+
+    // Inherited method links — navigate to ancestor and scroll to method in source
+    const inheritMethod = e.target.closest('a.inherit-method-link[data-fqn]');
+    if (inheritMethod) {
+      e.preventDefault();
+      const targetFqn = inheritMethod.dataset.fqn;
+      const method    = inheritMethod.dataset.method;
+      selectClass(targetFqn);
+      showSource(API.classes[targetFqn], method);
+      return;
+    }
+
+    // "…and N more" subclasses toggle
+    const moreToggle = e.target.closest('.inherit-more-toggle');
+    if (moreToggle) {
+      const moreEl = moreToggle.nextElementSibling;
+      if (moreEl?.classList.contains('inherit-more')) {
+        const hidden = moreEl.style.display === 'none';
+        moreEl.style.display = hidden ? '' : 'none';
+        moreToggle.textContent = hidden
+          ? 'show less'
+          : `…and ${moreToggle.dataset.count} more`;
+      }
+      return;
+    }
 
     // Group label → fold/unfold that group
     const groupLabel = e.target.closest('.method-group .group-label');

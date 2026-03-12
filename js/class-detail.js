@@ -16,6 +16,7 @@ function renderClassDetail(fqn) {
       </div>
       <div class="source-path">${esc(cls.source_file)}</div>
     </div>
+    ${renderInheritHeader(cls, fqn)}
     ${(cls.constructors || []).length ? `
     <div class="section">
       <div class="section-header">
@@ -30,6 +31,7 @@ function renderClassDetail(fqn) {
         ${cls.methods.length ? `<input class="inline-search" id="method-search-inp" type="text" placeholder="Filter…" value="${esc(methodSearch)}" autocomplete="off">` : ''}
       </div>
       <div id="methods-wrap"></div>
+      <div id="inherit-wrap"></div>
     </div>
     <div class="section">
       <div class="section-header">
@@ -40,7 +42,7 @@ function renderClassDetail(fqn) {
     </div>`;
 
   switchCtab('detail');
-  refreshMethods(cls);
+  refreshMethods(cls, fqn);
   refreshFields(cls);
 
   const mi = document.getElementById('method-search-inp');
@@ -49,7 +51,7 @@ function renderClassDetail(fqn) {
   if (fi) { fi.addEventListener('input', () => { fieldSearch  = fi.value; refreshFields(cls);  }); if (fieldSearch && !methodSearch) fi.focus(); }
 }
 
-function refreshMethods(cls) {
+function refreshMethods(cls, fqn) {
   const s      = methodSearch.toLowerCase();
   const tagged = cls.methods.filter(m =>  m.lua_tagged && (!s || m.name.toLowerCase().includes(s)));
   const other  = cls.methods.filter(m => !m.lua_tagged && (!s || m.name.toLowerCase().includes(s)));
@@ -62,6 +64,9 @@ function refreshMethods(cls) {
   const wrap = document.getElementById('methods-wrap');
   wrap.innerHTML = renderMethodGroups(tagged, other, cls.set_exposed);
   wrap.classList.toggle('hide-noncallable', !showNonCallable);
+
+  const inheritWrap = document.getElementById('inherit-wrap');
+  if (inheritWrap && fqn) inheritWrap.innerHTML = renderInheritedMethods(cls, fqn, s);
 
   // Update non-callable toggle button
   const btnWrap = document.getElementById('noncallable-btn-wrap');
@@ -148,6 +153,110 @@ function renderMethodsTable(methods) {
     </tr>`;
   }).join('');
   return `<table><thead><tr><th>Method</th><th>Returns</th><th>Parameters</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function renderInheritHeader(cls, fqn) {
+  const hasExtends    = !!cls.extends;
+  const hasImplements = (cls.implements || []).length > 0;
+  const hasSubclasses = (cls.subclasses || []).length > 0;
+  if (!hasExtends && !hasImplements && !hasSubclasses) return '';
+
+  let html = '<div class="inherit-header">';
+
+  // Inheritance tree: walk chain upward, render top-to-bottom
+  if (hasExtends) {
+    const chain = [];
+    let cur = fqn;
+    const visited = new Set();
+    while (cur && !visited.has(cur)) {
+      chain.unshift(cur);
+      visited.add(cur);
+      cur = API.classes[cur]?.extends;
+    }
+    if (cur && !visited.has(cur)) chain.unshift(cur); // root not in API
+
+    html += '<div class="inherit-tree">';
+    for (let i = 0; i < chain.length; i++) {
+      const indent  = '\u00a0\u00a0'.repeat(i);
+      const arrow   = i > 0 ? '\u2514\u2500 ' : '';
+      const cfqn    = chain[i];
+      const csimple = cfqn.split('.').pop();
+      if (cfqn === fqn) {
+        html += `<div class="inherit-tree-item">${esc(indent + arrow)}<span class="inherit-tree-current">${esc(csimple)}</span></div>`;
+      } else if (API.classes[cfqn]) {
+        html += `<div class="inherit-tree-item">${esc(indent + arrow)}<a class="inherit-link" data-fqn="${esc(cfqn)}">${esc(cfqn)}</a></div>`;
+      } else {
+        html += `<div class="inherit-tree-item">${esc(indent + arrow)}<span class="inherit-tree-item-ext">${esc(cfqn)}</span></div>`;
+      }
+    }
+    html += '</div>';
+  }
+
+  // Implemented interfaces
+  if (hasImplements) {
+    const links = (cls.implements || []).map(iface => {
+      const isimple = iface.split('.').pop();
+      return API.classes[iface]
+        ? `<a class="inherit-link" data-fqn="${esc(iface)}">${esc(isimple)}</a>`
+        : `<span class="inherit-tree-item-ext">${esc(isimple)}</span>`;
+    });
+    html += `<div class="inherit-meta"><span class="inherit-label">Implements:</span>${links.join(', ')}</div>`;
+  }
+
+  // Direct known subclasses (truncated with toggle)
+  if (hasSubclasses) {
+    const subs    = cls.subclasses;
+    const MAX     = 10;
+    const mkLink  = f => `<a class="inherit-link" data-fqn="${esc(f)}">${esc(f.split('.').pop())}</a>`;
+    let subHtml;
+    if (subs.length <= MAX) {
+      subHtml = subs.map(mkLink).join(', ');
+    } else {
+      const shown   = subs.slice(0, MAX).map(mkLink).join(', ');
+      const rest    = subs.slice(MAX).map(mkLink).join(', ');
+      const restCnt = subs.length - MAX;
+      subHtml = `${shown}, <span class="inherit-more-toggle" data-count="${restCnt}">…and ${restCnt} more</span>`
+               + `<span class="inherit-more">, ${rest}</span>`;
+    }
+    html += `<div class="inherit-meta"><span class="inherit-label">Direct subclasses:</span>${subHtml}</div>`;
+  }
+
+  html += '</div>';
+  return html;
+}
+
+function renderInheritedMethods(cls, fqn, filterStr) {
+  if (!cls.extends) return '';
+  const ownNames = new Set(cls.methods.map(m => m.name));
+  const s = (filterStr || '').toLowerCase();
+  let html = '';
+  let ancestorFqn = cls.extends;
+  const visited = new Set([fqn]);
+
+  while (ancestorFqn && !visited.has(ancestorFqn) && API.classes[ancestorFqn]) {
+    visited.add(ancestorFqn);
+    const anc = API.classes[ancestorFqn];
+
+    // Only callable: lua_tagged, or (setExposed and not static)
+    let inherited = anc.methods.filter(m =>
+      !ownNames.has(m.name) &&
+      (m.lua_tagged || (!m.static && anc.set_exposed))
+    );
+    if (s) inherited = inherited.filter(m => m.name.toLowerCase().includes(s));
+
+    if (inherited.length > 0) {
+      const links = inherited.map(m =>
+        `<a class="inherit-method-link" data-fqn="${esc(ancestorFqn)}" data-method="${esc(m.name)}">${esc(m.name)}</a>`
+      ).join(', ');
+      html += `<div class="method-group inherited">
+        <div class="group-label other-label"><span class="group-arrow">▼</span>Methods inherited from <a class="inherit-link" data-fqn="${esc(ancestorFqn)}">${esc(ancestorFqn)}</a></div>
+        <div class="group-body"><div class="inherited-methods-list">${links}</div></div>
+      </div>`;
+    }
+
+    ancestorFqn = anc.extends;
+  }
+  return html;
 }
 
 function renderFieldsTable(fields, isEnum) {
