@@ -155,11 +155,102 @@ function renderMethodsTable(methods) {
   return `<table><thead><tr><th>Method</th><th>Returns</th><th>Parameters</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
+// ── Interface helpers ─────────────────────────────────────────────────────
+
+function ifaceLink(fqn) {
+  const simple = fqn.split('.').pop();
+  if (API.classes[fqn])
+    return `<a class="inherit-link" data-fqn="${esc(fqn)}">${esc(simple)}</a>`;
+  const srcPath = API._source_index?.[simple];
+  if (srcPath)
+    return `<a class="src-class-ref" data-source-path="${esc(srcPath)}" title="${esc(fqn)}">${esc(simple)}</a>`;
+  return `<span class="inherit-tree-item-ext" title="${esc(fqn)}">${esc(simple)}</span>`;
+}
+
+// Returns [{directFqn, extensions:[fqn,...]}] for all interface-extends reachable
+// from a single directly-implemented interface. Updates `seen` in place.
+function collectIfaceExtensions(rootFqn, seen) {
+  const viaRows = [];  // {label, items:[fqn,...]}
+  const queue   = [[rootFqn, rootFqn]]; // [current, root]
+  while (queue.length) {
+    const [cur, root] = queue.shift();
+    const parents = API._interface_extends?.[cur] || [];
+    const newItems = parents.filter(p => !seen.has(p));
+    newItems.forEach(p => seen.add(p));
+    if (newItems.length) {
+      const rootSimple = root.split('.').pop();
+      // Merge into existing row for the same root, or add new
+      const existing = viaRows.find(r => r.root === rootFqn);
+      if (existing) existing.items.push(...newItems);
+      else viaRows.push({root: rootFqn, label: rootSimple, items: newItems});
+      newItems.forEach(p => queue.push([p, rootFqn]));
+    }
+  }
+  return viaRows;
+}
+
+// Builds groups [{fromFqn, isDirect, directItems, viaRows}]
+// walking the full extends chain and deduplicating across groups.
+function buildImplGroups(cls, fqn) {
+  const seen   = new Set();
+  const groups = [];
+  let curFqn   = fqn;
+  let curCls   = cls;
+  let isDirect = true;
+  const clsVisited = new Set();
+
+  while (curFqn && !clsVisited.has(curFqn)) {
+    clsVisited.add(curFqn);
+    const rawImpls = (curCls?.implements) || [];
+    const direct   = rawImpls.filter(i => !seen.has(i));
+    direct.forEach(i => seen.add(i));
+
+    if (direct.length) {
+      const viaRows = [];
+      for (const ifFqn of direct) {
+        const rows = collectIfaceExtensions(ifFqn, seen);
+        viaRows.push(...rows);
+      }
+      groups.push({fromFqn: curFqn, isDirect, directItems: direct, viaRows});
+    }
+
+    curFqn  = curCls?.extends || API._extends_map?.[curFqn];
+    curCls  = API.classes[curFqn];
+    isDirect = false;
+  }
+  return groups;
+}
+
+function renderImplGroups(groups) {
+  if (!groups.length) return '';
+  const total = groups.reduce((n, g) =>
+    n + g.directItems.length + g.viaRows.reduce((m, r) => m + r.items.length, 0), 0);
+
+  const rows = groups.map(g => {
+    const label = g.isDirect
+      ? `direct (${g.directItems.length})`
+      : `via ${esc(g.fromFqn.split('.').pop())} (${g.directItems.length})`;
+    const directHtml = g.directItems.map(ifaceLink).join(', ');
+    const viaHtml    = g.viaRows.map(r =>
+      `<div class="impl-via-row"><span class="impl-via-label">via ${esc(r.label)}:</span>${r.items.map(ifaceLink).join(', ')}</div>`
+    ).join('');
+    return `<div class="impl-group">
+      <span class="impl-group-header">${label}:</span><span class="impl-items">${directHtml}</span>${viaHtml}
+    </div>`;
+  }).join('');
+
+  return `<div class="inherit-meta impl-section">
+    <span class="inherit-label">All Implemented Interfaces (${total}):</span>${rows}
+  </div>`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 function renderInheritHeader(cls, fqn) {
   const hasExtends    = !!cls.extends;
-  const hasImplements = (cls.implements || []).length > 0;
+  const implGroups    = buildImplGroups(cls, fqn);
   const hasSubclasses = (cls.subclasses || []).length > 0;
-  if (!hasExtends && !hasImplements && !hasSubclasses) return '';
+  if (!hasExtends && !implGroups.length && !hasSubclasses) return '';
 
   let html = '<div class="inherit-header">';
 
@@ -192,19 +283,8 @@ function renderInheritHeader(cls, fqn) {
     html += '</div>';
   }
 
-  // Implemented interfaces
-  if (hasImplements) {
-    const links = (cls.implements || []).map(iface => {
-      const isimple = iface.split('.').pop();
-      if (API.classes[iface])
-        return `<a class="inherit-link" data-fqn="${esc(iface)}">${esc(isimple)}</a>`;
-      const srcPath = API._source_index?.[isimple];
-      if (srcPath)
-        return `<a class="src-class-ref" data-source-path="${esc(srcPath)}" title="${esc(iface)}">${esc(isimple)}</a>`;
-      return `<span class="inherit-tree-item-ext">${esc(isimple)}</span>`;
-    });
-    html += `<div class="inherit-meta"><span class="inherit-label">Implements:</span>${links.join(', ')}</div>`;
-  }
+  // Implemented interfaces — grouped by chain position and interface extends
+  html += renderImplGroups(implGroups);
 
   // Direct known subclasses (truncated with toggle)
   if (hasSubclasses) {

@@ -462,6 +462,68 @@ print(f"  Classes with implements: {sum(1 for v in all_classes.values() if 'impl
 print(f"  Classes with subclasses: {sum(1 for v in all_classes.values() if 'subclasses' in v)}")
 
 # ---------------------------------------------------------------------------
+# Step 4.7: Build _interface_extends map — interface FQN → [parent interface FQNs]
+# BFS from every interface that appears in any class's implements list.
+# ---------------------------------------------------------------------------
+print("Extracting interface extends chains...")
+
+_interface_extends = {}  # interface_fqn → [parent_interface_fqn, ...]
+_iface_queue   = deque()
+_iface_visited = set()
+
+for entry in all_classes.values():
+    for iface in (entry.get('implements') or []):
+        if iface not in _iface_visited:
+            _iface_queue.append(iface)
+
+while _iface_queue:
+    iface_fqn = _iface_queue.popleft()
+    if iface_fqn in _iface_visited:
+        continue
+    _iface_visited.add(iface_fqn)
+
+    java_file_i, inner_path_i = fqn_to_path(iface_fqn)
+    if java_file_i is None:
+        continue
+
+    tree_i = file_cache.get(java_file_i)
+    if tree_i is None:
+        src_i = java_file_i.read_text(errors="ignore")
+        tree_i = parse_java(src_i)
+        if tree_i is not None:
+            file_cache[java_file_i] = tree_i
+    if tree_i is None:
+        continue
+
+    iface_name_i = inner_path_i[-1] if inner_path_i else iface_fqn.rsplit('.', 1)[-1]
+    imap_i = get_file_import_map(java_file_i)
+    pkg_i  = '.'.join(iface_fqn.split('.')[:-1])
+
+    iface_node_i = None
+    for _, node in tree_i.filter(javalang.tree.InterfaceDeclaration):
+        if node.name == iface_name_i:
+            iface_node_i = node
+            break
+    if iface_node_i is None:
+        continue
+
+    ext_i = getattr(iface_node_i, 'extends', None) or []
+    if not ext_i:
+        continue
+
+    resolved_i = []
+    for e in ext_i:
+        r = resolve_simple(e.name, imap_i, pkg_i, all_classes)
+        resolved_i.append(r)
+        if r not in _iface_visited:
+            _iface_queue.append(r)
+
+    if resolved_i:
+        _interface_extends[iface_fqn] = resolved_i
+
+print(f"  Interfaces with extends: {len(_interface_extends)}")
+
+# ---------------------------------------------------------------------------
 # Step 5: Build _source_index — source-linkable classes NOT in the API
 # ---------------------------------------------------------------------------
 print("Building source index...")
@@ -496,6 +558,7 @@ api = {
     "global_functions": global_functions,
     "_source_index": source_index,
     "_extends_map": _extends_map,
+    "_interface_extends": _interface_extends,
     "unresolved": unresolved,
     "_meta": {
         "total_classes": len(all_classes),

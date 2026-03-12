@@ -220,6 +220,14 @@ tr:hover td{background:var(--bg2)}
 .inherit-more-toggle:hover{text-decoration:underline}
 .inherit-more{display:none}
 
+/* ── Implements groups ── */
+.impl-section{margin-top:6px}
+.impl-group{margin-top:5px;padding-left:0}
+.impl-group-header{color:var(--text-dim);font-size:11px;margin-right:6px;white-space:nowrap}
+.impl-items{line-height:1.9}
+.impl-via-row{margin-top:1px;padding-left:14px;color:var(--text-dim);font-size:11px;line-height:1.8}
+.impl-via-label{margin-right:4px;font-style:italic}
+
 /* ── Inherited method groups ── */
 .method-group.inherited .group-label{color:var(--text-dim);font-style:italic}
 .inherited-methods-list{padding:4px 8px;font-size:12px;line-height:2}
