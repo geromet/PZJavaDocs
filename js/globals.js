@@ -42,7 +42,7 @@ function updateGlobalsTable(filter) {
     const group    = g.category || 'Other';
     const subgroup = g.group    || group;
     const catKey   = 'CAT:' + group;
-    const subKey   = 'SUB:' + subgroup;
+    const subKey   = 'SUB:' + group + '/' + subgroup; // category-scoped to avoid cross-category collisions
     const catFolded = foldedGlobalGroups.has(catKey);
     const subFolded = foldedGlobalGroups.has(subKey);
 
@@ -86,10 +86,18 @@ function updateGlobalsTable(filter) {
       // Hide/show all rows and sub-headers in this category
       wrap.querySelectorAll(`[data-catkey="${catKey}"]`).forEach(r => {
         if (r === hdr) return;
-        r.style.display = folded ? 'none' : '';
-        // If showing, respect sub-header fold state
-        if (!folded && r.classList.contains('gfn-row') && foldedGlobalGroups.has(r.dataset.subkey)) {
+        if (folded) {
           r.style.display = 'none';
+        } else {
+          // Sub-headers always visible when category is open
+          if (r.classList.contains('globals-sub-header')) {
+            r.style.display = '';
+            const arrow = r.querySelector('.ggh-arrow');
+            if (arrow) arrow.textContent = foldedGlobalGroups.has(r.dataset.subkey) ? '▶' : '▼';
+          } else {
+            // Function rows: only show if their sub-group is not folded
+            r.style.display = foldedGlobalGroups.has(r.dataset.subkey) ? 'none' : '';
+          }
         }
       });
     });
