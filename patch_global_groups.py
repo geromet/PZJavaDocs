@@ -64,13 +64,16 @@ FUNCTION_GROUPS = {
     'sendHutchRemoveAnimalAction':           'Animal Hutch & Transport',
     'sendCorpse':                            'Animal Hutch & Transport',
 
-    # Animals & Hit Events
-    'sendAnimalGenome':              'Animals & Hit Events',
-    'addAnimal':                     'Animals & Hit Events',
-    'removeAnimal':                  'Animals & Hit Events',
-    'getFakeAttacker':               'Animals & Hit Events',
-    'sendHitPlayer':                 'Animals & Hit Events',
-    'sendHitVehicle':                'Animals & Hit Events',
+    # Animal Spawning
+    'sendAnimalGenome':              'Animal Spawning',
+    'addAnimal':                     'Animal Spawning',
+    'removeAnimal':                  'Animal Spawning',
+    'getAnimalChunk':                'Animal Spawning',
+
+    # Hit & Combat Events
+    'getFakeAttacker':               'Hit & Combat Events',
+    'sendHitPlayer':                 'Hit & Combat Events',
+    'sendHitVehicle':                'Hit & Combat Events',
 
     # Character Customization
     'getAllOutfits':                  'Character Customization',
@@ -140,6 +143,7 @@ FUNCTION_GROUPS = {
     'isoToScreenY':                  'Coordinate Conversion',
     'screenToIsoX':                  'Coordinate Conversion',
     'screenToIsoY':                  'Coordinate Conversion',
+    'getDirectionTo':                'Coordinate Conversion',
 
     # Debug Editor Views
     'toggleVehicleRenderToTexture':  'Debug Editor Views',
@@ -180,6 +184,7 @@ FUNCTION_GROUPS = {
     'isDebugEnabled':                'Debug Tools',
     'toggleBreakOnRead':             'Debug Tools',
     'toggleBreakpoint':              'Debug Tools',
+    'getDebugOptions':               'Debug Tools',
 
     # Debugger & Lua Inspector
     'assaultPlayer':                 'Debugger & Lua Inspector',
@@ -282,36 +287,37 @@ FUNCTION_GROUPS = {
     'disconnect':                    'Game Client & Player Management',
     'writeLog':                      'Game Client & Player Management',
 
-    # Game Config & Saves
-    'ping':                          'Game Config & Saves',
-    'getCustomizationData':          'Game Config & Saves',
-    'getCombatConfig':               'Game Config & Saves',
-    'stopPing':                      'Game Config & Saves',
-    'transformIntoKahluaTable':      'Game Config & Saves',
-    'getSaveDirectory':              'Game Config & Saves',
-    'getFullSaveDirectoryTable':     'Game Config & Saves',
-    'getSaveDirectoryTable':         'Game Config & Saves',
-    'getCurrentSaveName':            'Game Config & Saves',
-    'doChallenge':                   'Game Config & Saves',
-    'doTutorial':                    'Game Config & Saves',
-    'setMinMaxZombiesPerChunk':      'Game Config & Saves',
-    'deleteAllGameModeSaves':        'Game Config & Saves',
+    # Game Configuration
+    'getCustomizationData':          'Game Configuration',
+    'getCombatConfig':               'Game Configuration',
+    'setMinMaxZombiesPerChunk':      'Game Configuration',
+    'setShowPausedMessage':          'Game Configuration',
 
-    # Game Config & System Info
-    'setZoomLevels':                 'Game Config & System Info',
-    'getCore':                       'Game Config & System Info',
-    'getGameVersion':                'Game Config & System Info',
-    'getBreakModGameVersion':        'Game Config & System Info',
-    'getSquare':                     'Game Config & System Info',
-    'getDebugOptions':               'Game Config & System Info',
-    'setShowPausedMessage':          'Game Config & System Info',
-    'getFilenameOfCallframe':        'Game Config & System Info',
-    'getFilenameOfClosure':          'Game Config & System Info',
-    'getFirstLineOfClosure':         'Game Config & System Info',
-    'getLocalVarCount':              'Game Config & System Info',
-    'isSystemLinux':                 'Game Config & System Info',
-    'isSystemMacOS':                 'Game Config & System Info',
-    'isSystemWindows':               'Game Config & System Info',
+    # Save Management
+    'getSaveDirectory':              'Save Management',
+    'getFullSaveDirectoryTable':     'Save Management',
+    'getSaveDirectoryTable':         'Save Management',
+    'getCurrentSaveName':            'Save Management',
+    'doChallenge':                   'Save Management',
+    'doTutorial':                    'Save Management',
+    'deleteAllGameModeSaves':        'Save Management',
+
+    # (ping/stopPing → Multiplayer Connection; transformIntoKahluaTable → Miscellaneous Utilities)
+
+    # System Info
+    'getGameVersion':                'System Info',
+    'getBreakModGameVersion':        'System Info',
+    'isSystemLinux':                 'System Info',
+    'isSystemMacOS':                 'System Info',
+    'isSystemWindows':               'System Info',
+
+    # (scattered to existing groups below)
+    # setZoomLevels → Rendering & Performance
+    # getCore → Lua Runtime
+    # getSquare → World & Map Dimensions
+    # getDebugOptions → Debug Tools
+    # setShowPausedMessage → Game Configuration
+    # getFilenameOf*/getFirstLineOfClosure/getLocalVarCount → Lua Stack Introspection
 
     # Game Speed & Pause
     'getGameSpeed':                  'Game Speed & Pause',
@@ -330,6 +336,8 @@ FUNCTION_GROUPS = {
     'addPhysicsObject':              'Input Events & Vehicle Placement',
 
     # Item Information
+    'getAllItems':                   'Item Information',
+    'getAllRecipes':                  'Item Information',
     'getItemNameFromFullType':       'Item Information',
     'getItem':                       'Item Information',
     'getItemStaticModel':            'Item Information',
@@ -426,8 +434,13 @@ FUNCTION_GROUPS = {
     'callLua':                       'Lua Runtime',
     'callLuaReturn':                 'Lua Runtime',
     'callLuaBool':                   'Lua Runtime',
+    'getCore':                       'Lua Runtime',
 
     # Lua Stack Introspection
+    'getFilenameOfCallframe':        'Lua Stack Introspection',
+    'getFilenameOfClosure':          'Lua Stack Introspection',
+    'getFirstLineOfClosure':         'Lua Stack Introspection',
+    'getLocalVarCount':              'Lua Stack Introspection',
     'getLocalVarName':               'Lua Stack Introspection',
     'getLocalVarStack':              'Lua Stack Introspection',
     'getLocalVarStackIndex':         'Lua Stack Introspection',
@@ -440,6 +453,7 @@ FUNCTION_GROUPS = {
     'getLuaStackTrace':              'Lua Stack Introspection',
 
     # Miscellaneous Utilities
+    'transformIntoKahluaTable':      'Miscellaneous Utilities',
     'getBehaviourDebugPlayer':       'Miscellaneous Utilities',
     'setBehaviorStep':               'Miscellaneous Utilities',
     'getPuddlesManager':             'Miscellaneous Utilities',
@@ -488,6 +502,8 @@ FUNCTION_GROUPS = {
     'getMouseY':                     'Mouse Input',
 
     # Multiplayer Connection
+    'ping':                          'Multiplayer Connection',
+    'stopPing':                      'Multiplayer Connection',
     'serverConnect':                 'Multiplayer Connection',
     'serverConnectCoop':             'Multiplayer Connection',
     'sendPing':                      'Multiplayer Connection',
@@ -519,21 +535,21 @@ FUNCTION_GROUPS = {
     'hasDataBreakpoint':             'Player Data Sync',
     'hasBreakpoint':                 'Player Data Sync',
 
-    # Player Management & World
-    'getSleepingEvent':              'Player Management & World',
-    'setPlayerMovementActive':       'Player Management & World',
-    'setActivePlayer':               'Player Management & World',
-    'getPlayer':                     'Player Management & World',
-    'getNumActivePlayers':           'Player Management & World',
-    'getMaxActivePlayers':           'Player Management & World',
-    'getPlayerScreenLeft':           'Player Management & World',
-    'getPlayerScreenTop':            'Player Management & World',
-    'getPlayerScreenWidth':          'Player Management & World',
-    'getPlayerScreenHeight':         'Player Management & World',
-    'getPlayerByOnlineID':           'Player Management & World',
-    'initUISystem':                  'Player Management & World',
-    'getPerformance':                'Player Management & World',
-    'getAnimalChunk':                'Player Management & World',
+    # Player Management
+    'getSleepingEvent':              'Player Management',
+    'setPlayerMovementActive':       'Player Management',
+    'setActivePlayer':               'Player Management',
+    'getPlayer':                     'Player Management',
+    'getNumActivePlayers':           'Player Management',
+    'getMaxActivePlayers':           'Player Management',
+    'getPlayerScreenLeft':           'Player Management',
+    'getPlayerScreenTop':            'Player Management',
+    'getPlayerScreenWidth':          'Player Management',
+    'getPlayerScreenHeight':         'Player Management',
+    'getPlayerByOnlineID':           'Player Management',
+    'initUISystem':                  'Player Management',
+
+    # (getPerformance → Rendering & Performance; getAnimalChunk → Animal Spawning)
 
     # Radio & Broadcast
     'getRadioAPI':                   'Radio & Broadcast',
@@ -541,20 +557,24 @@ FUNCTION_GROUPS = {
     'getTranslatorCredits':          'Radio & Broadcast',
     'getZomboidRadio':               'Radio & Broadcast',
 
-    # Reflection & Map Utilities
-    'createTile':                            'Reflection & Map Utilities',
-    'getNumClassFunctions':                  'Reflection & Map Utilities',
-    'getClassFunction':                      'Reflection & Map Utilities',
-    'getNumClassFields':                     'Reflection & Map Utilities',
-    'getClassField':                         'Reflection & Map Utilities',
-    'getDirectionTo':                        'Reflection & Map Utilities',
-    'translatePointXInOverheadMapToWindow':  'Reflection & Map Utilities',
-    'translatePointYInOverheadMapToWindow':  'Reflection & Map Utilities',
-    'translatePointXInOverheadMapToWorld':   'Reflection & Map Utilities',
-    'translatePointYInOverheadMapToWorld':   'Reflection & Map Utilities',
-    'drawOverheadMap':                       'Reflection & Map Utilities',
+    # Java Reflection
+    'getNumClassFunctions':                  'Java Reflection',
+    'getClassFunction':                      'Java Reflection',
+    'getNumClassFields':                     'Java Reflection',
+    'getClassField':                         'Java Reflection',
+
+    # Overhead Map
+    'translatePointXInOverheadMapToWindow':  'Overhead Map',
+    'translatePointYInOverheadMapToWindow':  'Overhead Map',
+    'translatePointXInOverheadMapToWorld':   'Overhead Map',
+    'translatePointYInOverheadMapToWorld':   'Overhead Map',
+    'drawOverheadMap':                       'Overhead Map',
+
+    # (createTile → World & Map Dimensions; getDirectionTo → Coordinate Conversion)
 
     # Rendering & Performance
+    'setZoomLevels':                 'Rendering & Performance',
+    'getPerformance':                'Rendering & Performance',
     'screenZoomIn':                  'Rendering & Performance',
     'screenZoomOut':                 'Rendering & Performance',
     'checkServerName':               'Rendering & Performance',
@@ -592,15 +612,15 @@ FUNCTION_GROUPS = {
     'setSavefilePlayer1':            'Save Info',
     'getServerSavedWorldVersion':    'Save Info',
 
-    # Saves, Items & Logs
-    'getAllItems':                   'Saves, Items & Logs',
-    'scoreboardUpdate':              'Saves, Items & Logs',
-    'save':                          'Saves, Items & Logs',
-    'saveGame':                      'Saves, Items & Logs',
-    'getAllRecipes':                  'Saves, Items & Logs',
-    'requestUserlog':                'Saves, Items & Logs',
-    'addUserlog':                    'Saves, Items & Logs',
-    'removeUserlog':                 'Saves, Items & Logs',
+    # Game Saves & Logs
+    'scoreboardUpdate':              'Game Saves & Logs',
+    'save':                          'Game Saves & Logs',
+    'saveGame':                      'Game Saves & Logs',
+    'requestUserlog':                'Game Saves & Logs',
+    'addUserlog':                    'Game Saves & Logs',
+    'removeUserlog':                 'Game Saves & Logs',
+
+    # (getAllItems/getAllRecipes → Item Information)
 
     # Server / Client State
     'getLoadedLuaCount':             'Server / Client State',
@@ -744,15 +764,17 @@ FUNCTION_GROUPS = {
     'getRadioText':                  'Text & Localization',
     'getTextMediaEN':                'Text & Localization',
 
-    # Textures & Authentication
-    'useTextureFiltering':           'Textures & Authentication',
-    'getTexture':                    'Textures & Authentication',
-    'tryGetTexture':                 'Textures & Authentication',
-    'sendSecretKey':                 'Textures & Authentication',
-    'stopSendSecretKey':             'Textures & Authentication',
-    'generateSecretKey':             'Textures & Authentication',
-    'sendGoogleAuth':                'Textures & Authentication',
-    'createQRCodeTex':               'Textures & Authentication',
+    # Textures
+    'useTextureFiltering':           'Textures',
+    'getTexture':                    'Textures',
+    'tryGetTexture':                 'Textures',
+
+    # Authentication
+    'sendSecretKey':                 'Authentication',
+    'stopSendSecretKey':             'Authentication',
+    'generateSecretKey':             'Authentication',
+    'sendGoogleAuth':                'Authentication',
+    'createQRCodeTex':               'Authentication',
 
     # Trading & String Utilities
     'checkStringPattern':            'Trading & String Utilities',
@@ -803,6 +825,8 @@ FUNCTION_GROUPS = {
     'attachTrailerToPlayerVehicle':  'Vehicles, Blood & Zombie Spawning',
 
     # World & Map Dimensions
+    'createTile':                    'World & Map Dimensions',
+    'getSquare':                     'World & Map Dimensions',
     'getWorld':                      'World & Map Dimensions',
     'getCell':                       'World & Map Dimensions',
     'getCellSizeInChunks':           'World & Map Dimensions',
