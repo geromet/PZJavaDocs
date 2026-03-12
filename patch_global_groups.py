@@ -22,24 +22,6 @@ FUNCTION_GROUPS = {
     'setModelMetaData':              '3D Model Loading',
     'reloadModelsMatching':          '3D Model Loading',
 
-    # Actions, Sync & Containers
-    'emulateAnimEvent':              'Actions, Sync & Containers',
-    'emulateAnimEventOnce':          'Actions, Sync & Containers',
-    'createBuildAction':             'Actions, Sync & Containers',
-    'startFishingAction':            'Actions, Sync & Containers',
-    'syncItemActivated':             'Actions, Sync & Containers',
-    'syncItemModData':               'Actions, Sync & Containers',
-    'syncItemFields':                'Actions, Sync & Containers',
-    'syncHandWeaponFields':          'Actions, Sync & Containers',
-    'getPickedUpFish':               'Actions, Sync & Containers',
-    'sendAddItemToContainer':        'Actions, Sync & Containers',
-    'sendAddItemsToContainer':       'Actions, Sync & Containers',
-    'sendAttachedItem':              'Actions, Sync & Containers',
-    'sendReplaceItemInContainer':    'Actions, Sync & Containers',
-    'sendRemoveItemFromContainer':   'Actions, Sync & Containers',
-    'sendRemoveItemsFromContainer':  'Actions, Sync & Containers',
-    'replaceItemInContainer':        'Actions, Sync & Containers',
-
     # Admin: Bans & Tickets
     'sledgeDestroy':                 'Admin: Bans & Tickets',
     'getBannedIPs':                  'Admin: Bans & Tickets',
@@ -48,6 +30,8 @@ FUNCTION_GROUPS = {
     'addTicket':                     'Admin: Bans & Tickets',
     'viewedTicket':                  'Admin: Bans & Tickets',
     'removeTicket':                  'Admin: Bans & Tickets',
+    'setAdmin':                      'Admin: Bans & Tickets',
+    'addWarningPoint':               'Admin: Bans & Tickets',
 
     # Animal Hutch & Transport
     'getHutch':                              'Animal Hutch & Transport',
@@ -70,10 +54,12 @@ FUNCTION_GROUPS = {
     'removeAnimal':                  'Animal Spawning',
     'getAnimalChunk':                'Animal Spawning',
 
-    # Hit & Combat Events
-    'getFakeAttacker':               'Hit & Combat Events',
-    'sendHitPlayer':                 'Hit & Combat Events',
-    'sendHitVehicle':                'Hit & Combat Events',
+    # Authentication
+    'sendSecretKey':                 'Authentication',
+    'stopSendSecretKey':             'Authentication',
+    'generateSecretKey':             'Authentication',
+    'sendGoogleAuth':                'Authentication',
+    'createQRCodeTex':               'Authentication',
 
     # Character Customization
     'getAllOutfits':                  'Character Customization',
@@ -119,6 +105,16 @@ FUNCTION_GROUPS = {
     'sendHumanVisual':               'Client/Server Commands',
     'stopFire':                      'Client/Server Commands',
 
+    # Container Operations
+    'sendAddItemToContainer':        'Container Operations',
+    'sendAddItemsToContainer':       'Container Operations',
+    'sendAttachedItem':              'Container Operations',
+    'sendReplaceItemInContainer':    'Container Operations',
+    'sendRemoveItemFromContainer':   'Container Operations',
+    'sendRemoveItemsFromContainer':  'Container Operations',
+    'replaceItemInContainer':        'Container Operations',
+    'sendItemsInContainer':          'Container Operations',
+
     # Controller Settings
     'getControllerCount':            'Controller Settings',
     'isControllerConnected':         'Controller Settings',
@@ -162,18 +158,15 @@ FUNCTION_GROUPS = {
     'showVehicleEditor':             'Debug Editor Views',
     'showWorldMapEditor':            'Debug Editor Views',
 
-    # Debug Rendering & Weather
-    'debugSetRoomType':              'Debug Rendering & Weather',
-    'copyTable':                     'Debug Rendering & Weather',
-    'renderIsoCircle':               'Debug Rendering & Weather',
-    'renderIsoRect':                 'Debug Rendering & Weather',
-    'renderLine':                    'Debug Rendering & Weather',
-    'configureLighting':             'Debug Rendering & Weather',
-    'invalidateLighting':            'Debug Rendering & Weather',
-    'testHelicopter':                'Debug Rendering & Weather',
-    'endHelicopter':                 'Debug Rendering & Weather',
-    'getServerSettingsManager':      'Debug Rendering & Weather',
-    'rainConfig':                    'Debug Rendering & Weather',
+    # Debug Rendering
+    'debugSetRoomType':              'Debug Rendering',
+    'renderIsoCircle':               'Debug Rendering',
+    'renderIsoRect':                 'Debug Rendering',
+    'renderLine':                    'Debug Rendering',
+    'configureLighting':             'Debug Rendering',
+    'invalidateLighting':            'Debug Rendering',
+    'addAreaHighlight':              'Debug Rendering',
+    'addAreaHighlightForPlayer':     'Debug Rendering',
 
     # Debug Tools
     'getSpecificPlayer':             'Debug Tools',
@@ -185,6 +178,13 @@ FUNCTION_GROUPS = {
     'toggleBreakOnRead':             'Debug Tools',
     'toggleBreakpoint':              'Debug Tools',
     'getDebugOptions':               'Debug Tools',
+    'testHelicopter':                'Debug Tools',
+    'endHelicopter':                 'Debug Tools',
+    'emulateAnimEvent':              'Debug Tools',
+    'emulateAnimEventOnce':          'Debug Tools',
+    'takeScreenshot':                'Debug Tools',
+    'log':                           'Debug Tools',
+    'sendDebugStory':                'Debug Tools',
 
     # Debugger & Lua Inspector
     'assaultPlayer':                 'Debugger & Lua Inspector',
@@ -205,6 +205,8 @@ FUNCTION_GROUPS = {
     'getLuaDebuggerErrors':          'Debugger & Lua Inspector',
     'doLuaDebuggerAction':           'Debugger & Lua Inspector',
     'isQuitCooldown':                'Debugger & Lua Inspector',
+    'debugLuaTable':                 'Debugger & Lua Inspector',
+    'displayLUATable':               'Debugger & Lua Inspector',
 
     # Entity & Script Reload
     'reloadVehicles':                'Entity & Script Reload',
@@ -216,15 +218,18 @@ FUNCTION_GROUPS = {
     'reloadEntityDebug':             'Entity & Script Reload',
     'reloadEntityFromScriptDebug':   'Entity & Script Reload',
     'getIsoEntitiesDebug':           'Entity & Script Reload',
+    'reloadVehicleTextures':         'Entity & Script Reload',
 
     # Environment & Climate
-    'reloadVehicleTextures':         'Environment & Climate',
     'useStaticErosionRand':          'Environment & Climate',
     'getClimateManager':             'Environment & Climate',
     'getClimateMoon':                'Environment & Climate',
     'getWorldMarkers':               'Environment & Climate',
     'getIsoMarkers':                 'Environment & Climate',
     'getErosion':                    'Environment & Climate',
+    'rainConfig':                    'Environment & Climate',
+    'updateFire':                    'Environment & Climate',
+    'forceSnowCheck':                'Environment & Climate',
 
     # Event System
     'triggerEvent':                  'Event System',
@@ -241,10 +246,6 @@ FUNCTION_GROUPS = {
     'sendSafezoneClaim':             'Factions & Safehouses',
     'sendSafehouseClaim':            'Factions & Safehouses',
     'sendSafehouseRelease':          'Factions & Safehouses',
-
-    # File Checks & Screenshots
-    'serverFileExists':              'File Checks & Screenshots',
-    'takeScreenshot':                'File Checks & Screenshots',
 
     # File I/O
     'lineSeparator':                 'File I/O',
@@ -265,59 +266,40 @@ FUNCTION_GROUPS = {
     'ZombRandBetween':               'File I/O',
     'ZombRandFloat':                 'File I/O',
     'getShortenedFilename':          'File I/O',
+    'getFileSeparator':              'File I/O',
 
-    # Fire & Player Database
-    'updateFire':                    'Fire & Player Database',
-    'deletePlayerFromDatabase':      'Fire & Player Database',
-    'checkPlayerExistsInDatabase':   'Fire & Player Database',
-    'deletePlayerSave':              'Fire & Player Database',
+    # File System
+    'serverFileExists':              'File System',
+    'checkSaveFolderExists':         'File System',
+    'getAbsoluteSaveFolderName':     'File System',
+    'checkSaveFileExists':           'File System',
+    'checkSavePlayerExists':         'File System',
+    'cacheFileExists':               'File System',
+    'fileExists':                    'File System',
 
-    # Game Client & Player Management
-    'sortBrowserList':               'Game Client & Player Management',
-    'getGameClient':                 'Game Client & Player Management',
-    'sendRequestInventory':          'Game Client & Player Management',
-    'InvMngGetItem':                 'Game Client & Player Management',
-    'InvMngRemoveItem':              'Game Client & Player Management',
-    'InvMngUpdateItem':              'Game Client & Player Management',
-    'getConnectedPlayers':           'Game Client & Player Management',
-    'getPlayerFromUsername':         'Game Client & Player Management',
-    'isCoopHost':                    'Game Client & Player Management',
-    'setAdmin':                      'Game Client & Player Management',
-    'addWarningPoint':               'Game Client & Player Management',
-    'disconnect':                    'Game Client & Player Management',
-    'writeLog':                      'Game Client & Player Management',
+    # Game Actions
+    'createBuildAction':             'Game Actions',
+    'startFishingAction':            'Game Actions',
+    'getPickedUpFish':               'Game Actions',
+
+    # Game Client
+    'getGameClient':                 'Game Client',
+    'isCoopHost':                    'Game Client',
+    'disconnect':                    'Game Client',
+    'writeLog':                      'Game Client',
 
     # Game Configuration
     'getCustomizationData':          'Game Configuration',
     'getCombatConfig':               'Game Configuration',
     'setMinMaxZombiesPerChunk':      'Game Configuration',
     'setShowPausedMessage':          'Game Configuration',
+    'getSandboxOptions':             'Game Configuration',
+    'getSandboxPresets':             'Game Configuration',
+    'deleteSandboxPreset':           'Game Configuration',
 
-    # Save Management
-    'getSaveDirectory':              'Save Management',
-    'getFullSaveDirectoryTable':     'Save Management',
-    'getSaveDirectoryTable':         'Save Management',
-    'getCurrentSaveName':            'Save Management',
-    'doChallenge':                   'Save Management',
-    'doTutorial':                    'Save Management',
-    'deleteAllGameModeSaves':        'Save Management',
-
-    # (ping/stopPing → Multiplayer Connection; transformIntoKahluaTable → Miscellaneous Utilities)
-
-    # System Info
-    'getGameVersion':                'System Info',
-    'getBreakModGameVersion':        'System Info',
-    'isSystemLinux':                 'System Info',
-    'isSystemMacOS':                 'System Info',
-    'isSystemWindows':               'System Info',
-
-    # (scattered to existing groups below)
-    # setZoomLevels → Rendering & Performance
-    # getCore → Lua Runtime
-    # getSquare → World & Map Dimensions
-    # getDebugOptions → Debug Tools
-    # setShowPausedMessage → Game Configuration
-    # getFilenameOf*/getFirstLineOfClosure/getLocalVarCount → Lua Stack Introspection
+    # Game Saves
+    'save':                          'Game Saves',
+    'saveGame':                      'Game Saves',
 
     # Game Speed & Pause
     'getGameSpeed':                  'Game Speed & Pause',
@@ -325,19 +307,60 @@ FUNCTION_GROUPS = {
     'stepForward':                   'Game Speed & Pause',
     'isGamePaused':                  'Game Speed & Pause',
 
-    # Input Events & Vehicle Placement
-    'getKeyName':                    'Input Events & Vehicle Placement',
-    'getKeyCode':                    'Input Events & Vehicle Placement',
-    'queueCharEvent':                'Input Events & Vehicle Placement',
-    'queueKeyEvent':                 'Input Events & Vehicle Placement',
-    'addAllVehicles':                'Input Events & Vehicle Placement',
-    'addAllBurntVehicles':           'Input Events & Vehicle Placement',
-    'addAllSmashedVehicles':         'Input Events & Vehicle Placement',
-    'addPhysicsObject':              'Input Events & Vehicle Placement',
+    # Gamepad Input
+    'isJoypadPressed':                       'Gamepad Input',
+    'isJoypadDown':                          'Gamepad Input',
+    'isJoypadLTPressed':                     'Gamepad Input',
+    'isJoypadRTPressed':                     'Gamepad Input',
+    'isJoypadLeftStickButtonPressed':        'Gamepad Input',
+    'isJoypadRightStickButtonPressed':       'Gamepad Input',
+    'getJoypadAimingAxisX':                  'Gamepad Input',
+    'getJoypadAimingAxisY':                  'Gamepad Input',
+    'getJoypadMovementAxisX':                'Gamepad Input',
+    'getJoypadMovementAxisY':                'Gamepad Input',
+    'getJoypadAButton':                      'Gamepad Input',
+    'getJoypadBButton':                      'Gamepad Input',
+    'getJoypadXButton':                      'Gamepad Input',
+    'getJoypadYButton':                      'Gamepad Input',
+    'getJoypadLBumper':                      'Gamepad Input',
+    'getJoypadRBumper':                      'Gamepad Input',
+    'getJoypadBackButton':                   'Gamepad Input',
+    'getJoypadStartButton':                  'Gamepad Input',
+    'getJoypadLeftStickButton':              'Gamepad Input',
+    'getJoypadRightStickButton':             'Gamepad Input',
+    'wasMouseActiveMoreRecentlyThanJoypad':  'Gamepad Input',
+    'activateJoypadOnSteamDeck':             'Gamepad Input',
+    'reactivateJoypadAfterResetLua':         'Gamepad Input',
+    'isJoypadConnected':                     'Gamepad Input',
+    'toInt':                                 'Gamepad Input',
+    'getClientUsername':                     'Gamepad Input',
+    'setPlayerJoypad':                       'Gamepad Input',
+    'setPlayerMouse':                        'Gamepad Input',
+    'revertToKeyboardAndMouse':              'Gamepad Input',
+    'revertToKeyboardAndMouseFromMainMenu':  'Gamepad Input',
+    'isJoypadUp':                            'Gamepad Input',
+    'isJoypadLeft':                          'Gamepad Input',
+    'isJoypadRight':                         'Gamepad Input',
+    'isJoypadLBPressed':                     'Gamepad Input',
+    'isJoypadRBPressed':                     'Gamepad Input',
+    'getButtonCount':                        'Gamepad Input',
+    'setDebugToggleControllerPluggedIn':     'Gamepad Input',
+
+    # Hit & Combat Events
+    'getFakeAttacker':               'Hit & Combat Events',
+    'sendHitPlayer':                 'Hit & Combat Events',
+    'sendHitVehicle':                'Hit & Combat Events',
+
+    # Inventory Management
+    'sendRequestInventory':          'Inventory Management',
+    'InvMngGetItem':                 'Inventory Management',
+    'InvMngRemoveItem':              'Inventory Management',
+    'InvMngUpdateItem':              'Inventory Management',
 
     # Item Information
     'getAllItems':                   'Item Information',
     'getAllRecipes':                  'Item Information',
+    'getEvolvedRecipes':             'Item Information',
     'getItemNameFromFullType':       'Item Information',
     'getItem':                       'Item Information',
     'getItemStaticModel':            'Item Information',
@@ -363,6 +386,12 @@ FUNCTION_GROUPS = {
     'cloneItemType':                 'Item Scripting',
     'moduleDotType':                 'Item Scripting',
 
+    # Item Sync
+    'syncItemActivated':             'Item Sync',
+    'syncItemModData':               'Item Sync',
+    'syncItemFields':                'Item Sync',
+    'syncHandWeaponFields':          'Item Sync',
+
     # Item Transactions & Actions
     'createItemTransaction':             'Item Transactions & Actions',
     'createItemTransactionWithPosData':  'Item Transactions & Actions',
@@ -377,44 +406,17 @@ FUNCTION_GROUPS = {
     'getActionDuration':                 'Item Transactions & Actions',
     'removeAction':                      'Item Transactions & Actions',
 
-    # Joypad & Gamepad Input
-    'isJoypadPressed':                       'Joypad & Gamepad Input',
-    'isJoypadDown':                          'Joypad & Gamepad Input',
-    'isJoypadLTPressed':                     'Joypad & Gamepad Input',
-    'isJoypadRTPressed':                     'Joypad & Gamepad Input',
-    'isJoypadLeftStickButtonPressed':        'Joypad & Gamepad Input',
-    'isJoypadRightStickButtonPressed':       'Joypad & Gamepad Input',
-    'getJoypadAimingAxisX':                  'Joypad & Gamepad Input',
-    'getJoypadAimingAxisY':                  'Joypad & Gamepad Input',
-    'getJoypadMovementAxisX':                'Joypad & Gamepad Input',
-    'getJoypadMovementAxisY':                'Joypad & Gamepad Input',
-    'getJoypadAButton':                      'Joypad & Gamepad Input',
-    'getJoypadBButton':                      'Joypad & Gamepad Input',
-    'getJoypadXButton':                      'Joypad & Gamepad Input',
-    'getJoypadYButton':                      'Joypad & Gamepad Input',
-    'getJoypadLBumper':                      'Joypad & Gamepad Input',
-    'getJoypadRBumper':                      'Joypad & Gamepad Input',
-    'getJoypadBackButton':                   'Joypad & Gamepad Input',
-    'getJoypadStartButton':                  'Joypad & Gamepad Input',
-    'getJoypadLeftStickButton':              'Joypad & Gamepad Input',
-    'getJoypadRightStickButton':             'Joypad & Gamepad Input',
-    'wasMouseActiveMoreRecentlyThanJoypad':  'Joypad & Gamepad Input',
-    'activateJoypadOnSteamDeck':             'Joypad & Gamepad Input',
-    'reactivateJoypadAfterResetLua':         'Joypad & Gamepad Input',
-    'isJoypadConnected':                     'Joypad & Gamepad Input',
-    'toInt':                                 'Joypad & Gamepad Input',
-    'getClientUsername':                     'Joypad & Gamepad Input',
-    'setPlayerJoypad':                       'Joypad & Gamepad Input',
-    'setPlayerMouse':                        'Joypad & Gamepad Input',
-    'revertToKeyboardAndMouse':              'Joypad & Gamepad Input',
-    'revertToKeyboardAndMouseFromMainMenu':  'Joypad & Gamepad Input',
-    'isJoypadUp':                            'Joypad & Gamepad Input',
-    'isJoypadLeft':                          'Joypad & Gamepad Input',
-    'isJoypadRight':                         'Joypad & Gamepad Input',
-    'isJoypadLBPressed':                     'Joypad & Gamepad Input',
-    'isJoypadRBPressed':                     'Joypad & Gamepad Input',
-    'getButtonCount':                        'Joypad & Gamepad Input',
-    'setDebugToggleControllerPluggedIn':     'Joypad & Gamepad Input',
+    # Java Reflection
+    'getNumClassFunctions':                  'Java Reflection',
+    'getClassFunction':                      'Java Reflection',
+    'getNumClassFields':                     'Java Reflection',
+    'getClassField':                         'Java Reflection',
+
+    # Key Events
+    'getKeyName':                    'Key Events',
+    'getKeyCode':                    'Key Events',
+    'queueCharEvent':                'Key Events',
+    'queueKeyEvent':                 'Key Events',
 
     # Keyboard Input
     'isKeyDown':                     'Keyboard Input',
@@ -425,6 +427,18 @@ FUNCTION_GROUPS = {
     'isAltKeyDown':                  'Keyboard Input',
     'isMetaKeyDown':                 'Keyboard Input',
     'doKeyPress':                    'Keyboard Input',
+
+    # Lua File I/O
+    'getFileOutput':                         'Lua File I/O',
+    'getLastStandPlayersDirectory':          'Lua File I/O',
+    'getLastStandPlayerFileNames':           'Lua File I/O',
+    'getAllSavedPlayers':                    'Lua File I/O',
+    'getFileReader':                         'Lua File I/O',
+    'getModFileReader':                      'Lua File I/O',
+    'listFilesInZomboidLuaDirectory':        'Lua File I/O',
+    'listFilesInModDirectory':               'Lua File I/O',
+    'getModFileWriter':                      'Lua File I/O',
+    'getMyDocumentFolder':                   'Lua File I/O',
 
     # Lua Runtime
     'require':                       'Lua Runtime',
@@ -453,7 +467,6 @@ FUNCTION_GROUPS = {
     'getLuaStackTrace':              'Lua Stack Introspection',
 
     # Miscellaneous Utilities
-    'transformIntoKahluaTable':      'Miscellaneous Utilities',
     'getBehaviourDebugPlayer':       'Miscellaneous Utilities',
     'setBehaviorStep':               'Miscellaneous Utilities',
     'getPuddlesManager':             'Miscellaneous Utilities',
@@ -465,21 +478,13 @@ FUNCTION_GROUPS = {
     'convertToPZNetTable':           'Miscellaneous Utilities',
     'instanceof':                    'Miscellaneous Utilities',
     'getClassSimpleName':            'Miscellaneous Utilities',
-
-    # Mod & File System
-    'debugLuaTable':                 'Mod & File System',
-    'sendItemsInContainer':          'Mod & File System',
-    'getModDirectoryTable':          'Mod & File System',
-    'getMapFoldersForMod':           'Mod & File System',
-    'spawnpointsExistsForMod':       'Mod & File System',
-    'getFileSeparator':              'Mod & File System',
-    'getScriptManager':              'Mod & File System',
-    'checkSaveFolderExists':         'Mod & File System',
-    'getAbsoluteSaveFolderName':     'Mod & File System',
-    'checkSaveFileExists':           'Mod & File System',
-    'checkSavePlayerExists':         'Mod & File System',
-    'cacheFileExists':               'Mod & File System',
-    'fileExists':                    'Mod & File System',
+    'transformIntoKahluaTable':      'Miscellaneous Utilities',
+    'copyTable':                     'Miscellaneous Utilities',
+    'timSort':                       'Miscellaneous Utilities',
+    'javaListRemoveAt':              'Miscellaneous Utilities',
+    'getSearchMode':                 'Miscellaneous Utilities',
+    'transmitBigWaterSplash':        'Miscellaneous Utilities',
+    'replaceWith':                   'Miscellaneous Utilities',
 
     # Mod Management
     'isModActive':                   'Mod Management',
@@ -491,6 +496,13 @@ FUNCTION_GROUPS = {
     'saveModsFile':                  'Mod Management',
     'manipulateSavefile':            'Mod Management',
     'getServerModData':              'Mod Management',
+    'checkModsNeedUpdate':           'Mod Management',
+
+    # Mod Utilities
+    'getModDirectoryTable':          'Mod Utilities',
+    'getMapFoldersForMod':           'Mod Utilities',
+    'spawnpointsExistsForMod':       'Mod Utilities',
+    'getScriptManager':              'Mod Utilities',
 
     # Mouse Input
     'getMouseXScaled':               'Mouse Input',
@@ -522,6 +534,13 @@ FUNCTION_GROUPS = {
     'canConnect':                    'Multiplayer Connection',
     'getReconnectCountdownTimer':    'Multiplayer Connection',
 
+    # Overhead Map
+    'translatePointXInOverheadMapToWindow':  'Overhead Map',
+    'translatePointYInOverheadMapToWindow':  'Overhead Map',
+    'translatePointXInOverheadMapToWorld':   'Overhead Map',
+    'translatePointYInOverheadMapToWorld':   'Overhead Map',
+    'drawOverheadMap':                       'Overhead Map',
+
     # Player Data Sync
     'sendVisual':                    'Player Data Sync',
     'sendSyncPlayerFields':          'Player Data Sync',
@@ -534,6 +553,13 @@ FUNCTION_GROUPS = {
     'hasDataReadBreakpoint':         'Player Data Sync',
     'hasDataBreakpoint':             'Player Data Sync',
     'hasBreakpoint':                 'Player Data Sync',
+    'sendPlayerStatsChange':         'Player Data Sync',
+    'sendPersonalColor':             'Player Data Sync',
+
+    # Player Database
+    'deletePlayerFromDatabase':      'Player Database',
+    'checkPlayerExistsInDatabase':   'Player Database',
+    'deletePlayerSave':              'Player Database',
 
     # Player Management
     'getSleepingEvent':              'Player Management',
@@ -548,8 +574,9 @@ FUNCTION_GROUPS = {
     'getPlayerScreenHeight':         'Player Management',
     'getPlayerByOnlineID':           'Player Management',
     'initUISystem':                  'Player Management',
-
-    # (getPerformance → Rendering & Performance; getAnimalChunk → Animal Spawning)
+    'getConnectedPlayers':           'Player Management',
+    'getPlayerFromUsername':         'Player Management',
+    'teleportPlayers':               'Player Management',
 
     # Radio & Broadcast
     'getRadioAPI':                   'Radio & Broadcast',
@@ -557,27 +584,11 @@ FUNCTION_GROUPS = {
     'getTranslatorCredits':          'Radio & Broadcast',
     'getZomboidRadio':               'Radio & Broadcast',
 
-    # Java Reflection
-    'getNumClassFunctions':                  'Java Reflection',
-    'getClassFunction':                      'Java Reflection',
-    'getNumClassFields':                     'Java Reflection',
-    'getClassField':                         'Java Reflection',
-
-    # Overhead Map
-    'translatePointXInOverheadMapToWindow':  'Overhead Map',
-    'translatePointYInOverheadMapToWindow':  'Overhead Map',
-    'translatePointXInOverheadMapToWorld':   'Overhead Map',
-    'translatePointYInOverheadMapToWorld':   'Overhead Map',
-    'drawOverheadMap':                       'Overhead Map',
-
-    # (createTile → World & Map Dimensions; getDirectionTo → Coordinate Conversion)
-
     # Rendering & Performance
-    'setZoomLevels':                 'Rendering & Performance',
     'getPerformance':                'Rendering & Performance',
+    'setZoomLevels':                 'Rendering & Performance',
     'screenZoomIn':                  'Rendering & Performance',
     'screenZoomOut':                 'Rendering & Performance',
-    'checkServerName':               'Rendering & Performance',
     'Render3DItem':                  'Rendering & Performance',
     'getContainerOverlays':          'Rendering & Performance',
     'getTileOverlays':               'Rendering & Performance',
@@ -588,21 +599,7 @@ FUNCTION_GROUPS = {
     'getCPUWait':                    'Rendering & Performance',
     'getGPUWait':                    'Rendering & Performance',
     'getServerFPS':                  'Rendering & Performance',
-
-    # Sandbox & File I/O
-    'getSandboxOptions':             'Sandbox & File I/O',
-    'getFileOutput':                 'Sandbox & File I/O',
-    'getLastStandPlayersDirectory':  'Sandbox & File I/O',
-    'getLastStandPlayerFileNames':   'Sandbox & File I/O',
-    'getAllSavedPlayers':            'Sandbox & File I/O',
-    'getSandboxPresets':             'Sandbox & File I/O',
-    'deleteSandboxPreset':           'Sandbox & File I/O',
-    'getFileReader':                 'Sandbox & File I/O',
-    'getModFileReader':              'Sandbox & File I/O',
-    'listFilesInZomboidLuaDirectory':'Sandbox & File I/O',
-    'listFilesInModDirectory':       'Sandbox & File I/O',
-    'getModFileWriter':              'Sandbox & File I/O',
-    'getMyDocumentFolder':           'Sandbox & File I/O',
+    'configRoomFade':                'Rendering & Performance',
 
     # Save Info
     'getLastPlayedDate':             'Save Info',
@@ -612,15 +609,14 @@ FUNCTION_GROUPS = {
     'setSavefilePlayer1':            'Save Info',
     'getServerSavedWorldVersion':    'Save Info',
 
-    # Game Saves & Logs
-    'scoreboardUpdate':              'Game Saves & Logs',
-    'save':                          'Game Saves & Logs',
-    'saveGame':                      'Game Saves & Logs',
-    'requestUserlog':                'Game Saves & Logs',
-    'addUserlog':                    'Game Saves & Logs',
-    'removeUserlog':                 'Game Saves & Logs',
-
-    # (getAllItems/getAllRecipes → Item Information)
+    # Save Management
+    'getSaveDirectory':              'Save Management',
+    'getFullSaveDirectoryTable':     'Save Management',
+    'getSaveDirectoryTable':         'Save Management',
+    'getCurrentSaveName':            'Save Management',
+    'doChallenge':                   'Save Management',
+    'doTutorial':                    'Save Management',
+    'deleteAllGameModeSaves':        'Save Management',
 
     # Server / Client State
     'getLoadedLuaCount':             'Server / Client State',
@@ -652,8 +648,11 @@ FUNCTION_GROUPS = {
     'setShowConnectionInfo':         'Server Config & Runtime',
     'isShowServerInfo':              'Server Config & Runtime',
     'setShowServerInfo':             'Server Config & Runtime',
+    'getServerSettingsManager':      'Server Config & Runtime',
+    'checkServerName':               'Server Config & Runtime',
 
     # Server List & Accounts
+    'sortBrowserList':               'Server List & Accounts',
     'createRegionFile':              'Server List & Accounts',
     'getMapDirectoryTable':          'Server List & Accounts',
     'deleteSave':                    'Server List & Accounts',
@@ -736,23 +735,17 @@ FUNCTION_GROUPS = {
     'isPublicServerListAllowed':         'Steam Server Browser',
     'isSteamServerBrowserEnabled':       'Steam Server Browser',
 
-    # Teleport, Debug & Timers
-    'log':                           'Teleport, Debug & Timers',
-    'teleportPlayers':               'Teleport, Debug & Timers',
-    'checkModsNeedUpdate':           'Teleport, Debug & Timers',
-    'getSearchMode':                 'Teleport, Debug & Timers',
-    'transmitBigWaterSplash':        'Teleport, Debug & Timers',
-    'addAreaHighlight':              'Teleport, Debug & Timers',
-    'addAreaHighlightForPlayer':     'Teleport, Debug & Timers',
-    'configRoomFade':                'Teleport, Debug & Timers',
-    'timSort':                       'Teleport, Debug & Timers',
-    'javaListRemoveAt':              'Teleport, Debug & Timers',
-    'sendDebugStory':                'Teleport, Debug & Timers',
-    'displayLUATable':               'Teleport, Debug & Timers',
-    'timersShowMean':                'Teleport, Debug & Timers',
-    'timersShowTotal':               'Teleport, Debug & Timers',
-    'timersReset':                   'Teleport, Debug & Timers',
-    'timerGetKept':                  'Teleport, Debug & Timers',
+    # String Utilities
+    'checkStringPattern':            'String Utilities',
+    'getTwoLetters':                 'String Utilities',
+    'splitString':                   'String Utilities',
+
+    # System Info
+    'getGameVersion':                'System Info',
+    'getBreakModGameVersion':        'System Info',
+    'isSystemLinux':                 'System Info',
+    'isSystemMacOS':                 'System Info',
+    'isSystemWindows':               'System Info',
 
     # Text & Localization
     'getVideo':                      'Text & Localization',
@@ -769,25 +762,24 @@ FUNCTION_GROUPS = {
     'getTexture':                    'Textures',
     'tryGetTexture':                 'Textures',
 
-    # Authentication
-    'sendSecretKey':                 'Authentication',
-    'stopSendSecretKey':             'Authentication',
-    'generateSecretKey':             'Authentication',
-    'sendGoogleAuth':                'Authentication',
-    'createQRCodeTex':               'Authentication',
+    # Timers
+    'timersShowMean':                'Timers',
+    'timersShowTotal':               'Timers',
+    'timersReset':                   'Timers',
+    'timerGetKept':                  'Timers',
 
-    # Trading & String Utilities
-    'checkStringPattern':            'Trading & String Utilities',
-    'sendPlayerStatsChange':         'Trading & String Utilities',
-    'sendPersonalColor':             'Trading & String Utilities',
-    'requestTrading':                'Trading & String Utilities',
-    'acceptTrading':                 'Trading & String Utilities',
-    'tradingUISendAddItem':          'Trading & String Utilities',
-    'tradingUISendRemoveItem':       'Trading & String Utilities',
-    'tradingUISendUpdateState':      'Trading & String Utilities',
-    'sendWarManagerUpdate':          'Trading & String Utilities',
-    'getTwoLetters':                 'Trading & String Utilities',
-    'splitString':                   'Trading & String Utilities',
+    # Timestamps
+    'getTimestamp':                  'Timestamps',
+    'getTimestampMs':                'Timestamps',
+    'getGametimeTimestamp':          'Timestamps',
+
+    # Trading
+    'requestTrading':                'Trading',
+    'acceptTrading':                 'Trading',
+    'tradingUISendAddItem':          'Trading',
+    'tradingUISendRemoveItem':       'Trading',
+    'tradingUISendUpdateState':      'Trading',
+    'sendWarManagerUpdate':          'Trading',
 
     # User & Role Management
     'requestUsers':                  'User & Role Management',
@@ -807,22 +799,26 @@ FUNCTION_GROUPS = {
     'setDefaultRoleFor':             'User & Role Management',
     'moveRole':                      'User & Role Management',
 
-    # Vehicles, Blood & Zombie Spawning
-    'sendSwitchSeat':                'Vehicles, Blood & Zombie Spawning',
-    'getVehicleById':                'Vehicles, Blood & Zombie Spawning',
-    'removeVehicle':                 'Vehicles, Blood & Zombie Spawning',
-    'removeAllVehicles':             'Vehicles, Blood & Zombie Spawning',
-    'addBloodSplat':                 'Vehicles, Blood & Zombie Spawning',
-    'addCarCrash':                   'Vehicles, Blood & Zombie Spawning',
-    'createRandomDeadBody':          'Vehicles, Blood & Zombie Spawning',
-    'addZombieSitting':              'Vehicles, Blood & Zombie Spawning',
-    'addZombiesEating':              'Vehicles, Blood & Zombie Spawning',
-    'addZombiesInOutfitArea':        'Vehicles, Blood & Zombie Spawning',
-    'addZombiesInOutfit':            'Vehicles, Blood & Zombie Spawning',
-    'addZombiesInBuilding':          'Vehicles, Blood & Zombie Spawning',
-    'addVehicleDebug':               'Vehicles, Blood & Zombie Spawning',
-    'addVehicle':                    'Vehicles, Blood & Zombie Spawning',
-    'attachTrailerToPlayerVehicle':  'Vehicles, Blood & Zombie Spawning',
+    # User Logs
+    'scoreboardUpdate':              'User Logs',
+    'requestUserlog':                'User Logs',
+    'addUserlog':                    'User Logs',
+    'removeUserlog':                 'User Logs',
+
+    # Vehicle Management
+    'sendSwitchSeat':                'Vehicle Management',
+    'getVehicleById':                'Vehicle Management',
+    'removeVehicle':                 'Vehicle Management',
+    'removeAllVehicles':             'Vehicle Management',
+    'addVehicle':                    'Vehicle Management',
+    'addVehicleDebug':               'Vehicle Management',
+    'attachTrailerToPlayerVehicle':  'Vehicle Management',
+
+    # Vehicle Placement
+    'addAllVehicles':                'Vehicle Placement',
+    'addAllBurntVehicles':           'Vehicle Placement',
+    'addAllSmashedVehicles':         'Vehicle Placement',
+    'addPhysicsObject':              'Vehicle Placement',
 
     # World & Map Dimensions
     'createTile':                    'World & Map Dimensions',
@@ -834,6 +830,15 @@ FUNCTION_GROUPS = {
     'getChunkSizeInSquares':         'World & Map Dimensions',
     'getMinimumWorldLevel':          'World & Map Dimensions',
     'getMaximumWorldLevel':          'World & Map Dimensions',
+    'getCellMinX':                   'World & Map Dimensions',
+    'getCellMaxX':                   'World & Map Dimensions',
+    'getCellMinY':                   'World & Map Dimensions',
+    'getCellMaxY':                   'World & Map Dimensions',
+
+    # World Effects
+    'addBloodSplat':                 'World Effects',
+    'addCarCrash':                   'World Effects',
+    'createRandomDeadBody':          'World Effects',
 
     # World Info Queries
     'getZombieInfo':                 'World Info Queries',
@@ -860,21 +865,16 @@ FUNCTION_GROUPS = {
     'createHordeInAreaTo':           'Zombie & Horde Spawning',
     'spawnHorde':                    'Zombie & Horde Spawning',
     'createZombie':                  'Zombie & Horde Spawning',
+    'addZombieSitting':              'Zombie & Horde Spawning',
+    'addZombiesEating':              'Zombie & Horde Spawning',
+    'addZombiesInOutfitArea':        'Zombie & Horde Spawning',
+    'addZombiesInOutfit':            'Zombie & Horde Spawning',
+    'addZombiesInBuilding':          'Zombie & Horde Spawning',
 
-    # Zones, Map Bounds & Timestamps
-    'getEvolvedRecipes':             'Zones, Map Bounds & Timestamps',
-    'getZone':                       'Zones, Map Bounds & Timestamps',
-    'getZones':                      'Zones, Map Bounds & Timestamps',
-    'getVehicleZoneAt':              'Zones, Map Bounds & Timestamps',
-    'getCellMinX':                   'Zones, Map Bounds & Timestamps',
-    'getCellMaxX':                   'Zones, Map Bounds & Timestamps',
-    'getCellMinY':                   'Zones, Map Bounds & Timestamps',
-    'getCellMaxY':                   'Zones, Map Bounds & Timestamps',
-    'replaceWith':                   'Zones, Map Bounds & Timestamps',
-    'getTimestamp':                  'Zones, Map Bounds & Timestamps',
-    'getTimestampMs':                'Zones, Map Bounds & Timestamps',
-    'forceSnowCheck':                'Zones, Map Bounds & Timestamps',
-    'getGametimeTimestamp':          'Zones, Map Bounds & Timestamps',
+    # Zone Queries
+    'getZone':                       'Zone Queries',
+    'getZones':                      'Zone Queries',
+    'getVehicleZoneAt':              'Zone Queries',
 }
 
 api = json.loads(API_FILE.read_text(encoding="utf-8"))
