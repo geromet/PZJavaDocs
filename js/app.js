@@ -65,7 +65,7 @@ function navPush(state) {
 function captureState() {
   if (currentTab === 'globals') {
     const srcWrap = document.getElementById('globals-source-wrap');
-    if (srcWrap?.classList.contains('visible')) {
+    if (srcWrap?.classList.contains('has-source')) {
       return { type: 'globalSource', javaMethod: document.getElementById('globals-src-title').textContent };
     }
     return { type: 'globals' };
@@ -190,12 +190,9 @@ function switchCtab(name) {
 function applySplitLayout(enabled) {
   splitLayout = enabled && window.innerWidth > 900;
   document.getElementById('content').classList.toggle('split-layout', splitLayout);
-  const label = splitLayout ? '⊟' : '⊞';
-  const title = splitLayout ? 'Switch to single panel' : 'Switch to split panel';
-  ['btn-split-toggle', 'btn-globals-split-toggle'].forEach(id => {
-    const btn = document.getElementById(id);
-    if (btn) { btn.textContent = label; btn.title = title; }
-  });
+  const btn = document.getElementById('btn-split-toggle');
+  btn.textContent = splitLayout ? '⊟' : '⊞';
+  btn.title = splitLayout ? 'Switch to single panel' : 'Switch to split panel';
   localStorage.setItem('splitLayout', splitLayout ? '1' : '0');
   if (currentClass) {
     if (splitLayout) {
@@ -205,20 +202,6 @@ function applySplitLayout(enabled) {
         showSource(API.classes[currentClass]);
     } else {
       switchCtab(currentCtab);
-    }
-  }
-  if (currentTab === 'globals') {
-    const srcWrap = document.getElementById('globals-source-wrap');
-    if (srcWrap?.classList.contains('visible')) {
-      if (splitLayout) {
-        // Entering split: restore left panel, hide single-mode nav
-        document.getElementById('globals-left').style.display = '';
-        document.getElementById('globals-nav').classList.remove('visible');
-      } else {
-        // Leaving split: hide left panel, show single-mode nav
-        document.getElementById('globals-left').style.display = 'none';
-        document.getElementById('globals-nav').classList.add('visible');
-      }
     }
   }
 }
@@ -245,9 +228,8 @@ function setupEvents() {
   document.getElementById('btn-nav-back').addEventListener('click',    () => navGo(-1));
   document.getElementById('btn-nav-forward').addEventListener('click', () => navGo(+1));
 
-  // Split layout toggle (classes tab + globals tab)
+  // Split layout toggle (classes tab only)
   document.getElementById('btn-split-toggle').addEventListener('click', () => applySplitLayout(!splitLayout));
-  document.getElementById('btn-globals-split-toggle').addEventListener('click', () => applySplitLayout(!splitLayout));
   window.addEventListener('resize', () => { if (splitLayout && window.innerWidth <= 900) applySplitLayout(false); });
 
   // Local folder picker
@@ -309,9 +291,6 @@ function setupEvents() {
     foldedGlobalGroups.clear();
     updateGlobalsTable(document.getElementById('globals-search')?.value || '');
   });
-
-  // Globals back button
-  document.getElementById('globals-back-btn').addEventListener('click', backToGlobalsTable);
 
   // Source toolbar — class source
   document.getElementById('src-fold-all').addEventListener('click', () =>

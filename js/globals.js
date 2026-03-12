@@ -170,11 +170,8 @@ async function showGlobalSource(javaMethod) {
   navPush({type: 'globalSource', javaMethod});
   const relPath = 'zombie/Lua/LuaManager.java';
   document.getElementById('globals-src-title').textContent = javaMethod;
-  if (!splitLayout) {
-    document.getElementById('globals-left').style.display = 'none';
-    document.getElementById('globals-nav').classList.add('visible');
-  }
-  document.getElementById('globals-source-wrap').classList.add('visible');
+  document.getElementById('globals-source-wrap').classList.add('has-source');
+  document.getElementById('gsrc-toolbar').style.display = '';
 
   const codeEl = document.getElementById('globals-src-code');
   codeEl.textContent = 'Loading…';
@@ -194,9 +191,8 @@ async function showGlobalSource(javaMethod) {
 }
 
 function backToGlobalsTable() {
-  if (!splitLayout) {
-    document.getElementById('globals-left').style.display = '';
-    document.getElementById('globals-nav').classList.remove('visible');
-  }
-  document.getElementById('globals-source-wrap').classList.remove('visible');
+  document.getElementById('globals-source-wrap').classList.remove('has-source');
+  document.getElementById('gsrc-toolbar').style.display = 'none';
+  document.getElementById('globals-src-title').textContent = '';
+  document.getElementById('globals-src-code').textContent = '';
 }
