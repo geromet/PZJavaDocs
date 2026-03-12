@@ -11,7 +11,7 @@ A static web app for browsing the Project Zomboid Lua API. The viewer is deploye
 | File | Purpose |
 |------|---------|
 | `extract_lua_api.py` | Run from `../` (projectzomboid/) to regenerate `lua_api.json` |
-| `lua_api.json` | 5.2MB extracted API — copy to `pz-lua-api-viewer/lua_api.json` after regenerating |
+| `lua_api.json` | ~6MB extracted API — written here directly by `extract_lua_api.py` |
 | `index.html` | Single-file HTML shell (~720 lines) |
 | `app.css` | All styles |
 | `js/state.js` | Global state variables |
@@ -88,8 +88,8 @@ When the user says "work on the tasks" (or similar), do this without further cla
    - Read every file the task says it touches.
    - Implement per the plan; verify acceptance criteria.
    - If the task modified `extract_lua_api.py`, run the extractor and copy the JSON immediately (see "Regenerating the API").
-   - When done, move the task file to `docs/Archive/` and prepend a completion note (date + one-sentence summary of what was done / any deviations).
-   - If the task resolves a bug, move that bug file to `docs/Archive/` too with a note.
+   - When done, **move** (never delete) the task file to `docs/Archive/` and prepend a `> **COMPLETED date** — ...` blockquote. Copy the full original content — do not replace it with a stub.
+   - If the task resolves a bug, **move** that bug file to `docs/Archive/` too with a `> **FIXED date** — ...` blockquote prepended. Same rule: full content preserved, never deleted.
    - Update `docs/STATUS.md` — remove the task from "Active Tasks" and the bug from "Open Bugs".
 4. **If a task is blocked** (missing data, unclear spec, prerequisite not met), note the blocker in the task file, leave it in `docs/Tasks/`, and move to the next task.
 5. **After all tasks** in a session are done:
