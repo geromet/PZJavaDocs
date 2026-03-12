@@ -282,8 +282,9 @@ function setupEvents() {
   // Global group fold buttons
   document.getElementById('btn-fold-groups').addEventListener('click', () => {
     const wrap = document.getElementById('globals-table-wrap');
-    wrap.querySelectorAll('.globals-cat-header').forEach(hdr => foldedGlobalGroups.add(hdr.dataset.catkey));
-    wrap.querySelectorAll('.globals-sub-header').forEach(hdr => foldedGlobalGroups.add(hdr.dataset.subkey));
+    wrap.querySelectorAll('.globals-dom-header').forEach(hdr => foldedGlobalGroups.add(hdr.dataset.domkey));
+    wrap.querySelectorAll('.globals-sec-header').forEach(hdr => foldedGlobalGroups.add(hdr.dataset.seckey));
+    wrap.querySelectorAll('.globals-grp-header').forEach(hdr => foldedGlobalGroups.add(hdr.dataset.grpkey));
     updateGlobalsTable(document.getElementById('globals-search')?.value || '');
   });
   document.getElementById('btn-unfold-groups').addEventListener('click', () => {

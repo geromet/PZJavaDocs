@@ -24,58 +24,72 @@ function initGlobals() {
 }
 
 function updateGlobalsTable(filter) {
-  const s   = filter.toLowerCase();
-  // Build group source-order map: semantic group name → index of first occurrence in original array.
-  // This preserves the natural source order of LuaManager.java when sorting.
-  const groupOrder = {};
+  const s = filter.toLowerCase();
+
+  // Source-order maps so the natural LuaManager.java ordering is preserved.
+  const domainOrder = {}, sectionOrder = {}, groupOrder = {};
   API.global_functions.forEach((g, i) => {
-    const grp = g.group || '';
-    if (!(grp in groupOrder)) groupOrder[grp] = i;
+    const dom = g.domain  || 'Other';
+    const sec = dom + '/' + (g.section || 'Other');
+    const grp = g.group   || 'Other';
+    if (!(dom in domainOrder))  domainOrder[dom]  = i;
+    if (!(sec in sectionOrder)) sectionOrder[sec] = i;
+    if (!(grp in groupOrder))   groupOrder[grp]   = i;
   });
 
   const fns = API.global_functions
     .map((g, i) => ({g, i}))
     .filter(({g}) => !s || g.lua_name.toLowerCase().includes(s) || g.java_method.toLowerCase().includes(s))
     .sort((a, b) => {
-      const ga = a.g.group || '', gb = b.g.group || '';
-      const orderA = groupOrder[ga] ?? a.i, orderB = groupOrder[gb] ?? b.i;
-      return orderA - orderB
-        || (a.g.category || 'Other').localeCompare(b.g.category || 'Other')
-        || a.g.lua_name.localeCompare(b.g.lua_name);
+      const da = a.g.domain  || 'Other', db = b.g.domain  || 'Other';
+      const sa = da + '/' + (a.g.section || 'Other'), sb = db + '/' + (b.g.section || 'Other');
+      const ga = a.g.group   || 'Other', gb = b.g.group   || 'Other';
+      return (domainOrder[da]  ?? a.i) - (domainOrder[db]  ?? b.i)
+          || (sectionOrder[sa] ?? a.i) - (sectionOrder[sb] ?? b.i)
+          || (groupOrder[ga]   ?? a.i) - (groupOrder[gb]   ?? b.i)
+          || a.g.lua_name.localeCompare(b.g.lua_name);
     });
 
   document.getElementById('globals-count').textContent = `${fns.length} functions`;
 
-  let lastGroup = null, lastSubgroup = null;
+  let lastDomain = null, lastSection = null, lastGroup = null;
   let rows = '';
   for (const {g} of fns) {
-    const group    = g.group    || 'Other';  // semantic label → top level
-    const subgroup = g.category || 'Other';  // verb-prefix category → sub level
-    const catKey   = 'CAT:' + group;
-    const subKey   = 'SUB:' + group + '/' + subgroup; // category-scoped to avoid cross-category collisions
-    const catFolded = foldedGlobalGroups.has(catKey);
-    const subFolded = foldedGlobalGroups.has(subKey);
+    const domain  = g.domain  || 'Other';
+    const section = g.section || 'Other';
+    const group   = g.group   || 'Other';
+    const domKey  = 'DOM:' + domain;
+    const secKey  = 'SEC:' + domain + '/' + section;
+    const grpKey  = 'GRP:' + group;
+    const domFolded = foldedGlobalGroups.has(domKey);
+    const secFolded = foldedGlobalGroups.has(secKey);
+    const grpFolded = foldedGlobalGroups.has(grpKey);
 
+    if (domain !== lastDomain) {
+      rows += `<tr class="globals-dom-header" data-domkey="${esc(domKey)}">
+        <td colspan="3"><span class="ggh-arrow">${domFolded ? '▶' : '▼'}</span>
+        <span class="ggh-name">${esc(domain)}</span></td></tr>`;
+      lastDomain = domain; lastSection = null; lastGroup = null;
+    }
+    if (section !== lastSection) {
+      rows += `<tr class="globals-sec-header" data-domkey="${esc(domKey)}" data-seckey="${esc(secKey)}"${domFolded ? ' style="display:none"' : ''}>
+        <td colspan="3" style="padding-left:16px"><span class="ggh-arrow">${secFolded ? '▶' : '▼'}</span>
+        <span class="ggh-name" style="font-weight:600">${esc(section)}</span></td></tr>`;
+      lastSection = section; lastGroup = null;
+    }
     if (group !== lastGroup) {
-      rows += `<tr class="globals-cat-header" data-catkey="${esc(catKey)}">
-        <td colspan="3"><span class="ggh-arrow">${catFolded ? '▶' : '▼'}</span>
-        <span class="ggh-name">${esc(group)}</span></td></tr>`;
+      const grpHidden = domFolded || secFolded;
+      rows += `<tr class="globals-grp-header" data-domkey="${esc(domKey)}" data-seckey="${esc(secKey)}" data-grpkey="${esc(grpKey)}"${grpHidden ? ' style="display:none"' : ''}>
+        <td colspan="3" style="padding-left:32px"><span class="ggh-arrow">${grpFolded ? '▶' : '▼'}</span>
+        <span class="ggh-name" style="font-weight:normal;color:var(--accent)">${esc(group)}</span></td></tr>`;
       lastGroup = group;
-      lastSubgroup = null; // force subgroup header re-emit
     }
-    if (subgroup !== lastSubgroup) {
-      const hidden = catFolded;
-      rows += `<tr class="globals-sub-header" data-catkey="${esc(catKey)}" data-subkey="${esc(subKey)}"${hidden ? ' style="display:none"' : ''}>
-        <td colspan="3" style="padding-left:18px"><span class="ggh-arrow">${subFolded ? '▶' : '▼'}</span>
-        <span class="ggh-name" style="font-weight:normal;color:var(--text-dim)">${esc(subgroup)}</span></td></tr>`;
-      lastSubgroup = subgroup;
-    }
-    const hidden = catFolded || subFolded;
-    const alias  = g.java_method !== g.lua_name
+    const fnHidden = domFolded || secFolded || grpFolded;
+    const alias = g.java_method !== g.lua_name
       ? `<span style="color:var(--text-dim);font-size:11px;margin-left:8px">← ${esc(g.java_method)}</span>`
       : '';
-    rows += `<tr class="gfn-row" data-catkey="${esc(catKey)}" data-subkey="${esc(subKey)}"${hidden ? ' style="display:none"' : ''}>
-      <td style="padding-left:28px"><a class="gfn-link" data-method="${esc(g.java_method)}">${esc(g.lua_name)}</a>${alias}</td>
+    rows += `<tr class="gfn-row" data-domkey="${esc(domKey)}" data-seckey="${esc(secKey)}" data-grpkey="${esc(grpKey)}"${fnHidden ? ' style="display:none"' : ''}>
+      <td style="padding-left:48px"><a class="gfn-link" data-method="${esc(g.java_method)}">${esc(g.lua_name)}</a>${alias}</td>
       <td><span class="return-type">${esc(g.return_type || '?')}</span></td>
       <td><span class="params-cell">${renderParams(g.params) || '<span style="color:#444">—</span>'}</span></td>
     </tr>`;
@@ -86,41 +100,63 @@ function updateGlobalsTable(filter) {
 
   const wrap = document.getElementById('globals-table-wrap');
 
-  wrap.querySelectorAll('.globals-cat-header').forEach(hdr => {
+  // Domain-level fold/unfold
+  wrap.querySelectorAll('.globals-dom-header').forEach(hdr => {
     hdr.addEventListener('click', () => {
-      const catKey = hdr.dataset.catkey;
-      if (foldedGlobalGroups.has(catKey)) foldedGlobalGroups.delete(catKey);
-      else foldedGlobalGroups.add(catKey);
-      const folded = foldedGlobalGroups.has(catKey);
+      const domKey = hdr.dataset.domkey;
+      if (foldedGlobalGroups.has(domKey)) foldedGlobalGroups.delete(domKey);
+      else foldedGlobalGroups.add(domKey);
+      const folded = foldedGlobalGroups.has(domKey);
       hdr.querySelector('.ggh-arrow').textContent = folded ? '▶' : '▼';
-      // Hide/show all rows and sub-headers in this category
-      wrap.querySelectorAll(`[data-catkey="${catKey}"]`).forEach(r => {
+      wrap.querySelectorAll(`[data-domkey="${domKey}"]`).forEach(r => {
         if (r === hdr) return;
         if (folded) {
           r.style.display = 'none';
+        } else if (r.classList.contains('globals-sec-header')) {
+          r.style.display = '';
+          r.querySelector('.ggh-arrow').textContent = foldedGlobalGroups.has(r.dataset.seckey) ? '▶' : '▼';
+        } else if (r.classList.contains('globals-grp-header')) {
+          r.style.display = foldedGlobalGroups.has(r.dataset.seckey) ? 'none' : '';
+          if (r.style.display === '')
+            r.querySelector('.ggh-arrow').textContent = foldedGlobalGroups.has(r.dataset.grpkey) ? '▶' : '▼';
         } else {
-          // Sub-headers always visible when category is open
-          if (r.classList.contains('globals-sub-header')) {
-            r.style.display = '';
-            const arrow = r.querySelector('.ggh-arrow');
-            if (arrow) arrow.textContent = foldedGlobalGroups.has(r.dataset.subkey) ? '▶' : '▼';
-          } else {
-            // Function rows: only show if their sub-group is not folded
-            r.style.display = foldedGlobalGroups.has(r.dataset.subkey) ? 'none' : '';
-          }
+          r.style.display = (foldedGlobalGroups.has(r.dataset.seckey) || foldedGlobalGroups.has(r.dataset.grpkey)) ? 'none' : '';
         }
       });
     });
   });
 
-  wrap.querySelectorAll('.globals-sub-header').forEach(hdr => {
+  // Section-level fold/unfold
+  wrap.querySelectorAll('.globals-sec-header').forEach(hdr => {
     hdr.addEventListener('click', () => {
-      const subKey = hdr.dataset.subkey;
-      if (foldedGlobalGroups.has(subKey)) foldedGlobalGroups.delete(subKey);
-      else foldedGlobalGroups.add(subKey);
-      const folded = foldedGlobalGroups.has(subKey);
+      const secKey = hdr.dataset.seckey;
+      if (foldedGlobalGroups.has(secKey)) foldedGlobalGroups.delete(secKey);
+      else foldedGlobalGroups.add(secKey);
+      const folded = foldedGlobalGroups.has(secKey);
       hdr.querySelector('.ggh-arrow').textContent = folded ? '▶' : '▼';
-      wrap.querySelectorAll(`.gfn-row[data-subkey="${subKey}"]`).forEach(r => r.style.display = folded ? 'none' : '');
+      wrap.querySelectorAll(`[data-seckey="${secKey}"]`).forEach(r => {
+        if (r === hdr) return;
+        if (folded) {
+          r.style.display = 'none';
+        } else if (r.classList.contains('globals-grp-header')) {
+          r.style.display = '';
+          r.querySelector('.ggh-arrow').textContent = foldedGlobalGroups.has(r.dataset.grpkey) ? '▶' : '▼';
+        } else {
+          r.style.display = foldedGlobalGroups.has(r.dataset.grpkey) ? 'none' : '';
+        }
+      });
+    });
+  });
+
+  // Group-level fold/unfold
+  wrap.querySelectorAll('.globals-grp-header').forEach(hdr => {
+    hdr.addEventListener('click', () => {
+      const grpKey = hdr.dataset.grpkey;
+      if (foldedGlobalGroups.has(grpKey)) foldedGlobalGroups.delete(grpKey);
+      else foldedGlobalGroups.add(grpKey);
+      const folded = foldedGlobalGroups.has(grpKey);
+      hdr.querySelector('.ggh-arrow').textContent = folded ? '▶' : '▼';
+      wrap.querySelectorAll(`.gfn-row[data-grpkey="${grpKey}"]`).forEach(r => r.style.display = folded ? 'none' : '');
     });
   });
 
