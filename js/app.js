@@ -26,6 +26,13 @@ function init() {
     (classBySimpleName[simple] = classBySimpleName[simple] || []).push(fqn);
   }
 
+  // Merge source-only index: classes not in the API but with available source files
+  for (const [simple, path] of Object.entries(API._source_index || {})) {
+    if (!classBySimpleName[simple]) {
+      sourceOnlyPaths[simple] = path;
+    }
+  }
+
   buildClassList();
   setupEvents();
   if (location.hash) {
@@ -37,28 +44,69 @@ function init() {
 
 // ── Page history ──────────────────────────────────────────────────────────
 function navPush(state) {
-  if (navJumping) return;
+  // Suppressed during applyState (history restoration must never write history)
+  if (_restoringState) return;
   // Drop any forward entries after current position
   navHistory.splice(navIndex + 1);
   // Skip duplicate of the current top entry
   const top = navHistory[navHistory.length - 1];
-  if (top && top.type === state.type && top.fqn === state.fqn) return;
+  if (top && top.type === state.type && top.fqn === state.fqn && top.javaMethod === state.javaMethod) return;
   navHistory.push(state);
   navIndex = navHistory.length - 1;
   updateNavButtons();
 }
 
-function navGo(delta) {
+function captureState() {
+  if (currentTab === 'globals') {
+    const srcWrap = document.getElementById('globals-source-wrap');
+    if (srcWrap?.classList.contains('visible')) {
+      return { type: 'globalSource', javaMethod: document.getElementById('globals-src-title').textContent };
+    }
+    return { type: 'globals' };
+  }
+  if (!currentClass) return { type: 'placeholder' };
+  return { type: 'class', fqn: currentClass, ctab: currentCtab };
+}
+
+async function applyState(s) {
+  const seq = ++navSeq;
+  _restoringState = true;
+  try {
+    if (s.type === 'placeholder') {
+      showGlobalsPanel(false);
+      document.getElementById('placeholder').style.display = 'flex';
+      return;
+    }
+    if (s.type === 'globals') {
+      switchTab('globals');
+      return;
+    }
+    if (s.type === 'globalSource') {
+      // Set globals tab active without calling initGlobals (avoids table-view flash)
+      currentTab = 'globals';
+      document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'globals'));
+      document.getElementById('sidebar').style.display = 'none';
+      showGlobalsPanel(true);
+      document.getElementById('placeholder').style.display = 'none';
+      await showGlobalSource(s.javaMethod);
+      return;
+    }
+    if (s.type === 'class') {
+      switchTab('classes');
+      selectClass(s.fqn, null);
+      return;
+    }
+  } finally {
+    _restoringState = false;
+  }
+}
+
+async function navGo(delta) {
   const next = navIndex + delta;
   if (next < 0 || next >= navHistory.length) return;
-  navIndex   = next;
-  navJumping = true;
-  const s = navHistory[navIndex];
-  if (s.type === 'globals') switchTab('globals');
-  else if (s.type === 'globalSource') { switchTab('globals'); showGlobalSource(s.javaMethod); }
-  else { switchTab('classes'); selectClass(s.fqn); }
-  navJumping = false;
+  navIndex = next;
   updateNavButtons();
+  await applyState(navHistory[navIndex]);
 }
 
 function updateNavButtons() {
@@ -249,15 +297,50 @@ function setupEvents() {
 
   // Delegated click for source class refs (both source panels)
   document.getElementById('content').addEventListener('click', e => {
-    const a = e.target.closest('a.src-class-ref[data-fqn]');
-    if (a) { e.preventDefault(); switchTab('classes'); selectClass(a.dataset.fqn); }
+    const a = e.target.closest('a.src-class-ref');
+    if (!a) return;
+    e.preventDefault();
+    if (a.dataset.sourcePath) {
+      showSourceByPath(a.dataset.sourcePath);
+    } else if (a.dataset.fqn) {
+      switchTab('classes'); selectClass(a.dataset.fqn);
+    }
   });
 
-  // Delegated click for detail panel: method links + group label folding
+  // Delegated click for detail panel: method links, inherit links, group folding
   document.getElementById('detail-panel').addEventListener('click', e => {
     // Method / constructor source links
     const a = e.target.closest('a.method-link[data-method]');
     if (a) { e.preventDefault(); showSource(API.classes[currentClass], a.dataset.method); return; }
+
+    // Inheritance header — class links
+    const inheritLink = e.target.closest('a.inherit-link[data-fqn]');
+    if (inheritLink) { e.preventDefault(); selectClass(inheritLink.dataset.fqn); return; }
+
+    // Inherited method links — navigate to ancestor class and scroll to method in source
+    const inheritMethod = e.target.closest('a.inherit-method-link[data-fqn]');
+    if (inheritMethod) {
+      e.preventDefault();
+      const targetFqn = inheritMethod.dataset.fqn;
+      const method    = inheritMethod.dataset.method;
+      selectClass(targetFqn);
+      showSource(API.classes[targetFqn], method);
+      return;
+    }
+
+    // "…and N more" subclasses toggle
+    const moreToggle = e.target.closest('.inherit-more-toggle');
+    if (moreToggle) {
+      const moreEl = moreToggle.nextElementSibling;
+      if (moreEl?.classList.contains('inherit-more')) {
+        const hidden = moreEl.style.display === 'none';
+        moreEl.style.display = hidden ? '' : 'none';
+        moreToggle.textContent = hidden
+          ? 'show less'
+          : `…and ${moreToggle.dataset.count} more`;
+      }
+      return;
+    }
 
     // Group label → fold/unfold that group
     const groupLabel = e.target.closest('.method-group .group-label');

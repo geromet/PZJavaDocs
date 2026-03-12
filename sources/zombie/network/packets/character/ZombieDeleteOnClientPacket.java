@@ -1,0 +1,54 @@
+/*
+ * Decompiled with CFR 0.152.
+ */
+package zombie.network.packets.character;
+
+import java.util.ArrayList;
+import zombie.VirtualZombieManager;
+import zombie.characters.Capability;
+import zombie.characters.IsoZombie;
+import zombie.core.network.ByteBufferReader;
+import zombie.core.network.ByteBufferWriter;
+import zombie.core.raknet.UdpConnection;
+import zombie.network.GameClient;
+import zombie.network.IConnection;
+import zombie.network.JSONField;
+import zombie.network.PacketSetting;
+import zombie.network.packets.INetworkPacket;
+import zombie.popman.NetworkZombiePacker;
+
+@PacketSetting(ordering=0, priority=1, reliability=2, requiredCapability=Capability.LoginOnServer, handlingType=2)
+public class ZombieDeleteOnClientPacket
+implements INetworkPacket {
+    @JSONField
+    public final ArrayList<Short> zombiesDeleted = new ArrayList();
+
+    @Override
+    public void setData(Object ... values2) {
+        this.zombiesDeleted.clear();
+        for (NetworkZombiePacker.DeletedZombie dz : (ArrayList)values2[1]) {
+            if (!((UdpConnection)values2[0]).isRelevantTo(dz.x, dz.y)) continue;
+            this.zombiesDeleted.add(dz.onlineId);
+        }
+    }
+
+    @Override
+    public void parse(ByteBufferReader b, IConnection connection) {
+        short numDeletedZombies = b.getShort();
+        for (short n = 0; n < numDeletedZombies; n = (short)(n + 1)) {
+            short zombieId = b.getShort();
+            IsoZombie z = GameClient.IDToZombieMap.get(zombieId);
+            if (z == null) continue;
+            VirtualZombieManager.instance.removeZombieFromWorld(z);
+        }
+    }
+
+    @Override
+    public void write(ByteBufferWriter b) {
+        b.putShort(this.zombiesDeleted.size());
+        for (Short dz : this.zombiesDeleted) {
+            b.putShort(dz);
+        }
+    }
+}
+

@@ -166,8 +166,8 @@ table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:2px}
 th{text-align:left;padding:5px 10px;font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border)}
 td{padding:4px 10px;border-bottom:1px solid #222;vertical-align:top}
 tr:hover td{background:var(--bg2)}
-.method-link{color:var(--accent2);font-family:monospace;cursor:pointer;text-decoration:none}
-.method-link:hover{text-decoration:underline}
+.method-link,.inherit-method-link{color:var(--accent2);font-family:monospace;cursor:pointer;text-decoration:none}
+.method-link:hover,.inherit-method-link:hover{text-decoration:underline}
 .return-type{color:#b5cea8;font-family:monospace;font-size:12px}
 .params-cell{font-family:monospace;font-size:12px;color:var(--text-dim)}
 .param-type{color:#ce9178}.param-name{color:var(--text)}
@@ -205,3 +205,31 @@ tr:hover td{background:var(--bg2)}
 ::-webkit-scrollbar-track{background:var(--bg2)}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 ::-webkit-scrollbar-thumb:hover{background:#555}
+
+/* ── Inheritance header ── */
+.inherit-header{margin:0 0 12px;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:4px;font-size:12px}
+.inherit-tree{font-family:monospace;line-height:1.7;margin-bottom:4px}
+.inherit-tree-item{white-space:pre}
+.inherit-tree-current{font-weight:600;color:var(--text)}
+.inherit-tree-item-ext{color:var(--text-dim)}
+.inherit-meta{margin-top:4px;line-height:1.7}
+.inherit-label{color:var(--text-dim);margin-right:4px}
+.inherit-link{color:var(--accent2);text-decoration:none;cursor:pointer}
+.inherit-link:hover{text-decoration:underline}
+.inherit-more-toggle{color:var(--accent2);cursor:pointer}
+.inherit-more-toggle:hover{text-decoration:underline}
+.inherit-more{display:none}
+
+/* ── Implements groups ── */
+.impl-section{margin-top:6px}
+.impl-group{margin-top:5px;padding-left:0}
+.impl-group-header{color:var(--text-dim);font-size:11px;margin-right:6px;white-space:nowrap}
+.impl-items{line-height:1.9}
+.impl-via-row{margin-top:1px;padding-left:14px;color:var(--text-dim);font-size:11px;line-height:1.8}
+.impl-via-label{margin-right:4px;font-style:italic}
+
+/* ── Inherited method groups ── */
+.method-group.inherited .group-label{color:var(--text-dim);font-style:italic}
+.inherited-methods-list{padding:4px 8px;font-size:12px;line-height:2}
+.inherited-methods-list a{color:var(--accent2);text-decoration:none;margin-right:6px}
+.inherited-methods-list a:hover{text-decoration:underline}

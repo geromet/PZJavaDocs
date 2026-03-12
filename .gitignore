@@ -1,0 +1,3 @@
+# Temporary session files — not for version control
+docs/Temp/*
+!docs/Temp/README.md

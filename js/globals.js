@@ -67,7 +67,10 @@ function updateGlobalsTable(filter) {
   });
 
   document.querySelectorAll('#globals-table-wrap .gfn-link').forEach(a => {
-    a.addEventListener('click', e => { e.preventDefault(); showGlobalSource(a.dataset.method); });
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      showGlobalSource(a.dataset.method);
+    });
   });
 }
 

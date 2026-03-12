@@ -286,7 +286,9 @@ print(f"  setExposed resolved: {len(all_classes)}")
 # ---------------------------------------------------------------------------
 print("Scanning for @UsedFromLua classes not in setExposed...")
 lua_tagged_only = 0
-all_java_files = list(SRC_ROOT.rglob("*.java"))
+_viewer_dir = SRC_ROOT / "pz-lua-api-viewer"
+all_java_files = [p for p in SRC_ROOT.rglob("*.java")
+                  if not p.is_relative_to(_viewer_dir)]
 for i, java_file in enumerate(all_java_files):
     if i % 200 == 0: print(f"  {i}/{len(all_java_files)}...")
     src = java_file.read_text(errors="ignore")
@@ -312,11 +314,251 @@ for i, java_file in enumerate(all_java_files):
 print(f"  @UsedFromLua-only (not setExposed): {lua_tagged_only}")
 
 # ---------------------------------------------------------------------------
-# Step 5: Save
+# Step 4.5: Extract inheritance info (extends, implements) and build subclasses
+# ---------------------------------------------------------------------------
+print("Extracting inheritance info...")
+
+def get_file_import_map(java_file):
+    """Build simple_name → FQN from the file's explicit (non-wildcard) imports."""
+    tree = file_cache.get(java_file)
+    if tree is None:
+        return {}
+    imap = {}
+    for imp in (tree.imports or []):
+        if not imp.static and not getattr(imp, 'wildcard', False):
+            fqn_i = imp.path
+            imap[fqn_i.rsplit('.', 1)[-1]] = fqn_i
+    return imap
+
+def resolve_simple(name, imap, pkg, all_cls):
+    """Resolve a simple/short class name to FQN."""
+    base = name.split('<')[0].strip()   # strip generics
+    if base in imap:
+        return imap[base]
+    same_pkg = (pkg + '.' + base) if pkg else base
+    if same_pkg in all_cls:
+        return same_pkg
+    if base in _global_simple_to_fqn:
+        return _global_simple_to_fqn[base]
+    return base  # stdlib / unknown — return as-is
+
+# Global simple→FQN from path structure: zombie/network/GameClient.java → zombie.network.GameClient
+# Built now (before step 5) by scanning source files directly.
+_global_simple_to_fqn = {}
+for _path in SRC_ROOT.rglob("*.java"):
+    try:
+        _path.relative_to(SRC_ROOT / "pz-lua-api-viewer")
+        continue
+    except ValueError:
+        pass
+    _rel = str(_path.relative_to(SRC_ROOT)).replace("\\", "/")
+    _simple = _path.stem
+    if _simple not in _global_simple_to_fqn:
+        _global_simple_to_fqn[_simple] = _rel.removesuffix(".java").replace("/", ".")
+
+for entry_fqn, entry in list(all_classes.items()):
+    java_file, inner_path = fqn_to_path(entry_fqn)
+    if java_file is None:
+        continue
+    tree = file_cache.get(java_file)
+    if tree is None:
+        continue
+
+    all_types = {}
+    for _, node in tree.filter(javalang.tree.ClassDeclaration):   all_types[node.name] = node
+    for _, node in tree.filter(javalang.tree.InterfaceDeclaration): all_types[node.name] = node
+    for _, node in tree.filter(javalang.tree.EnumDeclaration):     all_types[node.name] = node
+
+    cls_name = inner_path[-1] if inner_path else entry['simple_name']
+    cls = all_types.get(cls_name)
+    if cls is None:
+        continue
+
+    imap = get_file_import_map(java_file)
+    pkg  = '.'.join(entry_fqn.split('.')[:-1])
+
+    # extends (ClassDeclaration only — not enums, not interfaces)
+    if isinstance(cls, javalang.tree.ClassDeclaration) and cls.extends:
+        resolved = resolve_simple(cls.extends.name, imap, pkg, all_classes)
+        if resolved not in ('java.lang.Object', 'Object'):
+            entry['extends'] = resolved
+
+    # implements
+    impl_list = getattr(cls, 'implements', None) or []
+    if impl_list:
+        impls = [resolve_simple(i.name, imap, pkg, all_classes) for i in impl_list]
+        if impls:
+            entry['implements'] = impls
+
+# ---------------------------------------------------------------------------
+# Step 4.6: Build _extends_map for non-API intermediate classes in chains
+# ---------------------------------------------------------------------------
+# BFS from any extends value not in all_classes, walking upward until we hit
+# a known class or a stdlib/unresolvable root.
+from collections import deque
+
+_extends_map = {}  # non-API fqn → parent fqn
+_resolve_queue = deque()
+_resolve_visited = set()
+
+for entry in all_classes.values():
+    parent = entry.get('extends')
+    if parent and parent not in all_classes:
+        _resolve_queue.append(parent)
+
+while _resolve_queue:
+    fqn_r = _resolve_queue.popleft()
+    if fqn_r in _resolve_visited or fqn_r in all_classes:
+        continue
+    _resolve_visited.add(fqn_r)
+
+    java_file_r, inner_path_r = fqn_to_path(fqn_r)
+    if java_file_r is None:
+        continue
+
+    tree_r = file_cache.get(java_file_r)
+    if tree_r is None:
+        src_r = java_file_r.read_text(errors="ignore")
+        tree_r = parse_java(src_r)
+        if tree_r is not None:
+            file_cache[java_file_r] = tree_r
+    if tree_r is None:
+        continue
+
+    all_types_r = {}
+    for _, node in tree_r.filter(javalang.tree.ClassDeclaration):
+        all_types_r[node.name] = node
+
+    cls_name_r = inner_path_r[-1] if inner_path_r else fqn_r.rsplit('.', 1)[-1]
+    cls_r = all_types_r.get(cls_name_r)
+    if cls_r is None or not isinstance(cls_r, javalang.tree.ClassDeclaration) or not cls_r.extends:
+        continue
+
+    imap_r  = get_file_import_map(java_file_r)
+    pkg_r   = '.'.join(fqn_r.split('.')[:-1])
+    parent_r = resolve_simple(cls_r.extends.name, imap_r, pkg_r, all_classes)
+    if parent_r not in ('java.lang.Object', 'Object'):
+        _extends_map[fqn_r] = parent_r
+        if parent_r not in all_classes:
+            _resolve_queue.append(parent_r)
+
+print(f"  Non-API extends-map entries: {len(_extends_map)}")
+
+# Build subclasses inverse map — include both API children and non-API intermediates
+for entry_fqn, entry in all_classes.items():
+    parent = entry.get('extends')
+    if parent and parent in all_classes:
+        all_classes[parent].setdefault('subclasses', []).append(entry_fqn)
+# Also add non-API intermediates as subclasses of their API parents
+for child_fqn, parent_fqn in _extends_map.items():
+    if parent_fqn in all_classes:
+        all_classes[parent_fqn].setdefault('subclasses', []).append(child_fqn)
+for entry in all_classes.values():
+    if 'subclasses' in entry:
+        entry['subclasses'].sort()
+
+print(f"  Classes with extends:    {sum(1 for v in all_classes.values() if 'extends' in v)}")
+print(f"  Classes with implements: {sum(1 for v in all_classes.values() if 'implements' in v)}")
+print(f"  Classes with subclasses: {sum(1 for v in all_classes.values() if 'subclasses' in v)}")
+
+# ---------------------------------------------------------------------------
+# Step 4.7: Build _interface_extends map — interface FQN → [parent interface FQNs]
+# BFS from every interface that appears in any class's implements list.
+# ---------------------------------------------------------------------------
+print("Extracting interface extends chains...")
+
+_interface_extends = {}  # interface_fqn → [parent_interface_fqn, ...]
+_iface_queue   = deque()
+_iface_visited = set()
+
+for entry in all_classes.values():
+    for iface in (entry.get('implements') or []):
+        if iface not in _iface_visited:
+            _iface_queue.append(iface)
+
+while _iface_queue:
+    iface_fqn = _iface_queue.popleft()
+    if iface_fqn in _iface_visited:
+        continue
+    _iface_visited.add(iface_fqn)
+
+    java_file_i, inner_path_i = fqn_to_path(iface_fqn)
+    if java_file_i is None:
+        continue
+
+    tree_i = file_cache.get(java_file_i)
+    if tree_i is None:
+        src_i = java_file_i.read_text(errors="ignore")
+        tree_i = parse_java(src_i)
+        if tree_i is not None:
+            file_cache[java_file_i] = tree_i
+    if tree_i is None:
+        continue
+
+    iface_name_i = inner_path_i[-1] if inner_path_i else iface_fqn.rsplit('.', 1)[-1]
+    imap_i = get_file_import_map(java_file_i)
+    pkg_i  = '.'.join(iface_fqn.split('.')[:-1])
+
+    iface_node_i = None
+    for _, node in tree_i.filter(javalang.tree.InterfaceDeclaration):
+        if node.name == iface_name_i:
+            iface_node_i = node
+            break
+    if iface_node_i is None:
+        continue
+
+    ext_i = getattr(iface_node_i, 'extends', None) or []
+    if not ext_i:
+        continue
+
+    resolved_i = []
+    for e in ext_i:
+        r = resolve_simple(e.name, imap_i, pkg_i, all_classes)
+        resolved_i.append(r)
+        if r not in _iface_visited:
+            _iface_queue.append(r)
+
+    if resolved_i:
+        _interface_extends[iface_fqn] = resolved_i
+
+print(f"  Interfaces with extends: {len(_interface_extends)}")
+
+# ---------------------------------------------------------------------------
+# Step 5: Build _source_index — source-linkable classes NOT in the API
+# ---------------------------------------------------------------------------
+print("Building source index...")
+
+def build_source_index(root):
+    """Map simple class name -> relative .java path for all .java files under root.
+    Skips the pz-lua-api-viewer/ subtree to avoid double-counting copied sources."""
+    viewer_dir = root / "pz-lua-api-viewer"
+    index = {}
+    for path in root.rglob("*.java"):
+        try:
+            path.relative_to(viewer_dir)
+            continue  # inside pz-lua-api-viewer/, skip
+        except ValueError:
+            pass
+        simple = path.stem
+        if simple not in index:
+            index[simple] = str(path.relative_to(root)).replace("\\", "/")
+    return index
+
+all_source_files = build_source_index(SRC_ROOT)
+api_simple_names = {v["simple_name"] for v in all_classes.values()}
+source_index = {simple: path for simple, path in all_source_files.items()
+                if simple not in api_simple_names}
+print(f"  Source-only entries: {len(source_index)}")
+
+# ---------------------------------------------------------------------------
+# Step 6: Save
 # ---------------------------------------------------------------------------
 api = {
     "classes": all_classes,
     "global_functions": global_functions,
+    "_source_index": source_index,
+    "_extends_map": _extends_map,
+    "_interface_extends": _interface_extends,
     "unresolved": unresolved,
     "_meta": {
         "total_classes": len(all_classes),

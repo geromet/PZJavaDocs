@@ -27,7 +27,15 @@ let showNonCallable = false;
 // Simple-name → [fqn, …] lookup for source class-ref linking
 let classBySimpleName = {};
 
+// Simple-name → relative .java path for classes in _source_index (not in API)
+let sourceOnlyPaths = {};
+
 // Navigation history
 const navHistory = [];
-let navIndex   = -1;
-let navJumping = false; // true while back/forward is restoring state
+let navIndex = -1;
+let navSeq   = 0; // incremented on each applyState call; guards against stale async nav
+
+// Set to true during applyState so that navPush becomes a no-op.
+// This means every nav-aware function can push unconditionally;
+// only applyState (history restoration) suppresses the push.
+let _restoringState = false;

@@ -54,6 +54,22 @@ for fqn, cls in api["classes"].items():
     shutil.copy2(src_path, dest_path)
     copied += 1
 
+# Also copy source-only files referenced by _source_index
+for simple, src_rel in api.get("_source_index", {}).items():
+    src_path  = SRC_ROOT / src_rel
+    dest_path = SOURCES_DIR / src_rel
+
+    if not src_path.exists():
+        missing += 1
+        continue
+
+    if dest_path.exists():
+        continue  # already copied (shared file with an API class)
+
+    dest_path.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(src_path, dest_path)
+    copied += 1
+
 print(f"Copied:  {copied} source files -> {SOURCES_DIR}")
 print(f"Missing: {missing}")
 print("Done.")

@@ -130,7 +130,7 @@ function injectFoldRegions(codeEl, regions) {
 }
 
 function linkClassRefs(codeEl) {
-  if (!Object.keys(classBySimpleName).length) return;
+  if (!Object.keys(classBySimpleName).length && !Object.keys(sourceOnlyPaths).length) return;
   const walker = document.createTreeWalker(codeEl, NodeFilter.SHOW_TEXT, null);
   const textNodes = [];
   let node;
@@ -142,13 +142,20 @@ function linkClassRefs(codeEl) {
     let changed = false;
     const frag = document.createDocumentFragment();
     for (const part of parts) {
-      const fqns = part.length > 1 && /^[A-Z]/.test(part) ? classBySimpleName[part] : null;
-      if (fqns) {
+      const isCapitalized = part.length > 1 && /^[A-Z]/.test(part);
+      const fqns     = isCapitalized ? classBySimpleName[part] : null;
+      const srcPath  = !fqns && isCapitalized ? sourceOnlyPaths[part] : null;
+      if (fqns || srcPath) {
         const a = document.createElement('a');
         a.className = 'src-class-ref';
         a.textContent = part;
-        a.dataset.fqn = fqns[0];
-        a.title = fqns[0];
+        if (fqns) {
+          a.dataset.fqn = fqns[0];
+          a.title = fqns[0];
+        } else {
+          a.dataset.sourcePath = srcPath;
+          a.title = srcPath + ' (source only — not in Lua API)';
+        }
         frag.appendChild(a);
         changed = true;
       } else {
@@ -224,6 +231,38 @@ async function showSource(cls, jumpToMethod) {
 
   if (jumpToMethod) scrollToMethod(text, jumpToMethod, preEl, codeEl);
   else preEl.scrollTop = 0;
+}
+
+async function showSourceByPath(relPath) {
+  // Show an arbitrary source file in the class source panel (no API entry)
+  showGlobalsPanel(false);
+  document.getElementById('content-tabs').classList.add('visible');
+  document.getElementById('placeholder').style.display = 'none';
+  switchCtab('source');
+
+  const toolbar   = document.getElementById('source-toolbar');
+  const loadingEl = document.getElementById('source-loading');
+  const codeEl    = document.getElementById('source-code');
+  const preEl     = document.getElementById('source-pre');
+
+  toolbar.style.display = 'none';
+  loadingEl.style.display = 'block';
+  codeEl.textContent = '';
+
+  let text;
+  try {
+    text = await fetchSource(relPath);
+  } catch (e) {
+    loadingEl.style.display = 'none';
+    codeEl.textContent = `// Source not available: ${relPath}\n// (not in Lua API — use 📁 Local sources to load)\n\n// Error: ${e.message}`;
+    hljs.highlightElement(codeEl);
+    return;
+  }
+
+  loadingEl.style.display = 'none';
+  renderFoldableSource(text, codeEl);
+  toolbar.style.display = '';
+  preEl.scrollTop = 0;
 }
 
 function scrollToMethod(sourceText, methodName, panelEl, codeEl) {

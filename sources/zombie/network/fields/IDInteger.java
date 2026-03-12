@@ -1,0 +1,38 @@
+/*
+ * Decompiled with CFR 0.152.
+ */
+package zombie.network.fields;
+
+import zombie.core.network.ByteBufferReader;
+import zombie.core.network.ByteBufferWriter;
+import zombie.network.IConnection;
+import zombie.network.fields.INetworkPacketField;
+
+public abstract class IDInteger
+implements INetworkPacketField {
+    protected int id;
+
+    @Override
+    public void parse(ByteBufferReader b, IConnection connection) {
+        this.id = b.getInt();
+    }
+
+    @Override
+    public void write(ByteBufferWriter b) {
+        b.putInt(this.id);
+    }
+
+    @Override
+    public boolean isConsistent(IConnection connection) {
+        return this.id != -1;
+    }
+
+    public void setID(int id) {
+        this.id = id;
+    }
+
+    public int getID() {
+        return this.id;
+    }
+}
+
