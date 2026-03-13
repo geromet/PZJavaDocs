@@ -1,6 +1,8 @@
+> **COMPLETED 2026-03-12** — Added `extractWildcardPackages()` to parse wildcard imports from source text, and integrated a single-candidate wildcard resolution fallback into `linkClassRefs()`. Supports both API classes and source-only paths. No regressions on existing class-ref links (IsoPlayer.java: 2607 links). Method lookahead also works for wildcard-resolved FQNs.
+
 # TASK-015: Wildcard import fallback for source class-ref linking
 
-**Status:** Ready
+**Status:** Done
 **Estimated scope:** Small
 **Touches:** `js/source-viewer.js`
 **Resolves:** [FEAT-009](../Planned_Features/FEAT-009-deep-java-analysis.md) Problem B (wildcard imports)

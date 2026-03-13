@@ -170,10 +170,96 @@ function navigateList(dir) {
   selectClass(fqn, matchInfo);
 }
 
+// ── Tab bar ───────────────────────────────────────────────────────────────
+function renderTabBar() {
+  const bar = document.getElementById('tab-bar');
+  bar.classList.toggle('visible', tabs.length > 0 && currentTab === 'classes');
+  bar.innerHTML = tabs.map((t, i) =>
+    `<div class="tab-item${i === activeTabIdx ? ' active' : ''}" data-tabidx="${i}">
+       <span class="tab-item-name">${esc(t.fqn.split('.').pop())}</span>
+       <span class="tab-close" data-closeidx="${i}" title="Close tab">×</span>
+     </div>`
+  ).join('');
+  bar.querySelectorAll('.tab-item').forEach(el =>
+    el.addEventListener('click', e => {
+      if (e.target.closest('.tab-close')) return;
+      activateTab(parseInt(el.dataset.tabidx));
+    }));
+  bar.querySelectorAll('.tab-close').forEach(el =>
+    el.addEventListener('click', () => closeTab(parseInt(el.dataset.closeidx))));
+}
+
+function saveActiveTabState() {
+  const tab = activeTab();
+  if (!tab) return;
+  tab.ctab        = currentCtab;
+  tab.methodSearch = methodSearch;
+  tab.fieldSearch  = fieldSearch;
+  tab.scrollDetail = document.getElementById('detail-panel').scrollTop;
+  const pre = document.getElementById('source-pre');
+  tab.scrollSource = pre ? pre.scrollTop : 0;
+}
+
+function activateTab(idx) {
+  // Save the tab we're leaving before switching (skip if already on this tab)
+  if (idx !== activeTabIdx) saveActiveTabState();
+  activeTabIdx = idx;
+  const tab = tabs[idx];
+  currentClass  = tab.fqn;
+  methodSearch  = tab.methodSearch;
+  fieldSearch   = tab.fieldSearch;
+  location.hash = encodeURIComponent(tab.fqn);
+  document.getElementById('placeholder').style.display = 'none';
+  document.getElementById('content-tabs').classList.add('visible');
+  showGlobalsPanel(false);
+  renderClassDetail(tab.fqn);
+  switchCtab(tab.ctab);
+  // Restore scroll after render; also load source panel if needed
+  requestAnimationFrame(() => {
+    document.getElementById('detail-panel').scrollTop = tab.scrollDetail || 0;
+    if (tab.ctab === 'source' || splitLayout) {
+      showSource(API.classes[tab.fqn]).then(() => {
+        if (tab.ctab === 'source') {
+          const pre = document.getElementById('source-pre');
+          if (pre) pre.scrollTop = tab.scrollSource || 0;
+        }
+      });
+    }
+  });
+  renderTabBar();
+  document.querySelectorAll('.class-item').forEach(el =>
+    el.classList.toggle('active', el.dataset.fqn === tab.fqn));
+  document.querySelector('.class-item.active')?.scrollIntoView({block: 'nearest'});
+}
+
+function closeTab(idx) {
+  tabs.splice(idx, 1);
+  if (tabs.length === 0) {
+    activeTabIdx = -1;
+    currentClass = null;
+    document.getElementById('tab-bar').classList.remove('visible');
+    document.getElementById('content-tabs').classList.remove('visible');
+    document.getElementById('detail-panel').classList.remove('visible');
+    document.getElementById('source-panel').classList.remove('visible');
+    document.getElementById('placeholder').style.display = 'flex';
+    location.hash = '';
+    renderTabBar();
+    return;
+  }
+  if (idx === activeTabIdx) {
+    // Closed the active tab — activate the nearest remaining tab
+    activeTabIdx = Math.min(idx, tabs.length - 1);
+    activateTab(activeTabIdx);
+  } else {
+    // Closed a non-active tab — just shift the active index if needed and re-render
+    if (idx < activeTabIdx) activeTabIdx--;
+    renderTabBar();
+  }
+}
+
 // ── Class selection ───────────────────────────────────────────────────────
 function selectClass(fqn, matchInfo, jumpToMethod) {
   if (!API.classes[fqn]) return;
-  currentClass = fqn;
 
   navPush({type: 'class', fqn});
 
@@ -185,23 +271,38 @@ function selectClass(fqn, matchInfo, jumpToMethod) {
 
   showNonCallable = false;
 
-  if (matchInfo && currentSearch) {
-    const s   = currentSearch.toLowerCase();
-    const cls = API.classes[fqn];
-    methodSearch = cls.methods.some(m => m.name.toLowerCase().includes(s)) ? currentSearch : '';
-    fieldSearch  = cls.fields.some(f  => f.name.toLowerCase().includes(s)) ? currentSearch : '';
-  } else { methodSearch = ''; fieldSearch = ''; }
+  const existing = tabs.findIndex(t => t.fqn === fqn);
+  if (existing !== -1) {
+    // Class already open — activate its tab (restores saved state)
+    activateTab(existing);
+  } else {
+    // Save current tab state before creating a new one
+    saveActiveTabState();
 
-  location.hash = encodeURIComponent(fqn);
-  document.querySelectorAll('.class-item').forEach(el => el.classList.toggle('active', el.dataset.fqn === fqn));
-  document.querySelector('.class-item.active')?.scrollIntoView({block: 'nearest'});
+    // Compute method/field search for the new tab from matchInfo
+    let ms = '', fs = '';
+    if (matchInfo && currentSearch) {
+      const s   = currentSearch.toLowerCase();
+      const cls = API.classes[fqn];
+      ms = cls.methods.some(m => m.name.toLowerCase().includes(s)) ? currentSearch : '';
+      fs = cls.fields.some(f  => f.name.toLowerCase().includes(s)) ? currentSearch : '';
+    }
 
-  document.getElementById('placeholder').style.display = 'none';
-  showGlobalsPanel(false);
-  document.getElementById('content-tabs').classList.add('visible');
-  renderClassDetail(fqn);
-  if (currentCtab === 'source' || splitLayout) showSource(API.classes[fqn], jumpToMethod || undefined);
-  else if (jumpToMethod) showSource(API.classes[fqn], jumpToMethod);
+    // Cap at 10 tabs — evict the oldest non-active tab
+    if (tabs.length >= 10) {
+      const dropIdx = tabs.findIndex((_, i) => i !== activeTabIdx);
+      if (dropIdx !== -1) {
+        tabs.splice(dropIdx, 1);
+        if (activeTabIdx > dropIdx) activeTabIdx--;
+      }
+    }
+
+    tabs.push({ fqn, ctab: 'detail', scrollDetail: 0, scrollSource: 0, methodSearch: ms, fieldSearch: fs });
+    activeTabIdx = tabs.length - 1;
+    activateTab(activeTabIdx);
+  }
+
+  if (jumpToMethod) showSource(API.classes[fqn], jumpToMethod);
 }
 
 // ── Content tab switching ─────────────────────────────────────────────────
@@ -243,6 +344,7 @@ function switchTab(tab) {
   currentTab = tab;
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
   document.getElementById('sidebar').style.display = tab === 'classes' ? 'flex' : 'none';
+  document.getElementById('tab-bar').classList.toggle('visible', tab === 'classes' && tabs.length > 0);
   if (tab === 'globals') {
     initGlobals();
     location.hash = 'globals';
@@ -317,10 +419,12 @@ function setupEvents() {
     wrap.querySelectorAll('.globals-dom-header').forEach(hdr => foldedGlobalGroups.add(hdr.dataset.domkey));
     wrap.querySelectorAll('.globals-sec-header').forEach(hdr => foldedGlobalGroups.add(hdr.dataset.seckey));
     wrap.querySelectorAll('.globals-grp-header').forEach(hdr => foldedGlobalGroups.add(hdr.dataset.grpkey));
+    saveGlobalGroupFolds();
     updateGlobalsTable(document.getElementById('globals-search')?.value || '');
   });
   document.getElementById('btn-unfold-groups').addEventListener('click', () => {
     foldedGlobalGroups.clear();
+    saveGlobalGroupFolds();
     updateGlobalsTable(document.getElementById('globals-search')?.value || '');
   });
 
@@ -343,9 +447,18 @@ function setupEvents() {
   // Global search bar
   let searchTimer;
   const searchEl = document.getElementById('global-search');
+  const searchClearBtn = document.getElementById('btn-search-clear');
   searchEl.addEventListener('input', e => {
     clearTimeout(searchTimer);
+    searchClearBtn.classList.toggle('visible', !!searchEl.value);
     searchTimer = setTimeout(() => { currentSearch = e.target.value; buildClassList(); }, 150);
+  });
+  searchClearBtn.addEventListener('click', () => {
+    searchEl.value = '';
+    currentSearch = '';
+    searchClearBtn.classList.remove('visible');
+    buildClassList();
+    searchEl.focus();
   });
   searchEl.addEventListener('keydown', e => {
     if (e.key === 'ArrowDown') { e.preventDefault(); navigateList(+1); }

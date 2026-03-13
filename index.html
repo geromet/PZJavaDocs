@@ -13,7 +13,10 @@
   <h1>PZ Lua API</h1>
   <button id="btn-nav-back"    class="nav-btn" disabled title="Back (Alt+←)">←</button>
   <button id="btn-nav-forward" class="nav-btn" disabled title="Forward (Alt+→)">→</button>
-  <input id="global-search" type="text" placeholder="Search classes, methods, fields… (press /)" autocomplete="off">
+  <div class="search-wrap">
+    <input id="global-search" type="text" placeholder="Search classes, methods, fields… (press /)" autocomplete="off">
+    <button id="btn-search-clear" class="search-clear" title="Clear search">×</button>
+  </div>
   <span class="hstat"><span class="hstat-dot" style="background:var(--col-exposed)"></span><span id="stat-exposed">…</span> setExposed</span>
   <span class="hstat"><span class="hstat-dot" style="background:var(--col-tagged)"></span><span id="stat-tagged">…</span> @UsedFromLua</span>
   <span class="hstat" id="stat-globals" style="color:var(--text-dim)"></span>
@@ -55,6 +58,7 @@
 
   <!-- Content -->
   <div id="content">
+    <div id="tab-bar"></div>
     <div id="loading"><div class="spinner"></div><span>Loading…</span></div>
     <div id="placeholder" style="display:none"><span>Select a class from the list</span><span style="font-size:12px;color:var(--text-dim)">↑↓ arrows navigate · / to search</span></div>
 

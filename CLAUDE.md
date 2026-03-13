@@ -1,5 +1,20 @@
 # PZ Lua API Viewer — Claude Working Instructions
 
+## Cohabitation Notice
+
+This project is shared between **Claude Code** (you) and **Pi / GSD** (another AI agent). Both agents work on the same codebase for the same user.
+
+| Agent | Config location | Instruction file |
+|-------|----------------|-----------------|
+| **Claude Code** | `.claude/` | `pz-lua-api-viewer/CLAUDE.md` (this file) |
+| **Pi (GSD)** | `.gsd/` | `.gsd/PI.md` |
+
+**Rules:**
+- Never modify `.gsd/` or anything inside it.
+- Both agents share the same `docs/` task system and `docs/Knowledge_Base/` conventions.
+- The full cohabitation rules are in `.gsd/COHABITATION.md` — read it if in doubt.
+- Commit attribution: always use `Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>`.
+
 ## Project Overview
 
 A static web app for browsing the Project Zomboid Lua API. The viewer is deployed to GitHub Pages from the `main` branch. All development happens on feature branches (currently `liability-machine`).

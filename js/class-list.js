@@ -191,7 +191,7 @@ function buildClassList() {
       div.className = 'class-item' + (fqn === currentClass ? ' active' : '');
       div.dataset.fqn = fqn;
       div.innerHTML =
-        `<div class="ci-text"><div class="ci-name">${esc(simple)}${cls.is_enum ? ` <span class="tag tag-enum">enum</span>` : ''}</div><div class="ci-pkg">${esc(pkg)}</div></div>` +
+        `<div class="ci-text"><div class="ci-name">${highlightMatch(simple, search)}${cls.is_enum ? ` <span class="tag tag-enum">enum</span>` : ''}</div><div class="ci-pkg">${highlightMatch(pkg, search)}</div></div>` +
         `<div class="ci-right"><div class="ci-dots">` +
         `<span class="dot ${cls.set_exposed ? 'dot-exposed' : 'dot-empty'}"></span>` +
         `<span class="dot ${cls.lua_tagged  ? 'dot-tagged'  : 'dot-empty'}"></span>` +

@@ -1,6 +1,8 @@
+> **COMPLETED 2026-03-12** — Added sticky `<thead>` styles for globals table, detail panel methods/fields, and inherited methods. Globals group fold state now persists in `localStorage` (`pzGlobalFolds` key) across tab switches and page reloads. All fold/unfold buttons (individual + bulk) wire through to persistence.
+
 # TASK-014: Globals tab redesign + sticky column headers
 
-**Status:** Ready
+**Status:** Done
 **Estimated scope:** Small
 **Touches:** `js/globals.js`, `app.css`
 **Resolves:** [FEAT-011](../Planned_Features/FEAT-011-globals-list-redesign.md) (partial — items 2, 3, 5), [FEAT-012](../Planned_Features/FEAT-012-sticky-column-headers.md)

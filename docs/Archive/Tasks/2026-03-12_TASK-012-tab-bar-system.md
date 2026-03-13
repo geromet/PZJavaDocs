@@ -1,3 +1,5 @@
+> **COMPLETED 2026-03-12** — Implemented tab bar. Tabs array + activeTabIdx in state.js; renderTabBar/saveActiveTabState/activateTab/closeTab in app.js; selectClass refactored to openTab logic; tab bar visibility wired through switchTab and showGlobalsPanel; CSS in app.css; tab-bar div in index.html. One bug fix over the task plan: closeTab correctly distinguishes closing active vs non-active tab to avoid shifting focus unexpectedly.
+
 # TASK-012: Tab bar system with multiple open classes
 
 **Status:** Ready

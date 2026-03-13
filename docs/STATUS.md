@@ -1,6 +1,6 @@
 # Project Status
 
-**Last updated:** 2026-03-12
+**Last updated:** 2026-03-13
 
 This is the live tracker. Update it when:
 - A bug is filed, fixed, or closed → update Open Bugs
@@ -20,11 +20,10 @@ This is the live tracker. Update it when:
 
 | ID | File | Priority | Summary |
 |----|------|----------|---------|
-| TASK-012 | [TASK-012](Tasks/TASK-012-tab-bar-system.md) | High | Tab bar system (FEAT-006) |
-| TASK-013 | [TASK-013](Tasks/TASK-013-search-improvements.md) | Medium | Search highlight + clear buttons (FEAT-013) |
-| TASK-014 | [TASK-014](Tasks/TASK-014-globals-redesign-and-sticky-headers.md) | Medium | Globals sticky headers + fold memory (FEAT-011, FEAT-012); do after TASK-022 |
-| TASK-015 | [TASK-015](Tasks/TASK-015-wildcard-import-fallback.md) | Medium | Wildcard import fallback for class-ref linking (FEAT-009 Problem B) |
-| TASK-016 | [TASK-016](Tasks/TASK-016-javadoc-extraction.md) | Medium | Extract and display Javadoc comments (FEAT-010) |
+| ~~TASK-013~~ | ~~Archived~~ | ~~Done~~ | ~~Search highlight + clear buttons (FEAT-013)~~ |
+| ~~TASK-014~~ | ~~Archived~~ | ~~Done~~ | ~~Globals sticky headers + fold memory (FEAT-011, FEAT-012)~~ |
+| ~~TASK-015~~ | ~~Archived~~ | ~~Done~~ | ~~Wildcard import fallback for class-ref linking (FEAT-009 Problem B)~~ |
+| TASK-016 | [TASK-016](Tasks/TASK-016-javadoc-extraction.md) | **Blocked** | Javadoc extraction — decompiled sources have 0 Javadoc blocks |
 | TASK-017 | [TASK-017](Tasks/TASK-017-build-time-precomputation.md) | Low | Build-time precomputation for faster startup (FEAT-008) |
 | TASK-018 | [TASK-018](Tasks/TASK-018-version-selector.md) | Low–Medium | Version selector + multi-version API storage (FEAT-005) |
 

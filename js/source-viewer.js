@@ -129,7 +129,18 @@ function injectFoldRegions(codeEl, regions) {
   codeEl.addEventListener('click', codeEl._foldHandler);
 }
 
-function linkClassRefs(codeEl) {
+function extractWildcardPackages(sourceText) {
+  const packages = [];
+  const lines = sourceText.split('\n');
+  for (const line of lines) {
+    const m = line.match(/^\s*import\s+([\w.]+)\.\*\s*;/);
+    if (m) packages.push(m[1] + '.');
+    if (/^\s*(public|protected|private|class|interface|enum|@)/.test(line)) break;
+  }
+  return packages;
+}
+
+function linkClassRefs(codeEl, wildcardPackages) {
   if (!Object.keys(classBySimpleName).length && !Object.keys(sourceOnlyPaths).length) return;
   const walker = document.createTreeWalker(codeEl, NodeFilter.SHOW_TEXT, null);
   const textNodes = [];
@@ -167,7 +178,33 @@ function linkClassRefs(codeEl) {
       const isCapitalized = part.length > 1 && /^[A-Z]/.test(part);
       const fqns    = isCapitalized ? classBySimpleName[part] : null;
       const srcPath = !fqns && isCapitalized ? sourceOnlyPaths[part] : null;
-      if (fqns || srcPath) {
+
+      // Wildcard import fallback: resolve unqualified names via wildcard packages
+      let wildcardFqn = null;
+      let wildcardSrcPath = null;
+      if (!fqns && !srcPath && isCapitalized && wildcardPackages && wildcardPackages.length) {
+        const candidates = [];
+        for (const pkg of wildcardPackages) {
+          // Check API classes by simple name
+          const apiMatches = classBySimpleName[part];
+          if (apiMatches) {
+            for (const f of apiMatches) {
+              if (f.startsWith(pkg)) candidates.push({type: 'fqn', value: f});
+            }
+          }
+          // Check source-only index
+          const soPath = sourceOnlyPaths[part];
+          if (soPath && soPath.startsWith(pkg.replace(/\./g, '/'))) {
+            candidates.push({type: 'src', value: soPath});
+          }
+        }
+        if (candidates.length === 1) {
+          if (candidates[0].type === 'fqn') wildcardFqn = candidates[0].value;
+          else wildcardSrcPath = candidates[0].value;
+        }
+      }
+
+      if (fqns || srcPath || wildcardFqn || wildcardSrcPath) {
         const a = document.createElement('a');
         a.className = 'src-class-ref';
         a.textContent = part;
@@ -181,6 +218,12 @@ function linkClassRefs(codeEl) {
           }) ?? fqns[0];
           a.dataset.fqn = best;
           a.title = best;
+        } else if (wildcardFqn) {
+          a.dataset.fqn = wildcardFqn;
+          a.title = wildcardFqn;
+        } else if (wildcardSrcPath) {
+          a.dataset.sourcePath = wildcardSrcPath;
+          a.title = wildcardSrcPath + ' (source only — not in Lua API)';
         } else {
           a.dataset.sourcePath = srcPath;
           a.title = srcPath + ' (source only — not in Lua API)';
@@ -191,7 +234,7 @@ function linkClassRefs(codeEl) {
         i++;
         // Look ahead for .methodName( pattern — only for API-linked classes (have fqn).
         // Emits the method name as an inherit-method-link when the method is in the API.
-        if (fqns) {
+        if (fqns || wildcardFqn) {
           const linkedFqn = a.dataset.fqn;
           let j = i;
           while (j < parts.length && /^\s*$/.test(parts[j])) j++;
@@ -240,7 +283,8 @@ function renderFoldableSource(rawText, codeEl) {
   codeEl.innerHTML = wrapLines(codeEl.innerHTML);
   const regions = buildFoldRegions(rawText);
   if (regions.length) injectFoldRegions(codeEl, regions);
-  linkClassRefs(codeEl);
+  const wildcardPackages = extractWildcardPackages(rawText);
+  linkClassRefs(codeEl, wildcardPackages);
 }
 
 function foldAllInEl(codeEl, mode) {

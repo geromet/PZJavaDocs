@@ -1,6 +1,8 @@
+> **COMPLETED 2026-03-12** — Implemented all 6 steps: `highlightMatch()` utility in utils.js, sidebar class name highlighting, global search clear button, method/field name highlighting in detail panel, inline search clear buttons, and CSS for `<mark>` elements. All existing behaviors (filters, keyboard nav, tree/fold) verified intact.
+
 # TASK-013: Search improvements
 
-**Status:** Ready
+**Status:** Done
 **Estimated scope:** Small–Medium
 **Touches:** `js/class-list.js`, `js/class-detail.js`, `app.css`, `index.html`
 **Resolves:** [FEAT-013](../Planned_Features/FEAT-013-search-improvements.md)

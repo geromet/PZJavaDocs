@@ -4,6 +4,15 @@ function esc(s) {
   return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+function highlightMatch(text, search) {
+  if (!search) return esc(text);
+  const idx = text.toLowerCase().indexOf(search.toLowerCase());
+  if (idx === -1) return esc(text);
+  return esc(text.slice(0, idx))
+    + `<mark class="search-mark">${esc(text.slice(idx, idx + search.length))}</mark>`
+    + esc(text.slice(idx + search.length));
+}
+
 function renderParams(params) {
   return (params || []).map(p =>
     `<span class="param-type">${esc(p.type)}</span> <span class="param-name">${esc(p.name)}</span>`

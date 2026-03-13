@@ -11,7 +11,12 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,san
 /* ── Header ── */
 #header{background:var(--bg2);border-bottom:1px solid var(--border);padding:8px 14px;display:flex;align-items:center;gap:12px;flex-shrink:0}
 #header h1{font-size:15px;font-weight:600;color:var(--accent);white-space:nowrap}
-#global-search{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:5px 10px;color:var(--text);font-size:13px;outline:none}
+.search-wrap{position:relative;flex:1;display:flex;align-items:center}
+.search-wrap input{flex:1;padding-right:28px}
+.search-clear{position:absolute;right:6px;background:none;border:none;color:var(--text-dim);font-size:15px;cursor:pointer;padding:0 4px;display:none;line-height:1}
+.search-clear.visible{display:block}
+.search-clear:hover{color:var(--text)}
+#global-search{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:5px 10px;color:var(--text);font-size:13px;outline:none}
 #global-search:focus{border-color:var(--accent)}
 #global-search::placeholder{color:var(--text-dim)}
 .hstat{font-size:11px;color:var(--text-dim);white-space:nowrap;display:flex;align-items:center;gap:4px}
@@ -165,9 +170,15 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,san
 .section-header{display:flex;align-items:center;gap:10px;margin-bottom:7px;padding-bottom:5px;border-bottom:1px solid var(--border)}
 .section-header h3{font-size:13px;font-weight:600}
 .section-header .count{font-size:12px;color:var(--text-dim)}
+.inline-search-wrap{position:relative;display:flex;align-items:center;margin-left:auto;width:150px}
+.inline-search-wrap .inline-search{width:100%;padding-right:22px;margin-left:0}
 .inline-search{background:var(--bg3);border:1px solid var(--border);border-radius:3px;padding:4px 8px;color:var(--text);font-size:12px;outline:none;margin-left:auto;width:150px}
 .inline-search:focus{border-color:var(--accent2)}
 .inline-search::placeholder{color:var(--text-dim)}
+.inline-search-clear{position:absolute;right:4px;background:none;border:none;color:var(--text-dim);font-size:13px;cursor:pointer;padding:0 3px;display:none;line-height:1}
+.inline-search-clear.visible{display:block}
+.inline-search-clear:hover{color:var(--text)}
+mark.search-mark{background:rgba(193,127,36,0.3);color:inherit;border-radius:2px;padding:0 1px}
 .group-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:7px 10px 3px;display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none}
 .group-label:hover{opacity:.8}
 .group-label.tagged-label{color:var(--col-tagged)}
@@ -251,3 +262,19 @@ tr:hover td{background:var(--bg2)}
 .inherited-methods-list{padding:4px 8px;font-size:12px;line-height:2}
 .inherited-methods-list a{color:var(--accent2);text-decoration:none;margin-right:6px}
 .inherited-methods-list a:hover{text-decoration:underline}
+
+/* ── Tab bar ── */
+#tab-bar{display:none;flex-direction:row;overflow-x:auto;flex-shrink:0;background:var(--bg2);border-bottom:1px solid var(--border)}
+#tab-bar.visible{display:flex}
+.tab-item{display:flex;align-items:center;gap:5px;padding:5px 12px 5px 14px;cursor:pointer;border-right:1px solid var(--border);white-space:nowrap;font-size:12px;color:var(--text-dim);user-select:none;flex-shrink:0;min-width:0;max-width:160px}
+.tab-item:hover{background:var(--bg3);color:var(--text)}
+.tab-item.active{color:var(--accent2);background:var(--bg);border-bottom:2px solid var(--accent2)}
+.tab-item-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tab-close{color:#555;font-size:11px;line-height:1;padding:1px 2px;border-radius:2px;cursor:pointer;flex-shrink:0}
+.tab-close:hover{color:var(--text);background:var(--bg3)}
+#tab-bar::-webkit-scrollbar{height:3px}
+
+/* ── Sticky table headers ── */
+#globals-table-wrap table thead th,
+#detail-panel table thead th,
+#inherit-wrap table thead th{position:sticky;top:0;z-index:1;background:var(--bg2)}

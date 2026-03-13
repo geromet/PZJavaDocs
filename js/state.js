@@ -42,3 +42,8 @@ let navSeq   = 0; // incremented on each applyState call; guards against stale a
 // This means every nav-aware function can push unconditionally;
 // only applyState (history restoration) suppresses the push.
 let _restoringState = false;
+
+// Tab bar state
+const tabs = [];       // [{fqn, ctab, scrollDetail, scrollSource, methodSearch, fieldSearch}]
+let activeTabIdx = -1;
+function activeTab() { return tabs[activeTabIdx] || null; }

@@ -1,6 +1,8 @@
+> **BLOCKED 2026-03-12** — Investigation found that 0/2938 decompiled .java files contain any Javadoc (`/**` blocks). The sources are CFR decompiler output from .class files, which strips all comments. This task is not actionable until original source files with Javadoc are available.
+
 # TASK-016: Extract and display Javadoc comments
 
-**Status:** Ready
+**Status:** Blocked
 **Estimated scope:** Large
 **Touches:** `extract_lua_api.py`, `js/class-detail.js`, `app.css`
 **Resolves:** [FEAT-010](../Planned_Features/FEAT-010-comments-descriptions.md)

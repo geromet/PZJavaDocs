@@ -28,7 +28,7 @@ function renderClassDetail(fqn) {
       <div class="section-header">
         <h3>Methods</h3><span class="count" id="method-count">${cls.methods.length}</span>
         <span id="noncallable-btn-wrap"></span>
-        ${cls.methods.length ? `<input class="inline-search" id="method-search-inp" type="text" placeholder="Filter…" value="${esc(methodSearch)}" autocomplete="off">` : ''}
+        ${cls.methods.length ? `<span class="inline-search-wrap"><input class="inline-search" id="method-search-inp" type="text" placeholder="Filter…" value="${esc(methodSearch)}" autocomplete="off"><button class="inline-search-clear${methodSearch ? ' visible' : ''}" id="btn-method-search-clear" title="Clear filter">×</button></span>` : ''}
       </div>
       <div id="methods-wrap"></div>
       <div id="inherit-wrap"></div>
@@ -36,7 +36,7 @@ function renderClassDetail(fqn) {
     <div class="section">
       <div class="section-header">
         <h3>${cls.is_enum ? 'Constants' : 'Fields'}</h3><span class="count" id="field-count">${cls.fields.length}</span>
-        ${cls.fields.length && !cls.is_enum ? `<input class="inline-search" id="field-search-inp" type="text" placeholder="Filter…" value="${esc(fieldSearch)}" autocomplete="off">` : ''}
+        ${cls.fields.length && !cls.is_enum ? `<span class="inline-search-wrap"><input class="inline-search" id="field-search-inp" type="text" placeholder="Filter…" value="${esc(fieldSearch)}" autocomplete="off"><button class="inline-search-clear${fieldSearch ? ' visible' : ''}" id="btn-field-search-clear" title="Clear filter">×</button></span>` : ''}
       </div>
       <div id="fields-wrap"></div>
     </div>`;
@@ -46,9 +46,41 @@ function renderClassDetail(fqn) {
   refreshFields(cls);
 
   const mi = document.getElementById('method-search-inp');
-  if (mi) { mi.addEventListener('input', () => { methodSearch = mi.value; refreshMethods(cls, fqn); }); if (methodSearch) mi.focus(); }
+  const miClear = document.getElementById('btn-method-search-clear');
+  if (mi) {
+    mi.addEventListener('input', () => {
+      methodSearch = mi.value;
+      if (miClear) miClear.classList.toggle('visible', !!mi.value);
+      refreshMethods(cls, fqn);
+    });
+    if (methodSearch) mi.focus();
+  }
+  if (miClear) {
+    miClear.addEventListener('click', () => {
+      mi.value = ''; methodSearch = '';
+      miClear.classList.remove('visible');
+      refreshMethods(cls, fqn);
+      mi.focus();
+    });
+  }
   const fi = document.getElementById('field-search-inp');
-  if (fi) { fi.addEventListener('input', () => { fieldSearch  = fi.value; refreshFields(cls);  }); if (fieldSearch && !methodSearch) fi.focus(); }
+  const fiClear = document.getElementById('btn-field-search-clear');
+  if (fi) {
+    fi.addEventListener('input', () => {
+      fieldSearch = fi.value;
+      if (fiClear) fiClear.classList.toggle('visible', !!fi.value);
+      refreshFields(cls);
+    });
+    if (fieldSearch && !methodSearch) fi.focus();
+  }
+  if (fiClear) {
+    fiClear.addEventListener('click', () => {
+      fi.value = ''; fieldSearch = '';
+      fiClear.classList.remove('visible');
+      refreshFields(cls);
+      fi.focus();
+    });
+  }
 }
 
 function refreshMethods(cls, fqn) {
@@ -62,7 +94,7 @@ function refreshMethods(cls, fqn) {
   document.getElementById('method-count').textContent = tagged.length + other.length;
 
   const wrap = document.getElementById('methods-wrap');
-  wrap.innerHTML = renderMethodGroups(tagged, other, cls.set_exposed);
+  wrap.innerHTML = renderMethodGroups(tagged, other, cls.set_exposed, s);
   wrap.classList.toggle('hide-noncallable', !showNonCallable);
 
   const inheritWrap = document.getElementById('inherit-wrap');
@@ -93,7 +125,7 @@ function refreshFields(cls) {
   const s      = fieldSearch.toLowerCase();
   const fields = cls.fields.filter(f => !s || f.name.toLowerCase().includes(s) || f.type.toLowerCase().includes(s));
   document.getElementById('field-count').textContent = fields.length;
-  document.getElementById('fields-wrap').innerHTML   = renderFieldsTable(fields, cls.is_enum);
+  document.getElementById('fields-wrap').innerHTML   = renderFieldsTable(fields, cls.is_enum, s);
 }
 
 function renderConstructorsTable(cls) {
@@ -112,7 +144,7 @@ function renderConstructorsTable(cls) {
   return `<table><thead><tr><th>Constructor</th><th>Parameters</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
-function renderMethodGroups(tagged, other, setExposed) {
+function renderMethodGroups(tagged, other, setExposed, search) {
   if (!tagged.length && !other.length) return `<div class="empty-msg">No methods</div>`;
   const taggedInst   = tagged.filter(m => !m.static);
   const taggedStatic = tagged.filter(m =>  m.static);
@@ -128,26 +160,26 @@ function renderMethodGroups(tagged, other, setExposed) {
 
   let html = '';
   if (taggedInst.length)
-    html += mkGroup('tagged-label', `<span class="dot dot-tagged"></span> @UsedFromLua (${taggedInst.length})`, renderMethodsTable(taggedInst), true);
+    html += mkGroup('tagged-label', `<span class="dot dot-tagged"></span> @UsedFromLua (${taggedInst.length})`, renderMethodsTable(taggedInst, search), true);
   if (taggedStatic.length)
-    html += mkGroup('tagged-label', `<span class="dot dot-tagged"></span> @UsedFromLua — static (${taggedStatic.length})`, renderMethodsTable(taggedStatic), true);
+    html += mkGroup('tagged-label', `<span class="dot dot-tagged"></span> @UsedFromLua — static (${taggedStatic.length})`, renderMethodsTable(taggedStatic, search), true);
   if (otherInst.length) {
     const lbl = setExposed ? `setExposed — callable (${otherInst.length})` : `Not setExposed (${otherInst.length})`;
-    html += mkGroup('other-label', `<span class="dot dot-empty"></span> ${lbl}`, renderMethodsTable(otherInst), setExposed);
+    html += mkGroup('other-label', `<span class="dot dot-empty"></span> ${lbl}`, renderMethodsTable(otherInst, search), setExposed);
   }
   if (otherStatic.length) {
     const lbl = setExposed ? `setExposed — static, not Lua-callable (${otherStatic.length})` : `Not setExposed — static (${otherStatic.length})`;
-    html += mkGroup('other-label', `<span class="dot dot-empty"></span> ${lbl}`, renderMethodsTable(otherStatic), false);
+    html += mkGroup('other-label', `<span class="dot dot-empty"></span> ${lbl}`, renderMethodsTable(otherStatic, search), false);
   }
   return html;
 }
 
-function renderMethodsTable(methods) {
+function renderMethodsTable(methods, search) {
   if (!methods.length) return '';
   const rows = methods.map(m => {
     const staticTag = m.static ? `<span class="tag-static" style="margin-left:5px">static</span>` : '';
     return `<tr>
-      <td><a class="method-link" data-method="${esc(m.name)}">${esc(m.name)}</a>${staticTag}</td>
+      <td><a class="method-link" data-method="${esc(m.name)}">${highlightMatch(m.name, search)}</a>${staticTag}</td>
       <td><span class="return-type">${esc(m.return_type)}</span></td>
       <td><span class="params-cell">${renderParams(m.params) || '<span style="color:#444">—</span>'}</span></td>
     </tr>`;
@@ -406,16 +438,16 @@ function renderInheritedMethods(cls, fqn, filterStr) {
   return html;
 }
 
-function renderFieldsTable(fields, isEnum) {
+function renderFieldsTable(fields, isEnum, search) {
   if (!fields.length) return `<div class="empty-msg">No fields</div>`;
   if (isEnum) {
-    return `<div style="padding:8px 0;line-height:2.2">${fields.map(f => `<span class="field-name" style="margin-right:12px">${esc(f.name)}</span>`).join('')}</div>`;
+    return `<div style="padding:8px 0;line-height:2.2">${fields.map(f => `<span class="field-name" style="margin-right:12px">${highlightMatch(f.name, search)}</span>`).join('')}</div>`;
   }
   return `<table><thead><tr><th>Field</th><th>Type</th></tr></thead><tbody>${
     fields.map(f => {
       const dot       = f.lua_tagged ? `<span class="dot dot-tagged" style="display:inline-block;margin-left:5px;vertical-align:middle" title="@UsedFromLua"></span>` : '';
       const staticTag = f.static     ? `<span class="tag-static" style="margin-left:5px">static</span>` : '';
-      return `<tr><td><span class="field-name">${esc(f.name)}</span>${dot}${staticTag}</td><td><span class="field-type">${esc(f.type)}</span></td></tr>`;
+      return `<tr><td><span class="field-name">${highlightMatch(f.name, search)}</span>${dot}${staticTag}</td><td><span class="field-type">${esc(f.type)}</span></td></tr>`;
     }).join('')
   }</tbody></table>`;
 }
