@@ -9,6 +9,10 @@ Two AI coding agents share this project. This file defines the rules of engageme
 | **Claude Code** | `.claude/` | `pz-lua-api-viewer/CLAUDE.md` | Anthropic CLI |
 | **Pi (GSD)** | `.gsd/` | `.gsd/PI.md` + `.gsd/milestones/` | GSD agent harness |
 
+## Repository location
+
+The **only** git repo is `pz-lua-api-viewer/`. The parent directory `projectzomboid/` is the PZ game install — it must NEVER have a `.git` directory, `.gitignore`, or any project files. All git operations must run with CWD set to `pz-lua-api-viewer/`.
+
 ## Shared resources
 
 - **Source code** (`pz-lua-api-viewer/`) — both agents read and write the same files.

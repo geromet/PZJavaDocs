@@ -4,9 +4,30 @@
 
 This project is shared between **Claude Code** (via `.claude/` and `pz-lua-api-viewer/CLAUDE.md`) and **Pi / GSD** (via `.gsd/`). Both agents work on the same codebase. Never modify `.claude/`, `pz-lua-api-viewer/CLAUDE.md`, or Claude Code's settings.
 
+## Directory Structure — READ THIS FIRST
+
+```
+ProjectZomboid/
+├── projectzomboid/              ← PZ game install dir (NOT a git repo)
+│   ├── sources/                 ← Decompiled Java sources (read by extract_lua_api.py)
+│   └── pz-lua-api-viewer/      ← THE GIT REPO (this project)
+│       ├── .git/
+│       ├── sources/             ← Pre-shipped .java copies for GitHub Pages
+│       ├── extract_lua_api.py
+│       ├── lua_api.json
+│       ├── index.html, app.css, js/
+│       └── docs/, .gsd/, .claude/
+```
+
+**Critical rules:**
+- The **only** git repo is `pz-lua-api-viewer/`. The parent `projectzomboid/` must NEVER have a `.git` directory or any project files.
+- Never run `git init` or `git clone` in `projectzomboid/`. Never create project files (`.gitignore`, `.gitattributes`, `README.md`, etc.) at the parent level.
+- CWD for all git operations and file editing must be `pz-lua-api-viewer/`, not the parent.
+- There are **two** `sources/` directories: `projectzomboid/sources/` (full decompiled sources, read by the extractor) and `pz-lua-api-viewer/sources/` (subset shipped to GitHub Pages). Do not confuse them.
+
 ## GSD Structure
 
-All GSD planning artifacts live in `.gsd/` (CWD is `projectzomboid/`):
+All GSD planning artifacts live in `.gsd/` inside `pz-lua-api-viewer/`:
 
 ```
 .gsd/

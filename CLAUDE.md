@@ -21,6 +21,27 @@ A static web app for browsing the Project Zomboid Lua API. The viewer is deploye
 
 **IMPORTANT: Do not push directly to `main`.** The site auto-deploys on push. Create a PR from your feature branch instead.
 
+## Directory Structure — READ THIS FIRST
+
+```
+ProjectZomboid/
+├── projectzomboid/              ← PZ game install dir (NOT a git repo)
+│   ├── sources/                 ← Decompiled Java sources (read by extract_lua_api.py)
+│   └── pz-lua-api-viewer/      ← THE GIT REPO (this project)
+│       ├── .git/
+│       ├── sources/             ← Pre-shipped .java copies for GitHub Pages
+│       ├── extract_lua_api.py
+│       ├── lua_api.json
+│       ├── index.html, app.css, js/
+│       └── docs/, .gsd/, .claude/
+```
+
+**Critical rules:**
+- The **only** git repo is `pz-lua-api-viewer/`. The parent `projectzomboid/` must NEVER have a `.git` directory.
+- Never run `git init` or `git clone` in `projectzomboid/`. Never create project files (`.gitignore`, `CLAUDE.md`, `README.md`, etc.) at the parent level.
+- There are **two** `sources/` directories: `projectzomboid/sources/` (full decompiled sources, read by the extractor) and `pz-lua-api-viewer/sources/` (subset shipped to GitHub Pages). Do not confuse them.
+- The CWD for all git operations and file editing must be `pz-lua-api-viewer/`, not the parent.
+
 ## Key Files
 
 | File | Purpose |
