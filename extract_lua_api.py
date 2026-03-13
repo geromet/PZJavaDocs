@@ -20,9 +20,10 @@ import json
 import pathlib
 import javalang
 
-SRC_ROOT = pathlib.Path("E:/SteamLibrary/steamapps/common/ProjectZomboid/projectzomboid")
-LUA_MGR  = SRC_ROOT / "zombie/Lua/LuaManager.java"
-OUT_FILE = SRC_ROOT / "pz-lua-api-viewer/lua_api.json"
+_PROJ_ROOT = pathlib.Path("E:/SteamLibrary/steamapps/common/ProjectZomboid/projectzomboid")
+SRC_ROOT   = _PROJ_ROOT / "sources"   # decompiled Java sources live here
+LUA_MGR    = SRC_ROOT / "zombie/Lua/LuaManager.java"
+OUT_FILE   = _PROJ_ROOT / "pz-lua-api-viewer/lua_api.json"
 
 # ---------------------------------------------------------------------------
 # Step 1: Parse LuaManager.java — get setExposed FQNs and @LuaMethod globals
@@ -648,10 +649,25 @@ print(f"  Source-only entries: {len(source_index)}")
 # ---------------------------------------------------------------------------
 # Step 6: Save
 # ---------------------------------------------------------------------------
+# Build _class_by_simple_name: reverse map simple → [fqn, ...]
+class_by_simple_name = {}
+for fqn in all_classes:
+    simple = fqn.split('.')[-1]
+    class_by_simple_name.setdefault(simple, []).append(fqn)
+
+# Build _source_only_paths: source index entries whose simple name is NOT in the API
+source_only_paths = {
+    simple: path
+    for simple, path in source_index.items()
+    if simple not in class_by_simple_name
+}
+
 api = {
     "classes": all_classes,
     "global_functions": global_functions,
     "_source_index": source_index,
+    "_class_by_simple_name": class_by_simple_name,
+    "_source_only_paths": source_only_paths,
     "_extends_map": _extends_map,
     "_interface_extends": _interface_extends,
     "_interface_paths": _interface_paths,

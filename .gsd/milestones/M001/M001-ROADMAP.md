@@ -23,7 +23,7 @@
 
 ## Slices
 
-- [ ] **S01: Unblocked Improvements** `risk:low` `depends:[]`
+- [x] **S01: Unblocked Improvements** `risk:low` `depends:[]`
   > After this: build-time precomputed data loads on page init; resizable panels work in live browser
 - [ ] **S02: Tab Enhancements** `risk:medium` `depends:[S01]`
   > After this: middle-click opens classes in new tab; hover preview card shows on link hover

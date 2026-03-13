@@ -1,0 +1,2 @@
+{"type":"model_change","id":"0bf79189","parentId":null,"timestamp":"2026-03-13T13:52:23.719Z","provider":"LocalLLM","modelId":"crow-9b-opus-4.6-distill-heretic_qwen3.5"}
+{"type":"thinking_level_change","id":"9425b43d","parentId":"0bf79189","timestamp":"2026-03-13T13:52:23.719Z","thinkingLevel":"off"}
