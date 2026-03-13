@@ -1,0 +1,21 @@
+@echo off
+"D:\Users\Anon\llama-cuda\llama\llama-server.exe" ^
+  --model "D:\Users\Anon\.lmstudio\models\crownelius\Crow-9B-Opus-4.6-Distill-Heretic_Qwen3.5\Qwen3.5-9B-heretic-v2.Q4_K_M.gguf" ^
+  --ctx-size 180000 ^
+  --cache-type-k q4_0 ^
+  --cache-type-v q4_0 ^
+  --no-mmap ^
+  --threads 8 ^
+  --batch-size 256 ^
+  --n-gpu-layers 99 ^
+  --flash-attn on ^
+  --jinja ^
+  --chat-template-kwargs "{\"enable_thinking\":true}" ^
+  --temp 0.6 ^
+  --top-k 20 ^
+  --top-p 0.95 ^
+  --min-p 0 ^
+  --repeat-penalty 1.05 ^
+  --repeat-last-n 256 ^
+  --port 1234 ^
+  --host 0.0.0.0
