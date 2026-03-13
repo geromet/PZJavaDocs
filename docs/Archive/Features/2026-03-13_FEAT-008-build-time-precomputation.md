@@ -1,3 +1,5 @@
+> **COMPLETED 2026-03-13** — Build-time precomputation of class lookups in JSON; fast-path init(). Shipped via TASK-017.
+
 # FEAT-008: Build-time precomputation for faster startup
 
 **Status:** Planned

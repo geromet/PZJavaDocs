@@ -47,5 +47,4 @@ This is the live tracker. Update it when:
 
 | ID | File | Blocked by | Summary |
 |----|------|------------|---------|
-| FEAT-009 | [FEAT-009](Planned_Features/FEAT-009-deep-java-analysis.md) | — | Problem C: method-level call linking in source |
-| FEAT-010 | [FEAT-010](Planned_Features/FEAT-010-comments-descriptions.md) | TASK-016 (blocked) | Javadoc/LuaDoc display in detail panel |
+| FEAT-010 | [FEAT-010](Planned_Features/FEAT-010-comments-descriptions.md) | TASK-016 (blocked) | Javadoc/LuaDoc display in detail panel — waiting on original PZ sources |

@@ -1,3 +1,5 @@
+> **COMPLETED 2026-03-12/13** — Sticky group headers (FEAT-012), fold memory (FEAT-012), globals domain/section grouping, search by type/params. Shipped across multiple commits.
+
 # FEAT-011: Globals tab list redesign
 
 **Status:** Planned

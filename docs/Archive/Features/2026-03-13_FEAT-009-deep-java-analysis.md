@@ -1,3 +1,5 @@
+> **COMPLETED 2026-03-12/13** — Problem B (wildcard imports) and Problem C (method-level call linking) both implemented in source-viewer.js. Archived as docs cleanup.
+
 # FEAT-009: Deeper Java analysis (wildcard imports, method-level linking)
 
 **Status:** Problem C implemented in TASK-009 (2026-03-12). Problem B (wildcard imports) still planned.

@@ -1,3 +1,5 @@
+> **COMPLETED 2026-03-13** — Version dropdown, versioned JSON output, ?v= URL param. Shipped in bf40c8f.
+
 # FEAT-005: Version selector and multi-version API storage
 
 **Status:** Planned

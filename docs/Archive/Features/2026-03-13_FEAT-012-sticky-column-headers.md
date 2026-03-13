@@ -1,3 +1,5 @@
+> **COMPLETED 2026-03-12** — Sticky table headers in detail + globals panels via CSS position:sticky. Shipped in TASK-014.
+
 # FEAT-012: Sticky column headers in tables
 
 **Status:** Planned

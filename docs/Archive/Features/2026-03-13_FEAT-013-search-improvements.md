@@ -1,3 +1,5 @@
+> **COMPLETED 2026-03-12** — Search highlight marks, clear button, incremental search. Shipped in TASK-013.
+
 # FEAT-013: Search box improvements
 
 **Status:** Planned

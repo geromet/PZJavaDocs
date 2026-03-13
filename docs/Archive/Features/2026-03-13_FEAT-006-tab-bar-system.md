@@ -1,3 +1,5 @@
+> **COMPLETED 2026-03-12** — Tab bar system shipped in TASK-012 (0921427).
+
 # FEAT-006: Tab bar system with multiple open classes
 
 **Status:** Planned
