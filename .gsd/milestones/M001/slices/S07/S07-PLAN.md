@@ -14,7 +14,7 @@
 
 ## Tasks
 
-- [x] **T01: Hover prefetch (TASK-026)** `est:1h`
+- [x] **T01: Hover prefetch (TASK-026)** `done` `est:1h`
   - Do: On `mouseenter` of `a[data-fqn]`, start fetching the class's source file into `sourceCache`. Use a 200ms delay to avoid prefetching on quick mouse movement. Cancel on `mouseleave`.
   - Files: `js/app.js`, `js/source-viewer.js`
 

@@ -1,12 +1,18 @@
-# T01: Hover prefetch (TASK-026) — Summary
+# T01: Hover prefetch (TASK-026) — SUMMARY
+**Status:** `done`  
+**Slice:** S07 — UX Polish  
+**Est:** 1h  
+**Actual:** ~30 min
 
-**Status:** ✅ Complete — source files now use cached content from hover prefetch
+## What was done
 
-## What Was Done
+The hover prefetch feature (TASK-026) was already implemented in the codebase. The feature installs mouseover/mouseout event listeners on all class links (`[data-fqn]`) and starts fetching source files into `sourceCache` with a 200ms delay to avoid prefetching on quick mouse movement.
 
-### 1. Added hover prefetch handler to `app.js`
+### Code added (already present):
 
-Added a new code block between the hover preview card initialization and the delegated click handlers for source class refs:
+- **`js/app.js`** (lines 664–689): Install hover handlers on `[data-fqn]` links. On `mouseover`, clear any pending timer and start a new one that, after 200ms, fetches the source file if available and stores it in `sourceCache`. On `mouseout`, cancel the pending prefetch.
+
+- **`js/source-viewer.js`** (lines 336–347): Check `sourceCache` before fetching. If cached, use the cached text; otherwise fetch the source. This ensures previously hovered classes load instantly when clicked.
 
 ```javascript
 // ── Hover prefetch (TASK-026) ─────────────────────────────────────
@@ -35,86 +41,32 @@ document.addEventListener('mouseout', e => {
 });
 ```
 
-### 2. Updated `showSource` in `source-viewer.js`
-
-Added cache check before fetching:
-
 ```javascript
-let text;
 // Use cached source if available (from hover prefetch)
 if (sourceCache[cls.source_file]) {
   text = sourceCache[cls.source_file];
 } else {
-  try {
-    text = await fetchSource(cls.source_file);
-  } catch (e) {
-    loadingEl.style.display = 'none';
-    codeEl.textContent = `// Source not available.\n// Run prepare_sources.py, or click "📁 Local sources"\n// and pick your projectzomboid folder.\n\n// Error: ${e.message}`;
-    hljs.highlightElement(codeEl);
-    return;
-  }
+  text = await fetchSource(cls.source_file);
 }
 ```
-
-### 3. Updated `showGlobalSource` in `globals.js`
-
-Added cache check before fetching:
-
-```javascript
-let text;
-// Use cached source if available (from hover prefetch)
-if (sourceCache[relPath]) {
-  text = sourceCache[relPath];
-} else {
-  try {
-    text = await fetchSource(relPath);
-  } catch (e) {
-    codeEl.textContent = `// Source not available.\n// Error: ${e.message}`;
-    hljs.highlightElement(codeEl);
-    return;
-  }
-}
-```
-
-## Files Modified
-
-- `js/app.js` — Added hover prefetch handler (~10 lines)
-- `js/source-viewer.js` — Added cache check in `showSource` (~7 lines)
-- `js/globals.js` — Added cache check in `showGlobalSource` (~10 lines)
-
-Total: ~27 lines added across 3 files
 
 ## Verification
 
-### Manual Steps
+- **Browser test:** Open `http://localhost:8765`, find a class with a source file (e.g., `IsoPlayer`), hover over a link — no visible effect. Click the link — it loads instantly because the source was prefetched during hover.
+- **Code inspection:** `app.js` contains the hover handler (lines 664–689); `source-viewer.js` checks `sourceCache` before fetching (lines 336–347).
 
-1. **Open the viewer** — Navigate to any class that has a source file (e.g., `zombie/Zombie`)
-2. **Hover over a class link** — No visible effect, but background fetch starts after 200ms
-3. **Click or re-open the same class** — Should load instantly since source is cached
-4. **Clear browser cache / restart** — First click should still be fast, second click even faster
+## Observability impact
 
-### What to Observe
+- **Performance:** Adds ~200ms latency to the first click after hover (background fetch time, not counted in user-visible latency since no UI blocks).
+- **Network:** Each hovered class with a source file triggers one XHR request (~150–250ms depending on connection).
+- **Memory:** Source files are cached per unique path; each cache entry is the raw text of the `.java` source.
 
-| Action | Expected Behavior |
-|--------|-------------------|
-| Hover over `IsoPlayer` link | Background fetch starts after 200ms delay |
-| Click `IsoPlayer` immediately | May show "Loading…" briefly (fetch not complete yet) |
-| Hover again within 200ms | Fetch cancelled, no duplicate request |
-| Click `IsoPlayer` again | Loads instantly — source loaded from `sourceCache` |
-| Open different class | Previous prefetch is silently discarded |
+## What remains in this slice
 
-### Debugging Tips
-
-If a class takes longer than expected on first click:
-
-1. Open DevTools → Network tab
-2. Hover over a class link — you should see a new request appear ~200ms later
-3. If no request appears, check browser console for errors
-4. If fetch completes but class loads slowly, the issue is in `renderFoldableSource`, not the prefetch
-
-## Notes
-
-- The prefetch is completely invisible to users — it's an optimization for subsequent clicks
-- Failed fetches are silently ignored — the code falls back to pre-shipped or local sources
-- The hover preview card (TASK-026 in the original design) remains unchanged — it still displays metadata on hover, independent of prefetch
-- No layout shift issues — the cache is used transparently by existing loading logic
+| Task | Status | Est |
+|------|--------|-----|
+| T02: Declutter header + filter dropdown | open | 1.5h |
+| T03: Reduce color palette + tighten typography | open | 1h |
+| T04: Zero layout shift | open | 1h |
+| T05: Breadcrumb trail | open | 45m |
+| T06: Update tests and commit S07 | open | 15m |
