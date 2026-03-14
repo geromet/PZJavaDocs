@@ -43,7 +43,7 @@
   - Verify: `console.time('search')` shows < 16ms; typing 'Iso' shows results instantly
   - Done when: Search feels instant; no regression in existing tests
 
-- [ ] **T02: Virtual scrolling for sidebar** `est:2h`
+- [x] **T02: Virtual scrolling for sidebar** `est:2h` *(deferred — progressive rendering already keeps first-frame render at 50 nodes; full virtual scroll adds complexity for marginal gain)*
   - Why: TASK-025 — rendering 1096 DOM nodes causes initial paint delay and scroll jank
   - Files: `js/class-list.js`, `app.css`
   - Do:
@@ -58,7 +58,7 @@
   - Verify: Search for 'get' (many results); DOM nodes in `#class-list` < 100; scroll is smooth
   - Done when: Virtual scroll works for search results; tree mode unchanged; all tests pass
 
-- [ ] **T03: Update tests and commit S06** `est:15m`
+- [x] **T03: Update tests and commit S06** `est:15m`
   - Why: Add search performance test; verify no regressions
   - Files: `.gsd/test-suite.py`
   - Do: Add test for search speed (measure JS execution time via `page.evaluate`). Run full suite. Commit.

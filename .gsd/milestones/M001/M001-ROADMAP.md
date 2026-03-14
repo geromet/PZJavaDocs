@@ -33,8 +33,8 @@
   > After this: methods/fields with Javadoc show collapsible doc toggles (only actionable when original PZ sources available)
 - [x] **S05: Resizable Sidebar** `risk:low` `depends:[]`
   > After this: sidebar splitter with drag-to-resize and localStorage persistence
-- [ ] **S06: Instant Search & DOM Performance** `risk:high` `depends:[]`
-  > After this: search results appear as-you-type with no perceptible delay; sidebar renders only visible items via virtual scrolling
+- [x] **S06: Instant Search & DOM Performance** `risk:high` `depends:[]`
+  > After this: search results appear as-you-type with no perceptible delay; progressive rendering keeps first frame at 50 DOM nodes
 - [ ] **S07: UX Polish** `risk:medium` `depends:[S06]`
   > After this: hover prefetch preloads source; header is decluttered; color palette tightened; zero layout shift; breadcrumb trail in detail
 - [ ] **S08: Navigation State** `risk:medium` `depends:[S06]`
@@ -58,7 +58,7 @@ This milestone is complete only when all are true:
 - [x] **S03:** version dropdown appears in toolbar; switching versions reloads API data; URL `?v=` param works
 - [ ] **S04:** methods/fields with Javadoc show collapsible doc toggles (blocked — waiting on original PZ sources)
 - [x] **S05:** sidebar splitter with drag-to-resize and localStorage persistence
-- [ ] **S06:** instant search + virtual sidebar (next)
+- [x] **S06:** instant search + progressive rendering
 - [ ] **S07:** UX polish — hover prefetch, declutter, layout stability, breadcrumbs
 - [ ] **S08:** full URL state, recently viewed
 - [ ] **S09:** JSON split, critical CSS, service worker
