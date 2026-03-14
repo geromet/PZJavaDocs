@@ -1,7 +1,7 @@
 @echo off
 "D:\Users\Anon\llama-cuda\llama\llama-server.exe" ^
   --model "D:\Users\Anon\.lmstudio\models\crownelius\Crow-9B-Opus-4.6-Distill-Heretic_Qwen3.5\Qwen3.5-9B-heretic-v2.Q4_K_M.gguf" ^
-  --ctx-size 180000 ^
+  --ctx-size 120000 ^
   --cache-type-k q4_0 ^
   --cache-type-v q4_0 ^
   --no-mmap ^
@@ -16,6 +16,6 @@
   --top-p 0.95 ^
   --min-p 0 ^
   --repeat-penalty 1.05 ^
-  --repeat-last-n 512 ^
+  --repeat-last-n 128 ^
   --port 1234 ^
   --host 0.0.0.0
