@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Automated test suite for PZ Lua API Viewer.
 Uses Playwright to verify UI features, navigation, search, globals, and regressions.
@@ -103,10 +104,8 @@ class PZViewerTests:
         from playwright.sync_api import sync_playwright
         self.pw = sync_playwright().start()
         self.browser = self.pw.chromium.launch(headless=True)
-        # Clean up browser cache to avoid stale data between test runs
-        cache_dir = self.browser._browser_process_path().parent / "User Data" / "Chromium" / "Cache"
-        if cache_dir.exists():
-            cache_dir.rmdir()
+        # Note: Browser class no longer has _browser_process_path() method
+        # Cache cleanup is handled by Playwright automatically on browser close
         ctx = self.browser.new_context(viewport={"width": 1280, "height": 800})
         self.page = ctx.new_page()
         # Auto-dismiss file chooser dialogs to prevent blocking
@@ -604,8 +603,11 @@ if __name__ == "__main__":
             suite.teardown()
             if not success:
                 # Kill Python processes when tests fail
-                print("[INFO] Tests failed — killing Python processes...")
-                subprocess.run("kill_py.bat", shell=True)
+                print("[INFO] Tests failed - killing Python processes...")
+                subprocess.Popen("taskkill /F /IM python.exe", start_new_session=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True)
+    except Exception:
+        success = False
+    finally:
         server_proc.terminate()
         server_proc.wait(timeout=5)
 
