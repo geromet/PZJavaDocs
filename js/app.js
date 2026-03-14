@@ -55,14 +55,29 @@ function setupVersionDropdown(manifest, currentId) {
     // Preserve existing hash (currently open class) across version switch
     const hash = location.hash;
     location.href = `${location.pathname}?${p.toString()}${hash}`;
+    // Push version change to history so Alt+Left/Right can navigate back
+    navPush({type: 'versionSwitch', version: sel.value});
   });
 }
 
 function init() {
   const m = API._meta;
-  document.getElementById('stat-exposed').textContent = m.set_exposed_count;
-  document.getElementById('stat-tagged').textContent  = m.lua_tagged_count;
-  document.getElementById('stat-globals').textContent = `${m.total_global_functions} globals`;
+  const statsContainer = document.getElementById('header-stats');
+  if (statsContainer) {
+    const exposed = document.createElement('span');
+    exposed.className = 'hstat';
+    exposed.innerHTML = `<span class="hstat-dot" style="background:var(--col-exposed)"></span><span id="stat-exposed">…</span> setExposed`;
+    statsContainer.appendChild(exposed);
+    const tagged = document.createElement('span');
+    tagged.className = 'hstat';
+    tagged.innerHTML = `<span class="hstat-dot" style="background:var(--col-tagged)"></span><span id="stat-tagged">…</span> @UsedFromLua`;
+    statsContainer.appendChild(tagged);
+    const globals = document.createElement('span');
+    globals.id = 'stat-globals';
+    globals.style.color = 'var(--text-dim)';
+    globals.textContent = `${m.total_global_functions} globals`;
+    statsContainer.appendChild(globals);
+  }
 
   // Build simple-name → [fqn, …] lookup for source class-ref linking
   // Fast path: use precomputed maps from lua_api.json if present
@@ -99,6 +114,24 @@ function init() {
     if (val === 'globals') switchTab('globals');
     else selectClass(val);
   }
+  
+  // Version selector — change event listener
+  const versionSelect = document.getElementById('version-select');
+  if (versionSelect) {
+    versionSelect.addEventListener('change', () => {
+      const p = new URLSearchParams(location.search);
+      p.set('v', versionSelect.value);
+      const hash = location.hash;
+      location.href = `${location.pathname}?${p.toString()}${hash}`;
+    });
+  }
+
+  // Filter dropdown — close when clicking outside
+  const filterDropdown = document.getElementById('filter-dropdown');
+  document.getElementById('sidebar-filters').addEventListener('click', (e) => {
+    if (e.target.closest('.filter-dropdown')) return;
+    filterDropdown.classList.remove('visible');
+  });
 }
 
 // ── Resizable splitters ───────────────────────────────────────────────────
@@ -447,7 +480,14 @@ function setupEvents() {
 
   // Filter buttons
   document.querySelectorAll('.filter-btn').forEach(btn =>
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
+      const dropdown = document.getElementById('filter-dropdown');
+      // Toggle dropdown visibility when clicking the dropdown button
+      if (btn.dataset.filter === 'dropdown') {
+        dropdown.classList.toggle('visible');
+        e.preventDefault();
+        return;
+      }
       currentFilter = btn.dataset.filter;
       document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
@@ -470,6 +510,20 @@ function setupEvents() {
     if (label && label.dataset.path) {
       togglePackage(label.dataset.path);
     }
+  });
+
+  // Filter dropdown
+  document.getElementById('filter-dropdown').addEventListener('change', () => {
+    currentFilter = document.getElementById('filter-dropdown').value;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    // Mark the selected filter button as active
+    const btns = document.querySelectorAll('.filter-btn[data-filter]');
+    btns.forEach(btn => {
+      if (btn.dataset.filter === currentFilter) {
+        btn.classList.add('active');
+      }
+    });
+    buildClassList();
   });
 
   // Fold depth controls

@@ -11,7 +11,7 @@ python .gsd/test/run.py
 ```
 
 This will:
-1. Start the local server on port 8765
+1. Start the local server on port 8000
 2. Run all test suites
 3. Generate an HTML report in `.gsd/test-reports/`
 4. Open the report in your browser
@@ -90,6 +90,6 @@ View reports: `npx playwright show-report`
 
 ## Notes
 
-- Tests run against a local server on port 8765
+- Tests run against a local server on port 8000
 - Each test captures screenshots for visual regression detection
 - Tests are designed to catch UI/UX regressions, not functional bugs

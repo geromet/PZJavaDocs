@@ -60,14 +60,14 @@ ProjectZomboid/
 
 ## Running Locally
 
-Use the Python dev server (port 8765):
+Use the Python dev server (port 8000):
 
 ```
 cd pz-lua-api-viewer
 python server.py
 ```
 
-Then open `http://localhost:8765`.
+Then open `http://localhost:8000`.
 
 ## Regenerating the API
 

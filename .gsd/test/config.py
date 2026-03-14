@@ -13,7 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent  # .../projectzo
 PROJECT_DIR = BASE_DIR / "pz-lua-api-viewer"
 REPORT_DIR = PROJECT_DIR / ".gsd" / "test-reports"
 SERVER_SCRIPT = PROJECT_DIR / "serve.py"
-SERVER_PORT = 8765
+SERVER_PORT = 8000
 SERVER_URL = f"http://localhost:{SERVER_PORT}"
 
 
@@ -30,7 +30,7 @@ def setup_server():
             ["netstat", "-ano"], capture_output=True, text=True
         )
         for line in result.stdout.splitlines():
-            if ":8765" in line:
+            if ":8000" in line:
                 pid = line.split()[-1]
                 subprocess.run(["taskkill", "/F", "/PID", pid], check=True)
     except Exception:
@@ -50,7 +50,7 @@ def setup_server():
     start_time = datetime.now()
     while datetime.now() - start_time < max_wait:
         try:
-            response = requests.get("http://127.0.0.1:8765/", timeout=1)
+            response = requests.get("http://127.0.0.1:8000/", timeout=1)
             if response.status_code == 200:
                 print(f"[INFO] Server is ready at {SERVER_URL}")
                 return True

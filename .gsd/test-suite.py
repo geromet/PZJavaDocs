@@ -8,7 +8,7 @@ Usage:
     python .gsd/test-suite.py
 
 Requires: playwright (pip install playwright && playwright install chromium)
-The local server must NOT already be running on port 8765.
+The local server must NOT already be running on port 8000.
 """
 
 import json
@@ -28,7 +28,7 @@ if sys.platform == "win32":
 # Configuration
 # ---------------------------------------------------------------------------
 PROJECT_DIR = Path(__file__).resolve().parent.parent  # pz-lua-api-viewer/
-PORT = 8765
+PORT = 8000
 SERVER_URL = f"http://localhost:{PORT}"
 REPORT_DIR = PROJECT_DIR / ".gsd" / "test-reports"
 REPORT_DIR.mkdir(parents=True, exist_ok=True)
@@ -582,7 +582,7 @@ class PZViewerTests:
 # Main
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
-    # Kill anything on port 8765
+    # Kill anything on port 8000
     kill_port(PORT)
     time.sleep(0.5)
 

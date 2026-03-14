@@ -17,10 +17,7 @@
     <input id="global-search" type="text" placeholder="Search classes, methods, fields… (press /)" autocomplete="off">
     <button id="btn-search-clear" class="search-clear" title="Clear search">×</button>
   </div>
-  <span class="hstat"><span class="hstat-dot" style="background:var(--col-exposed)"></span><span id="stat-exposed">…</span> setExposed</span>
-  <span class="hstat"><span class="hstat-dot" style="background:var(--col-tagged)"></span><span id="stat-tagged">…</span> @UsedFromLua</span>
-  <span class="hstat" id="stat-globals" style="color:var(--text-dim)"></span>
-  <select id="version-select" style="display:none" title="Switch API version"></select>
+  <div id="header-stats" class="header-stats"></div>
   <button id="btn-folder" title="Load source files from your local Project Zomboid installation (overrides pre-shipped sources)">📁 Local sources</button>
 </div>
 
@@ -38,13 +35,15 @@
       <span class="legend-item"><span class="dot dot-blue"></span> tagged methods</span>
     </div>
     <div id="sidebar-filters">
-      <button class="filter-btn active" data-filter="all">All</button>
-      <button class="filter-btn" data-filter="both">Both</button>
-      <button class="filter-btn" data-filter="exposed">setExposed only</button>
-      <button class="filter-btn" data-filter="tagged">@UsedFromLua only</button>
-      <button class="filter-btn" data-filter="has-tagged-methods">Has tagged methods</button>
-      <button class="filter-btn" data-filter="callable">Callable</button>
-      <button class="filter-btn" data-filter="enum">Enums</button>
+      <div class="filter-dropdown">
+        <a href="#" data-filter="all" class="active">All</a>
+        <a href="#" data-filter="both">Both</a>
+        <a href="#" data-filter="exposed">setExposed only</a>
+        <a href="#" data-filter="tagged">@UsedFromLua only</a>
+        <a href="#" data-filter="has-tagged-methods">Has tagged methods</a>
+        <a href="#" data-filter="callable">Callable</a>
+        <a href="#" data-filter="enum">Enums</a>
+      </div>
     </div>
     <div id="fold-depth-controls">
       <button class="fdc-btn" id="btn-fold-all-pkg" title="Fold all packages">▶▶</button>
