@@ -27,7 +27,7 @@
 
 ## Tasks
 
-- [ ] **T01: Build pre-computed search index** `est:1.5h`
+- [x] **T01: Build pre-computed search index** `est:1.5h`
   - Why: TASK-024 core — current search does O(n*m) string matching per keystroke
   - Files: new `js/search-index.js`, `js/app.js` (init), `js/class-list.js` (query)
   - Do:

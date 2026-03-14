@@ -156,57 +156,72 @@ function adjustFoldDepth(delta) {
   buildClassList();
 }
 
+// ── Progressive rendering ─────────────────────────────────────────────────
+let _pendingRenderResults = null;
+let _pendingRenderRafId  = null;
+
+function renderSearchResultsBatch(list, results, startIdx, search, batchSize) {
+  const frag = document.createDocumentFragment();
+  const end = Math.min(startIdx + batchSize, results.length);
+  for (let i = startIdx; i < end; i++) {
+    const {fqn, cls, matchInfo} = results[i];
+    const parts  = fqn.split('.');
+    const simple = parts.pop();
+    const pkg    = parts.join('.');
+    const htm    = hasTaggedMethods(cls);
+    const div    = document.createElement('div');
+    div.className = 'class-item' + (fqn === currentClass ? ' active' : '');
+    div.dataset.fqn = fqn;
+    if (matchInfo) div.dataset.matchInfo = matchInfo;
+    div.innerHTML =
+      `<div class="ci-text"><div class="ci-name">${highlightMatch(simple, search)}${cls.is_enum ? ` <span class="tag tag-enum">enum</span>` : ''}</div><div class="ci-pkg">${highlightMatch(pkg, search)}</div></div>` +
+      `<div class="ci-right"><div class="ci-dots">` +
+      `<span class="dot ${cls.set_exposed ? 'dot-exposed' : 'dot-empty'}"></span>` +
+      `<span class="dot ${cls.lua_tagged  ? 'dot-tagged'  : 'dot-empty'}"></span>` +
+      `<span class="dot ${htm             ? 'dot-blue'    : 'dot-empty'}"></span>` +
+      `</div>${matchInfo ? `<span class="ci-match">${matchInfo}</span>` : ''}</div>`;
+    frag.appendChild(div);
+  }
+  list.appendChild(frag);
+  return end;
+}
+
 // ── Class list ────────────────────────────────────────────────────────────
 function buildClassList() {
   const search = currentSearch.trim();
 
+  // Cancel any pending progressive render
+  if (_pendingRenderRafId) {
+    cancelAnimationFrame(_pendingRenderRafId);
+    _pendingRenderRafId = null;
+  }
+
   if (search) {
-    // Flat scored results when searching
-    const results = [];
-    for (const [fqn, cls] of Object.entries(API.classes)) {
-      if (!passesCurrentFilter(fqn, cls)) continue;
-      const score = scoreClass(fqn, cls, search);
-      if (score === 0) continue;
-      const s  = search.toLowerCase();
-      const mm = cls.methods.filter(m => m.name.toLowerCase().includes(s)).length;
-      const fm = cls.fields.filter(f  => f.name.toLowerCase().includes(s)).length;
-      const matchInfo = (mm > 0 || fm > 0)
-        ? [mm > 0 && `${mm} method${mm > 1 ? 's' : ''}`, fm > 0 && `${fm} field${fm > 1 ? 's' : ''}`].filter(Boolean).join(', ')
-        : null;
-      results.push({fqn, cls, score, matchInfo});
-    }
-    results.sort((a, b) => b.score !== a.score ? b.score - a.score : a.fqn.split('.').pop().localeCompare(b.fqn.split('.').pop()));
+    // Use pre-computed search index for fast lookup
+    const results = querySearchIndex(search, currentFilter);
     filteredResults = results;
     document.getElementById('class-count').textContent = `${results.length} classes`;
 
     const list = document.getElementById('class-list');
-    const frag = document.createDocumentFragment();
     list.innerHTML = '';
-    for (const {fqn, cls, matchInfo} of results) {
-      const parts  = fqn.split('.');
-      const simple = parts.pop();
-      const pkg    = parts.join('.');
-      const htm    = hasTaggedMethods(cls);
-      const div    = document.createElement('div');
-      div.className = 'class-item' + (fqn === currentClass ? ' active' : '');
-      div.dataset.fqn = fqn;
-      div.innerHTML =
-        `<div class="ci-text"><div class="ci-name">${highlightMatch(simple, search)}${cls.is_enum ? ` <span class="tag tag-enum">enum</span>` : ''}</div><div class="ci-pkg">${highlightMatch(pkg, search)}</div></div>` +
-        `<div class="ci-right"><div class="ci-dots">` +
-        `<span class="dot ${cls.set_exposed ? 'dot-exposed' : 'dot-empty'}"></span>` +
-        `<span class="dot ${cls.lua_tagged  ? 'dot-tagged'  : 'dot-empty'}"></span>` +
-        `<span class="dot ${htm             ? 'dot-blue'    : 'dot-empty'}"></span>` +
-        `</div>${matchInfo ? `<span class="ci-match">${matchInfo}</span>` : ''}</div>`;
-      div.addEventListener('click', e => {
-    // Middle-click or Ctrl+click → open in new tab
-    if (e.button === 1 || e.ctrlKey) {
-      if (div.dataset.fqn) { openNewTab(div.dataset.fqn); e.preventDefault(); return; }
+
+    // Progressive rendering: first 50 immediately, rest in animation frames
+    const FIRST_BATCH = 50;
+    const SUBSEQUENT_BATCH = 100;
+    renderSearchResultsBatch(list, results, 0, search, FIRST_BATCH);
+
+    if (results.length > FIRST_BATCH) {
+      let idx = FIRST_BATCH;
+      function renderMore() {
+        // Bail if search changed while we were rendering
+        if (currentSearch.trim() !== search) return;
+        idx = renderSearchResultsBatch(list, results, idx, search, SUBSEQUENT_BATCH);
+        if (idx < results.length) {
+          _pendingRenderRafId = requestAnimationFrame(renderMore);
+        }
+      }
+      _pendingRenderRafId = requestAnimationFrame(renderMore);
     }
-    selectClass(div.dataset.fqn, matchInfo);
-  });
-      frag.appendChild(div);
-    }
-    list.appendChild(frag);
     return;
   }
 
@@ -218,17 +233,5 @@ function buildClassList() {
 
   const list = document.getElementById('class-list');
   list.innerHTML = renderPackageTreeHTML(root, 0);
-
-  list.querySelectorAll('.pkg-label').forEach(label => {
-    label.addEventListener('click', () => togglePackage(label.dataset.path));
-  });
-  list.querySelectorAll('.class-item').forEach(item => {
-    item.addEventListener('click', e => {
-      // Middle-click or Ctrl+click → open in new tab
-      if (e.button === 1 || e.ctrlKey) {
-        if (item.dataset.fqn) { openNewTab(item.dataset.fqn); e.preventDefault(); return; }
-      }
-      selectClass(item.dataset.fqn, null);
-    });
-  });
+  // Click handlers are managed via event delegation on #class-list (see app.js)
 }

@@ -82,6 +82,7 @@ function init() {
     }
   }
 
+  buildSearchIndex(API);
   buildClassList();
   setupEvents();
   initSplitter('sidebar-splitter', 'sidebar',       'splitW-sidebar');
@@ -452,6 +453,24 @@ function setupEvents() {
       btn.classList.add('active');
       buildClassList();
     }));
+
+  // Event delegation for class list (search results + tree items)
+  document.getElementById('class-list').addEventListener('click', e => {
+    const item = e.target.closest('.class-item');
+    if (item && item.dataset.fqn) {
+      if (e.button === 1 || e.ctrlKey) {
+        openNewTab(item.dataset.fqn);
+        e.preventDefault();
+        return;
+      }
+      selectClass(item.dataset.fqn, item.dataset.matchInfo || null);
+      return;
+    }
+    const label = e.target.closest('.pkg-label');
+    if (label && label.dataset.path) {
+      togglePackage(label.dataset.path);
+    }
+  });
 
   // Fold depth controls
   document.getElementById('btn-fold-all-pkg').addEventListener('click', () => {

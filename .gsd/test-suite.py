@@ -447,7 +447,46 @@ class PZViewerTests:
             self.add("Hover preview", False, "No class link found to hover in detail panel")
 
     # ------------------------------------------------------------------
-    # 10. Console Errors
+    # 10. Search Performance
+    # ------------------------------------------------------------------
+    def test_search_performance(self):
+        """Search index query should complete in < 16ms (one frame)."""
+        self.page.goto(SERVER_URL + "/", wait_until="networkidle")
+        self.page.wait_for_timeout(500)
+        result = self.page.evaluate("""
+            (() => {
+                const bench = (term) => {
+                    const start = performance.now();
+                    const results = querySearchIndex(term, 'all');
+                    return {term, count: results.length, ms: performance.now() - start};
+                };
+                return [bench('Iso'), bench('get'), bench('a')];
+            })()
+        """)
+        max_ms = max(r['ms'] for r in result)
+        ok = max_ms < 16
+        details = ", ".join(f"{r['term']}={r['ms']:.1f}ms/{r['count']}hits" for r in result)
+        self.add("Search performance", ok, f"Max {max_ms:.1f}ms ({details})")
+
+    def test_progressive_render(self):
+        """Progressive render should create <= 50 DOM nodes in first frame."""
+        self.page.goto(SERVER_URL + "/", wait_until="networkidle")
+        self.page.wait_for_timeout(500)
+        node_count = self.page.evaluate("""
+            (() => {
+                currentSearch = 'a';
+                buildClassList();
+                const count = document.querySelectorAll('#class-list .class-item').length;
+                currentSearch = '';
+                buildClassList();
+                return count;
+            })()
+        """)
+        ok = node_count <= 50
+        self.add("Progressive render", ok, f"{node_count} DOM nodes in first frame (limit 50)")
+
+    # ------------------------------------------------------------------
+    # 11. Console Errors
     # ------------------------------------------------------------------
     def test_no_console_errors(self):
         """Reload the page fresh and check for JS errors."""
@@ -494,6 +533,7 @@ class PZViewerTests:
             ("Sidebar", [self.test_sidebar_filters, self.test_sidebar_splitter]),
             ("Version", [self.test_version_select_exists]),
             ("Hover Preview", [self.test_hover_preview]),
+            ("Performance", [self.test_search_performance, self.test_progressive_render]),
             ("Console Errors", [self.test_no_console_errors]),
         ]
 
