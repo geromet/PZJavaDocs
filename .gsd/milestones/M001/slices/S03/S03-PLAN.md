@@ -51,7 +51,7 @@
   - Verify: `grep -q 'setupVersionDropdown' js/app.js`
   - Done when: Version-aware loader and dropdown exist in app.js (verified)
 
-- [ ] **T03: Add diagnostic data attribute and Playwright tests for version selector** `est:45m`
+- [x] **T03: Add diagnostic data attribute and Playwright tests for version selector** `est:45m`
   - Why: S03 implementation is done but has no automated tests and no diagnostic surface for future agents. Pre-flight requires observability and failure-path verification.
   - Files: `js/app.js`, `.gsd/test/s03_version_selector.py`
   - Do: (1) In `setupVersionDropdown()`, set `sel.dataset.versionActive = currentId` when manifest has entries, remove attribute when hidden. (2) Write `.gsd/test/s03_version_selector.py` with pytest + Playwright: test dropdown hidden with single version, dropdown visible when manifest has ≥2 entries (use route intercept to inject fake manifest), `?v=` param selects correct version, versions.json 404 → graceful fallback. Follow patterns from `.gsd/test/s09_load_perf.py`.

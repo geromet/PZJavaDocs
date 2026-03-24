@@ -79,12 +79,14 @@ function setupVersionDropdown(manifest, currentId) {
   const sel = document.getElementById('version-select');
   if (!manifest || manifest.length <= 1) {
     sel.style.display = 'none';
+    delete sel.dataset.versionActive;
     return;
   }
   sel.innerHTML = manifest.map(v =>
     `<option value="${esc(v.id)}"${v.id === currentId ? ' selected' : ''}>${esc(v.label)}</option>`
   ).join('');
   sel.style.display = '';
+  sel.dataset.versionActive = currentId;
   sel.addEventListener('change', () => {
     const nextUrl = buildNavigationUrl(captureNavigationState(), { versionOverride: sel.value });
     location.href = nextUrl;
