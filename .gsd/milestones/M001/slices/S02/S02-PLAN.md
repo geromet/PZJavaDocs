@@ -53,7 +53,7 @@
   - Verify: `grep -q "hover-preview" index.html && grep -q "hover-preview" js/app.js`
   - Done when: Card appears after 400ms; disappears on mouseout; no viewport overflow; no console errors
 
-- [ ] **T03: Verify S02 features and close out slice** `est:15m`
+- [x] **T03: Verify S02 features and close out slice** `est:15m`
   - Why: Run the automated test suite to confirm both features work end-to-end; close the slice cleanly
   - Files: `.gsd/milestones/M001/slices/S02/S02-SUMMARY.md`
   - Do: Run `python .gsd/test/s02_features.py` to verify both FEAT-007 and FEAT-014 pass. Confirm no regressions via `python .gsd/test-suite.py`. Update S02 summary if needed.

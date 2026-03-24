@@ -9,11 +9,11 @@ tasks:
   - T01
   - T02
 key_files_changed:
-  - pz-lua-api-viewer/js/state.js
-  - pz-lua-api-viewer/js/class-list.js
-  - pz-lua-api-viewer/js/app.js
-  - pz-lua-api-viewer/app.css
-  - pz-lua-api-viewer/index.html
+  - js/state.js
+  - js/class-list.js
+  - js/app.js
+  - app.css
+  - index.html
 ---
 
 # S02: Tab Enhancements — Complete ✅
@@ -81,11 +81,11 @@ Floating preview card appears after 400ms hover on any `[data-fqn]` element, sho
 
 | File | Change |
 |------|--------|
-| `pz-lua-api-viewer/js/state.js` | Added `openNewTab(fqn)` function (+12 lines) |
-| `pz-lua-api-viewer/js/class-list.js` | Middle-click handlers for search results and namespace tree (+18 lines) |
-| `pz-lua-api-viewer/js/app.js` | IIFE hover preview logic in `setupEvents()` (+~80 lines) |
-| `pz-lua-api-viewer/app.css` | `#hover-preview` and `.hp-*` styles (~20 lines) |
-| `pz-lua-api-viewer/index.html` | Added `<div id="hover-preview">` container |
+| `js/state.js` | Added `openNewTab(fqn)` function (+12 lines) |
+| `js/class-list.js` | Middle-click handlers for search results and namespace tree (+18 lines) |
+| `js/app.js` | IIFE hover preview logic in `setupEvents()` (+~80 lines) |
+| `app.css` | `#hover-preview` and `.hp-*` styles (~20 lines) |
+| `index.html` | Added `<div id="hover-preview">` container |
 | `docs/STATUS.md` | Updated shipped features timestamps |
 
 **Archived:** FEAT-007-middle-mouse-new-tab.md, FEAT-014-hover-preview.md
