@@ -10,41 +10,60 @@
 - Preview card shows: simple name, FQN, method count, first 3 methods alphabetically
 - Preview card stays within viewport (no overflow off right/bottom edge)
 - Existing left-click navigation unaffected
-- Browser screenshot confirms both features
+
+## Proof Level
+
+- This slice proves: operational
+- Real runtime required: yes
+- Human/UAT required: no
 
 ## Verification
 
-- Start server: `cd pz-lua-api-viewer && python server.py`
-- Browser screenshot: open IsoPlayer, middle-click an inherited class — new tab appears with that class
-- Browser screenshot: hover over a class link in source panel — preview card appears after delay
-- No console errors in browser dev tools
+- `python .gsd/test/s02_features.py` — middle-click new tab and hover preview card tests pass
+- `grep -q "openNewTab" js/state.js` — middle-click utility present
+- `grep -q "hover-preview" js/app.js` — hover preview logic present
+- `grep -q "hover-preview" index.html` — preview container div present
+
+## Observability / Diagnostics
+
+- Runtime signals: `#hover-preview` div gains `data-status="visible"` / hidden state via CSS display toggle; tab count observable via `tabs` array in `state.js`
+- Inspection surfaces: Browser devtools Elements panel for `#hover-preview` position/content; Console for JS errors on middle-click or hover
+- Failure visibility: Console errors if `openNewTab()` receives an unknown FQN; hover card not appearing after 400ms indicates broken event delegation
+- Redaction constraints: none
+
+## Integration Closure
+
+- Upstream surfaces consumed: `js/state.js` (tab system, `openNewTab`), `js/class-list.js` (sidebar click handlers), `js/app.js` (delegated event handlers, hover logic)
+- New wiring introduced in this slice: `openNewTab()` in state.js called from multiple click handlers; IIFE hover preview logic in `setupEvents()`; `#hover-preview` container in `index.html`
+- What remains before the milestone is truly usable end-to-end: S03 (version selector), S05 (resizable sidebar)
 
 ## Tasks
 
 - [x] **T01: Middle-click new tab (FEAT-007)** `est:45m`
   - Why: Implements FEAT-007; tab system already exists in `state.js` (tabs array, `openNewTab`)
-  - Files: `pz-lua-api-viewer/js/app.js` (event delegation), `pz-lua-api-viewer/app.css` (cursor hint if needed)
-  - Do: Read `pz-lua-api-viewer/docs/Planned_Features/FEAT-007-middle-mouse-new-tab.md`. In the global click handler (or mousedown), detect `event.button === 1` (middle) or `event.ctrlKey && event.button === 0` on elements with `data-fqn`. Call `openNewTab(fqn)`. Prevent default on middle-click (browser autoscroll). Applies to: sidebar class items, inheritance header links, inherited method class links, source `<a data-fqn>` tags.
-  - Verify: Browser screenshot showing two tabs after middle-clicking a class link
-  - Done when: Middle-click opens new tab; Ctrl+click opens new tab; left-click still navigates current tab
+  - Files: `js/state.js`, `js/class-list.js`, `js/app.js`
+  - Do: Add `openNewTab(fqn)` to `state.js`. Wire middle-click (button===1) and Ctrl+click handlers into sidebar class items in `class-list.js` and delegated click handlers in `app.js` for source refs, inherit links, and inherit method links.
+  - Verify: `grep -q "openNewTab" js/state.js && grep -q "button === 1" js/app.js`
+  - Done when: Middle-click and Ctrl+click open new tabs; left-click still navigates current tab
 
 - [x] **T02: Hover preview card (FEAT-014)** `est:1.5h`
   - Why: Implements FEAT-014; class data already available in window-scope API object
-  - Files: `pz-lua-api-viewer/js/app.js` (hover logic), `pz-lua-api-viewer/app.css` (preview card styles), `pz-lua-api-viewer/index.html` (preview card container div)
-  - Do: Read `pz-lua-api-viewer/docs/Planned_Features/FEAT-014-hover-preview.md`. Add a `#hover-preview` div to `index.html` (hidden by default). In `app.js`, add `mouseover`/`mouseout` listeners on `[data-fqn]` elements. On mouseover, set a 400ms timeout; on fire, look up the class in the API, build preview HTML (name, FQN, method count, first 3 methods), position the card near the cursor clamped to viewport, show it. On mouseout, cancel timeout and hide card. Style in `app.css` (small card, shadow, dark theme consistent with existing UI).
-  - Verify: Browser screenshot showing hover card over a class link
+  - Files: `js/app.js`, `app.css`, `index.html`
+  - Do: Add `#hover-preview` div to `index.html`. Add delegated `mouseover`/`mouseout` listeners on `[data-fqn]` in `app.js` with 400ms show delay and 80ms hide grace. Style card in `app.css` with viewport clamping.
+  - Verify: `grep -q "hover-preview" index.html && grep -q "hover-preview" js/app.js`
   - Done when: Card appears after 400ms; disappears on mouseout; no viewport overflow; no console errors
 
-- [ ] **T03: Update docs and commit S02** `est:10m`
-  - Why: Keep STATUS.md accurate; lock in S02
-  - Files: `pz-lua-api-viewer/docs/STATUS.md`, `pz-lua-api-viewer/docs/Planned_Features/FEAT-007-middle-mouse-new-tab.md`, `pz-lua-api-viewer/docs/Planned_Features/FEAT-014-hover-preview.md`
-  - Do: Archive FEAT-007 and FEAT-014 docs using `python docs/archive.py`. Update `docs/STATUS.md`. Commit and push.
-  - Verify: `git status` clean; `git log --oneline -3` shows commit
-  - Done when: pushed to `liability-machine`
+- [ ] **T03: Verify S02 features and close out slice** `est:15m`
+  - Why: Run the automated test suite to confirm both features work end-to-end; close the slice cleanly
+  - Files: `.gsd/milestones/M001/slices/S02/S02-SUMMARY.md`
+  - Do: Run `python .gsd/test/s02_features.py` to verify both FEAT-007 and FEAT-014 pass. Confirm no regressions via `python .gsd/test-suite.py`. Update S02 summary if needed.
+  - Verify: `python .gsd/test-suite.py` exits 0
+  - Done when: All S02-related tests pass; slice summary accurate
 
 ## Files Likely Touched
 
-- `pz-lua-api-viewer/js/app.js`
-- `pz-lua-api-viewer/app.css`
-- `pz-lua-api-viewer/index.html`
-- `pz-lua-api-viewer/docs/STATUS.md`
+- `js/state.js`
+- `js/class-list.js`
+- `js/app.js`
+- `app.css`
+- `index.html`

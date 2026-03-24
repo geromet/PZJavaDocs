@@ -1,78 +1,52 @@
+---
+estimated_steps: 4
+estimated_files: 3
+skills_used: []
+---
+
 # T01: Middle-click new tab (FEAT-007)
 
-**Status:** In Progress  
-**Complexity:** Tiny  
-**Estimate:** 45m  
-**Depends on:** Tab system (shipped in S00/foundation)
+**Slice:** S02 — Tab Enhancements
+**Milestone:** M001
 
-## Why
+## Description
 
-Implements FEAT-007: middle-clicking or Ctrl+clicking a class link opens that class in a new tab rather than navigating the current tab.
+Implement FEAT-007: middle-clicking or Ctrl+clicking any class link opens that class in a new tab rather than navigating the current tab. The tab system already exists in `state.js`.
 
-## Files
+## Steps
 
-- `pz-lua-api-viewer/js/app.js` — event delegation for click handling
-- `pz-lua-api-viewer/app.css` — cursor hint for middle-click affordance (optional)
+1. Add `openNewTab(fqn)` utility to `js/state.js` that creates a new tab entry, switches to it, and loads the class — cap at 10 tabs with oldest non-active eviction.
+2. Wire middle-click (`event.button === 1`) and Ctrl+click (`event.ctrlKey && event.button === 0`) handlers into sidebar class items in `js/class-list.js` for both search results and namespace tree items.
+3. Add the same middle-click / Ctrl+click detection to delegated click handlers in `js/app.js` for source class refs (`a.src-class-ref`), inherit links (`a.inherit-link[data-fqn]`), and inherited method links (`a.inherit-method-link[data-fqn]`). Call `openNewTab(fqn)` and `preventDefault()`.
+4. Verify left-click still navigates the current tab without regression.
 
-## Do
+## Must-Haves
 
-### Step 1: Read existing click handlers in app.js
+- [x] Middle-clicking any class link opens a new tab with that class
+- [x] Ctrl+clicking any class link opens a new tab with that class
+- [x] Left-click still navigates current tab (no regression)
+- [x] No console errors in browser dev tools
 
-The global click handler (`#content`) already has delegated handlers for:
-- Source class refs (`a.src-class-ref`) — calls `selectClass(fqn)`
-- Inheritance header class links (`a.inherit-link[data-fqn]`) — calls `selectClass(fqn)`
-- Inherited method links (`a.inherit-method-link[data-fqn]`) — calls `selectClass(targetFqn, null, method)`
+## Verification
 
-### Step 2: Add middle-click handler
+- `grep -q "openNewTab" js/state.js` — utility function exists
+- `grep -c "button === 1" js/app.js` returns >= 3 — middle-click handlers wired in multiple locations
+- `grep -q "openNewTab" js/class-list.js` — sidebar middle-click wired
 
-Add to the click handler's loop (after the source class ref check):
+## Observability Impact
 
-```js
-// Middle-click or Ctrl+click → open in new tab
-if (e.button === 1 || e.ctrlKey) {
-  const fqn = inheritMethod ? inheritMethod.dataset.fqn : a.dataset.fqn;
-  if (fqn && API.classes[fqn]) {
-    openNewTab(fqn);
-    return;
-  }
-}
-```
+- Signals added/changed: Tab count in `state.js` tabs array increases when `openNewTab()` called; active tab index updates
+- How a future agent inspects this: Check `tabs.length` in browser console; inspect tab bar DOM for new tab elements
+- Failure state exposed: Console error if `openNewTab()` receives an FQN not in `API.classes`
 
-Place this after the existing `if (a)` block and before the `a.inherit-link` check.
+## Inputs
 
-### Step 3: Verify `openNewTab` exists
+- `js/state.js` — existing tab system with tabs array and tab management functions
+- `js/class-list.js` — sidebar click handlers for search results and namespace tree
+- `js/app.js` — delegated click handlers for source refs, inherit links, inherit method links
 
-Read `state.js` to confirm `openNewTab()` is defined and available globally.
+## Expected Output
 
-### Step 4: Test with browser screenshots
-
-- Start server: `cd pz-lua-api-viewer && python server.py`
-- Open browser, go to http://localhost:8765
-- Find IsoPlayer class in sidebar, middle-click it
-- Verify a new tab opens with that class loaded
-- Take screenshot showing two tabs
-- Test Ctrl+click as well
-
-### Step 5: Optional cursor hint
-
-Consider adding a cursor change on hover for elements with `[data-fqn]`:
-
-```css
-[data-fqn]:hover { cursor: alias; }
-```
-
-This signals the middle-click affordance.
-
-## Acceptance Criteria
-
-1. Middle-clicking any class link opens a new tab with that class
-2. Ctrl+clicking any class link opens a new tab with that class
-3. Left-click still navigates current tab (no regression)
-4. No console errors in browser dev tools
-5. Browser screenshot shows two tabs after middle-click
-
-## Done When
-
-- Middle-click opens new tab
-- Ctrl+click opens new tab  
-- Left-click still navigates current tab
+- `js/state.js` — new `openNewTab(fqn)` function added
+- `js/class-list.js` — middle-click / Ctrl+click handlers added to class items
+- `js/app.js` — middle-click / Ctrl+click detection added to existing delegated handlers
