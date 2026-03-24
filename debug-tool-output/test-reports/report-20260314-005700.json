@@ -1,0 +1,121 @@
+{
+  "timestamp": "2026-03-14T00:57:00.338410",
+  "passed": 19,
+  "total": 19,
+  "results": [
+    {
+      "name": "Page loads",
+      "passed": true,
+      "message": "Title: Project Zomboid Lua API",
+      "screenshot": "E:\\SteamLibrary\\steamapps\\common\\ProjectZomboid\\projectzomboid\\pz-lua-api-viewer\\.gsd\\test-reports\\01-page-load.png"
+    },
+    {
+      "name": "Class count",
+      "passed": true,
+      "message": "1096 classes (expected >1000)",
+      "screenshot": ""
+    },
+    {
+      "name": "Stats bar",
+      "passed": true,
+      "message": "exposed=917, globals=745 globals",
+      "screenshot": ""
+    },
+    {
+      "name": "Search filters",
+      "passed": true,
+      "message": "1 results for 'IsoPlayer'",
+      "screenshot": "E:\\SteamLibrary\\steamapps\\common\\ProjectZomboid\\projectzomboid\\pz-lua-api-viewer\\.gsd\\test-reports\\02-search.png"
+    },
+    {
+      "name": "Search clear",
+      "passed": true,
+      "message": "After clear: value='', count=1096",
+      "screenshot": ""
+    },
+    {
+      "name": "Class detail loads",
+      "passed": true,
+      "message": "URL: http://localhost:8765/#zombie.characters.IsoPlayer",
+      "screenshot": "E:\\SteamLibrary\\steamapps\\common\\ProjectZomboid\\projectzomboid\\pz-lua-api-viewer\\.gsd\\test-reports\\03-class-detail.png"
+    },
+    {
+      "name": "Inheritance tree",
+      "passed": true,
+      "message": "Chain present: True \u2014 looking for ['GameEntity', 'IsoObject', 'IsoMovingObject', 'IsoGameCharacter', 'IsoPlayer']",
+      "screenshot": ""
+    },
+    {
+      "name": "Methods visible",
+      "passed": true,
+      "message": "2063 method elements found",
+      "screenshot": ""
+    },
+    {
+      "name": "Source tab",
+      "passed": true,
+      "message": "Source code length: 353056",
+      "screenshot": "E:\\SteamLibrary\\steamapps\\common\\ProjectZomboid\\projectzomboid\\pz-lua-api-viewer\\.gsd\\test-reports\\04-source-tab.png"
+    },
+    {
+      "name": "Tab bar",
+      "passed": true,
+      "message": "2 tabs open after navigating to zombie.entity.GameEntity",
+      "screenshot": "E:\\SteamLibrary\\steamapps\\common\\ProjectZomboid\\projectzomboid\\pz-lua-api-viewer\\.gsd\\test-reports\\05-tab-bar.png"
+    },
+    {
+      "name": "Back/Forward",
+      "passed": true,
+      "message": "start=IsoPlayer, nav->GameEntity, back->IsoPlayer, fwd->GameEntity",
+      "screenshot": ""
+    },
+    {
+      "name": "Hash navigation",
+      "passed": true,
+      "message": "Direct hash nav to IsoObject: found",
+      "screenshot": ""
+    },
+    {
+      "name": "Globals panel",
+      "passed": true,
+      "message": "Panel visible: True, count text: '745 functions'",
+      "screenshot": "E:\\SteamLibrary\\steamapps\\common\\ProjectZomboid\\projectzomboid\\pz-lua-api-viewer\\.gsd\\test-reports\\06-globals.png"
+    },
+    {
+      "name": "Globals search",
+      "passed": true,
+      "message": "'reload' found in globals: True",
+      "screenshot": "E:\\SteamLibrary\\steamapps\\common\\ProjectZomboid\\projectzomboid\\pz-lua-api-viewer\\.gsd\\test-reports\\07-globals-search.png"
+    },
+    {
+      "name": "Sidebar filter (setExposed only)",
+      "passed": true,
+      "message": "2 classes (baseline 1096) exclusively setExposed",
+      "screenshot": ""
+    },
+    {
+      "name": "Sidebar splitter",
+      "passed": true,
+      "message": "Splitter element visible",
+      "screenshot": ""
+    },
+    {
+      "name": "Version select exists",
+      "passed": true,
+      "message": "Element present in DOM",
+      "screenshot": ""
+    },
+    {
+      "name": "Hover preview",
+      "passed": true,
+      "message": "Preview card appeared",
+      "screenshot": "E:\\SteamLibrary\\steamapps\\common\\ProjectZomboid\\projectzomboid\\pz-lua-api-viewer\\.gsd\\test-reports\\08-hover-preview.png"
+    },
+    {
+      "name": "No console errors",
+      "passed": true,
+      "message": "No console errors",
+      "screenshot": ""
+    }
+  ]
+}

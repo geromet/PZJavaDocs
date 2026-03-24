@@ -1,0 +1,133 @@
+{
+  "timestamp": "2026-03-14T04:35:59.118300",
+  "passed": 6,
+  "total": 21,
+  "results": [
+    {
+      "name": "Page loads",
+      "passed": true,
+      "message": "Title: Project Zomboid Lua API",
+      "screenshot": "E:\\SteamLibrary\\steamapps\\common\\ProjectZomboid\\projectzomboid\\pz-lua-api-viewer\\.gsd\\test-reports\\01-page-load.png"
+    },
+    {
+      "name": "Class count",
+      "passed": false,
+      "message": "0 classes (expected >1000)",
+      "screenshot": ""
+    },
+    {
+      "name": "stats bar",
+      "passed": false,
+      "message": "EXCEPTION: Locator.text_content: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\"#stat-exposed\")\n",
+      "screenshot": ""
+    },
+    {
+      "name": "Search filters",
+      "passed": false,
+      "message": "0 results for 'IsoPlayer'",
+      "screenshot": "E:\\SteamLibrary\\steamapps\\common\\ProjectZomboid\\projectzomboid\\pz-lua-api-viewer\\.gsd\\test-reports\\02-search.png"
+    },
+    {
+      "name": "Search clear",
+      "passed": false,
+      "message": "Clear button not visible",
+      "screenshot": ""
+    },
+    {
+      "name": "Class detail loads",
+      "passed": false,
+      "message": "Could not find IsoPlayer in list",
+      "screenshot": ""
+    },
+    {
+      "name": "Inheritance tree",
+      "passed": false,
+      "message": "Chain present: False \u2014 looking for ['GameEntity', 'IsoObject', 'IsoMovingObject', 'IsoGameCharacter', 'IsoPlayer']",
+      "screenshot": ""
+    },
+    {
+      "name": "Methods visible",
+      "passed": false,
+      "message": "0 method elements found",
+      "screenshot": ""
+    },
+    {
+      "name": "Source tab",
+      "passed": false,
+      "message": "Source tab not found",
+      "screenshot": ""
+    },
+    {
+      "name": "Tab bar",
+      "passed": false,
+      "message": "No class links found in detail panel to open second tab",
+      "screenshot": ""
+    },
+    {
+      "name": "Back/Forward",
+      "passed": false,
+      "message": "No class link to navigate to",
+      "screenshot": ""
+    },
+    {
+      "name": "Hash navigation",
+      "passed": true,
+      "message": "Direct hash nav to IsoObject: found",
+      "screenshot": ""
+    },
+    {
+      "name": "Globals panel",
+      "passed": false,
+      "message": "Panel visible: False, count text: ''",
+      "screenshot": "E:\\SteamLibrary\\steamapps\\common\\ProjectZomboid\\projectzomboid\\pz-lua-api-viewer\\.gsd\\test-reports\\06-globals.png"
+    },
+    {
+      "name": "Globals search",
+      "passed": false,
+      "message": "Globals search input not found",
+      "screenshot": ""
+    },
+    {
+      "name": "Sidebar filter (setExposed)",
+      "passed": false,
+      "message": "setExposed filter button not found",
+      "screenshot": ""
+    },
+    {
+      "name": "Sidebar splitter",
+      "passed": true,
+      "message": "Splitter element visible",
+      "screenshot": ""
+    },
+    {
+      "name": "Version select exists",
+      "passed": false,
+      "message": "Missing from DOM",
+      "screenshot": ""
+    },
+    {
+      "name": "Hover preview",
+      "passed": false,
+      "message": "No class link found to hover in detail panel",
+      "screenshot": ""
+    },
+    {
+      "name": "Search performance",
+      "passed": true,
+      "message": "Max 0.2ms (Iso=0.2ms/0hits, get=0.0ms/0hits, a=0.0ms/0hits)",
+      "screenshot": ""
+    },
+    {
+      "name": "Progressive render",
+      "passed": true,
+      "message": "0 DOM nodes in first frame (limit 50)",
+      "screenshot": ""
+    },
+    {
+      "name": "No console errors",
+      "passed": true,
+      "message": "No console errors",
+      "screenshot": ""
+    }
+  ]
+}

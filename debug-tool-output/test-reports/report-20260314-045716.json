@@ -1,0 +1,133 @@
+{
+  "timestamp": "2026-03-14T04:57:16.876120",
+  "passed": 1,
+  "total": 21,
+  "results": [
+    {
+      "name": "Page loads",
+      "passed": true,
+      "message": "Title: Project Zomboid Lua API",
+      "screenshot": "E:\\SteamLibrary\\steamapps\\common\\ProjectZomboid\\projectzomboid\\pz-lua-api-viewer\\.gsd\\test-reports\\01-page-load.png"
+    },
+    {
+      "name": "Class count",
+      "passed": false,
+      "message": "0 classes (expected >1000)",
+      "screenshot": ""
+    },
+    {
+      "name": "stats bar",
+      "passed": false,
+      "message": "EXCEPTION: Locator.text_content: Page crashed\nCall log:\n  - waiting for locator(\"#stat-exposed\")\n",
+      "screenshot": ""
+    },
+    {
+      "name": "search filters",
+      "passed": false,
+      "message": "EXCEPTION: Locator.fill: Target crashed \nCall log:\n  - waiting for locator(\"#global-search\")\n",
+      "screenshot": ""
+    },
+    {
+      "name": "search clear",
+      "passed": false,
+      "message": "EXCEPTION: Locator.fill: Target crashed \nCall log:\n  - waiting for locator(\"#global-search\")\n",
+      "screenshot": ""
+    },
+    {
+      "name": "class detail loads",
+      "passed": false,
+      "message": "EXCEPTION: Page.goto: Page crashed\nCall log:\n  - navigating to \"http://localhost:8000/\", waiting until \"networkidle\"\n",
+      "screenshot": ""
+    },
+    {
+      "name": "inheritance tree",
+      "passed": false,
+      "message": "EXCEPTION: Locator.text_content: Target crashed \nCall log:\n  - waiting for locator(\"#detail-panel\")\n",
+      "screenshot": ""
+    },
+    {
+      "name": "methods visible",
+      "passed": false,
+      "message": "EXCEPTION: Locator.count: Target crashed ",
+      "screenshot": ""
+    },
+    {
+      "name": "source tab",
+      "passed": false,
+      "message": "EXCEPTION: Locator.is_visible: Target crashed \nCall log:\n    - checking visibility of locator(\".ctab[data-ctab=\\\"source\\\"]\")\n",
+      "screenshot": ""
+    },
+    {
+      "name": "tab bar",
+      "passed": false,
+      "message": "EXCEPTION: Page.goto: Page crashed\nCall log:\n  - navigating to \"http://localhost:8000/#zombie.characters.IsoPlayer\", waiting until \"networkidle\"\n",
+      "screenshot": ""
+    },
+    {
+      "name": "back forward",
+      "passed": false,
+      "message": "EXCEPTION: Page.goto: Page crashed\nCall log:\n  - navigating to \"http://localhost:8000/\", waiting until \"networkidle\"\n",
+      "screenshot": ""
+    },
+    {
+      "name": "hash navigation",
+      "passed": false,
+      "message": "EXCEPTION: Page.goto: Page crashed\nCall log:\n  - navigating to \"http://localhost:8000/?_t=1773460636#zombie.iso.IsoObject\", waiting until \"networkidle\"\n",
+      "screenshot": ""
+    },
+    {
+      "name": "globals panel",
+      "passed": false,
+      "message": "EXCEPTION: Page.goto: Page crashed\nCall log:\n  - navigating to \"http://localhost:8000/\", waiting until \"networkidle\"\n",
+      "screenshot": ""
+    },
+    {
+      "name": "globals search",
+      "passed": false,
+      "message": "EXCEPTION: Locator.is_visible: Target crashed \nCall log:\n    - checking visibility of locator(\"#globals-search\")\n",
+      "screenshot": ""
+    },
+    {
+      "name": "sidebar filters",
+      "passed": false,
+      "message": "EXCEPTION: Page.goto: Page crashed\nCall log:\n  - navigating to \"http://localhost:8000/\", waiting until \"networkidle\"\n",
+      "screenshot": ""
+    },
+    {
+      "name": "sidebar splitter",
+      "passed": false,
+      "message": "EXCEPTION: Locator.is_visible: Target crashed \nCall log:\n    - checking visibility of locator(\"#sidebar-splitter\")\n",
+      "screenshot": ""
+    },
+    {
+      "name": "version select exists",
+      "passed": false,
+      "message": "EXCEPTION: Page.goto: Page crashed\nCall log:\n  - navigating to \"http://localhost:8000/\", waiting until \"networkidle\"\n",
+      "screenshot": ""
+    },
+    {
+      "name": "hover preview",
+      "passed": false,
+      "message": "EXCEPTION: Page.goto: Page crashed\nCall log:\n  - navigating to \"http://localhost:8000/\", waiting until \"networkidle\"\n",
+      "screenshot": ""
+    },
+    {
+      "name": "search performance",
+      "passed": false,
+      "message": "EXCEPTION: Page.goto: Page crashed\nCall log:\n  - navigating to \"http://localhost:8000/\", waiting until \"networkidle\"\n",
+      "screenshot": ""
+    },
+    {
+      "name": "progressive render",
+      "passed": false,
+      "message": "EXCEPTION: Page.goto: Page crashed\nCall log:\n  - navigating to \"http://localhost:8000/\", waiting until \"networkidle\"\n",
+      "screenshot": ""
+    },
+    {
+      "name": "no console errors",
+      "passed": false,
+      "message": "EXCEPTION: Page.goto: Page crashed\nCall log:\n  - navigating to \"http://localhost:8000/\", waiting until \"networkidle\"\n",
+      "screenshot": ""
+    }
+  ]
+}
