@@ -35,7 +35,7 @@
   > After this: sidebar splitter with drag-to-resize and localStorage persistence
 - [x] **S06: Instant Search & DOM Performance** risk:high depends:[]
   > After this: search results appear as-you-type with no perceptible delay; progressive rendering keeps first frame at 50 DOM nodes
-- [ ] **S07: UX Polish** risk:medium depends:[S06]
+- [x] **S07: UX Polish** risk:medium depends:[S06]
   > After this: hover prefetch preloads source; header is decluttered; color palette tightened; zero layout shift; breadcrumb trail in detail
 - [ ] **S08: Navigation State** risk:medium depends:[S06]
   > After this: full UI state (filter, search, active tab, scroll) encoded in URL; recently viewed classes dropdown
@@ -59,6 +59,6 @@ This milestone is complete only when all are true:
 - [ ] **S04:** methods/fields with Javadoc show collapsible doc toggles (blocked — waiting on original PZ sources)
 - [x] **S05:** sidebar splitter with drag-to-resize and localStorage persistence
 - [x] **S06:** instant search + progressive rendering — pre-computed index cuts search to <3ms; progressive render keeps first frame at 50 DOM nodes
-- [ ] **S07:** UX polish — hover prefetch, declutter, layout stability, breadcrumbs
+- [x] **S07:** UX polish — hover prefetch, declutter, layout stability, breadcrumbs
 - [ ] **S08:** full URL state, recently viewed
 - [ ] **S09:** JSON split, critical CSS, service worker
