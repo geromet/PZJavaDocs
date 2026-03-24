@@ -58,7 +58,7 @@
   - Verify: `pytest .gsd/test/s03_version_selector.py -v`
   - Done when: All 4+ tests pass; `grep -q 'versionActive' js/app.js` succeeds
 
-- [ ] **T04: Write real S03 summary and commit** `est:15m`
+- [x] **T04: Write real S03 summary and commit** `est:15m`
   - Why: Doctor-created placeholder summary needs replacement; slice work needs to be committed and pushed.
   - Files: `.gsd/milestones/M001/slices/S03/S03-SUMMARY.md`, `.gsd/milestones/M001/slices/S03/S03-UAT.md`
   - Do: (1) Replace S03-SUMMARY.md with real compressed summary covering all T01–T03 work. (2) Replace S03-UAT.md with real smoke-test checklist. (3) Commit and push to liability-machine.

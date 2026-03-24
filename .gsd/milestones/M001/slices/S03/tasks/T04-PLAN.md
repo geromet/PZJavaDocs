@@ -42,6 +42,12 @@ Replace the doctor-created placeholder S03-SUMMARY.md and S03-UAT.md with real a
 - `.gsd/milestones/M001/slices/S03/S03-UAT.md` — current placeholder to replace
 - `.gsd/test/s03_version_selector.py` — test file from T03 to reference in summary
 
+## Observability Impact
+
+- **Signals changed:** None — this task writes documentation artifacts only, no runtime code changes.
+- **How to inspect:** `cat .gsd/milestones/M001/slices/S03/S03-SUMMARY.md` and verify it has real YAML frontmatter (not placeholder). `cat .gsd/milestones/M001/slices/S03/S03-UAT.md` and verify it has concrete smoke-test cases.
+- **Failure visibility:** `grep -q 'placeholder' .gsd/milestones/M001/slices/S03/S03-SUMMARY.md` returns exit 1 (no match) when the task succeeds.
+
 ## Expected Output
 
 - `.gsd/milestones/M001/slices/S03/S03-SUMMARY.md` — real compressed summary replacing placeholder
