@@ -7,7 +7,7 @@ import time
 from config import SERVER_URL, REPORT_DIR
 
 
-CLASS_URL = SERVER_URL + "/#zombie.characters.IsoPlayer"
+CLASS_URL = SERVER_URL + "/?class=zombie.characters.IsoPlayer"
 
 
 def _wait_ready(page):
@@ -33,14 +33,14 @@ def test_back_forward_buttons(page) -> dict:
         class_ref.click()
         time.sleep(1)
 
-        if page.url.endswith("#zombie.characters.IsoPlayer"):
+        if page.url.endswith("#zombie.characters.IsoPlayer") or "class=zombie.characters.IsoPlayer" in page.url:
             return {"name": "back-forward-buttons", "passed": False,
                     "message": f"Expected to be on {fqn}, but still on IsoPlayer"}
 
         page.locator('#btn-nav-back').click()
         time.sleep(0.5)
 
-        if not page.url.endswith("#zombie.characters.IsoPlayer"):
+        if "class=zombie.characters.IsoPlayer" not in page.url and not page.url.endswith("#zombie.characters.IsoPlayer"):
             return {"name": "back-forward-buttons", "passed": False,
                     "message": f"After back button: {page.url}"}
 

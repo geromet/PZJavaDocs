@@ -30,6 +30,7 @@ import inheritance  # noqa: E402
 import navigation  # noqa: E402
 import regression  # noqa: E402
 import s02_features  # noqa: E402
+import s08_navigation_state  # noqa: F401,E402
 import search  # noqa: E402
 
 LEGACY_GROUPS = [
@@ -82,6 +83,7 @@ LEGACY_GROUPS = [
 ]
 
 S07_COMMAND = [sys.executable, "-m", "pytest", ".gsd/test/s07_ux_polish.py", "-q"]
+S08_COMMAND = [sys.executable, "-m", "pytest", ".gsd/test/s08_navigation_state.py", "-q"]
 all_results: list[dict] = []
 
 
@@ -161,7 +163,7 @@ def inject_browser_globals(browser):
 
 
 def run_legacy_tests(browser):
-    total_groups = len(LEGACY_GROUPS) + 1
+    total_groups = len(LEGACY_GROUPS) + 2
     for index, (group_name, tests) in enumerate(LEGACY_GROUPS, start=1):
         print(f"\n[{index}/{total_groups}] Running {group_name}...")
         for test_func in tests:
@@ -176,11 +178,11 @@ def run_legacy_tests(browser):
                 page.close()
 
 
-def run_s07_pytest():
-    print(f"\n[{len(LEGACY_GROUPS) + 1}/{len(LEGACY_GROUPS) + 1}] Running S07 UX Polish Tests...")
+def run_pytest_module(index: int, total: int, name: str, command: list[str]):
+    print(f"\n[{index}/{total}] Running {name}...")
     started = time.perf_counter()
     proc = subprocess.run(
-        S07_COMMAND,
+        command,
         cwd=PROJECT_DIR,
         capture_output=True,
         text=True,
@@ -192,27 +194,22 @@ def run_s07_pytest():
     if proc.stderr:
         print(proc.stderr.strip())
 
-    if proc.returncode == 0:
-        print_result(
-            {
-                "name": "s07-ux-polish",
-                "passed": True,
-                "message": "Standalone pytest module passed",
-                "command": " ".join(S07_COMMAND),
-                "duration_seconds": duration,
-            }
-        )
-        return
+    result = {
+        "name": name.lower().replace(" ", "-"),
+        "passed": proc.returncode == 0,
+        "message": "Standalone pytest module passed" if proc.returncode == 0 else (proc.stdout + "\n" + proc.stderr).strip()[-4000:],
+        "command": " ".join(command),
+        "duration_seconds": duration,
+    }
+    print_result(result)
 
-    print_result(
-        {
-            "name": "s07-ux-polish",
-            "passed": False,
-            "message": (proc.stdout + "\n" + proc.stderr).strip()[-4000:],
-            "command": " ".join(S07_COMMAND),
-            "duration_seconds": duration,
-        }
-    )
+
+def run_s07_pytest():
+    run_pytest_module(len(LEGACY_GROUPS) + 1, len(LEGACY_GROUPS) + 2, "S07 UX Polish Tests", S07_COMMAND)
+
+
+def run_s08_pytest():
+    run_pytest_module(len(LEGACY_GROUPS) + 2, len(LEGACY_GROUPS) + 2, "S08 Navigation State Tests", S08_COMMAND)
 
 
 def run_all_tests():
@@ -227,6 +224,7 @@ def run_all_tests():
             inject_browser_globals(browser)
             run_legacy_tests(browser)
         run_s07_pytest()
+        run_s08_pytest()
 
     _save_report()
 

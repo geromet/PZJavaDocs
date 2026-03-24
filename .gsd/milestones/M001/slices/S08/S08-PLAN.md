@@ -58,7 +58,7 @@ PY`
   - Do: Add a compact recent-classes control near the existing search/navigation chrome, back it with a localStorage list that is deduplicated and capped, update it from real class-selection events only, reuse existing `selectClass`/tab activation behavior when a recent item is chosen, and expose inspectable DOM state for item count and empty/error/fallback cases so browser checks can assert the control without scraping visual styling.
   - Verify: `python -m pytest .gsd/test/s08_navigation_state.py -k "recent or diagnostics"`
   - Done when: Selecting classes builds a bounded most-recent-first list, reselecting a class moves it to the top instead of duplicating it, the control is operable from the rendered UI, and recent-class navigation restores the expected class/source/detail view.
-- [ ] **T03: Close slice verification and runner integration for navigation state** `est:45m`
+- [x] **T03: Close slice verification and runner integration for navigation state** `est:45m`
   - Why: S08 touches runtime navigation and local persistence. The slice should finish with one trustworthy verification entrypoint and aligned planning docs, not ad hoc test commands.
   - Files: `.gsd/test/run.py`, `.gsd/test/s08_navigation_state.py`, `.gsd/milestones/M001/slices/S08/S08-PLAN.md`
   - Do: Register the S08 browser module in the consolidated runner, run the full suite plus the standalone S08 module, fix any runner/report drift uncovered by the new stateful tests, and keep the slice plan’s verification commands and touched file paths aligned with reality after implementation.
