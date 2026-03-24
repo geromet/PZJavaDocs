@@ -313,6 +313,22 @@ function unfoldAllInEl(codeEl) {
   });
 }
 
+function setSourcePanelState(state, relPath = '', errorMessage = '') {
+  const panel = document.getElementById('source-panel');
+  const loadingEl = document.getElementById('source-loading');
+  if (!panel || !loadingEl) return;
+  panel.dataset.sourceState = state;
+  panel.dataset.sourcePath = relPath || '';
+  loadingEl.dataset.sourceState = state;
+  if (errorMessage) {
+    panel.dataset.sourceError = errorMessage;
+    loadingEl.dataset.sourceError = errorMessage;
+  } else {
+    delete panel.dataset.sourceError;
+    delete loadingEl.dataset.sourceError;
+  }
+}
+
 async function showSource(cls, jumpToMethod) {
   switchCtab('source');
   const toolbar   = document.getElementById('source-toolbar');
@@ -325,11 +341,13 @@ async function showSource(cls, jumpToMethod) {
   codeEl.textContent = '';
 
   if (!cls.source_file) {
+    setSourcePanelState('idle', '', '');
     codeEl.textContent = `// No source file available for this class.\n// It may be a nested type whose parent class has the source.`;
     hljs.highlightElement(codeEl);
     return;
   }
 
+  setSourcePanelState('pending', cls.source_file);
   loadingEl.style.display = 'block';
 
   let text;
@@ -337,12 +355,14 @@ async function showSource(cls, jumpToMethod) {
     text = await fetchSource(cls.source_file);
   } catch (e) {
     loadingEl.style.display = 'none';
+    setSourcePanelState('error', cls.source_file, e.message || String(e));
     codeEl.textContent = `// Source not available.\n// Run scripts/prepare_sources.py, or click "📁 Local sources"\n// and pick your projectzomboid folder.\n\n// Error: ${e.message}`;
     hljs.highlightElement(codeEl);
     return;
   }
 
   loadingEl.style.display = 'none';
+  setSourcePanelState('ready', cls.source_file);
   renderFoldableSource(text, codeEl);
   toolbar.style.display = '';
 
@@ -363,6 +383,7 @@ async function showSourceByPath(relPath) {
   const preEl     = document.getElementById('source-pre');
 
   toolbar.style.display = 'none';
+  setSourcePanelState('pending', relPath);
   loadingEl.style.display = 'block';
   codeEl.textContent = '';
 
@@ -371,12 +392,14 @@ async function showSourceByPath(relPath) {
     text = await fetchSource(relPath);
   } catch (e) {
     loadingEl.style.display = 'none';
+    setSourcePanelState('error', relPath, e.message || String(e));
     codeEl.textContent = `// Source not available: ${relPath}\n// (not in Lua API — use 📁 Local sources to load)\n\n// Error: ${e.message}`;
     hljs.highlightElement(codeEl);
     return;
   }
 
   loadingEl.style.display = 'none';
+  setSourcePanelState('ready', relPath);
   renderFoldableSource(text, codeEl);
   toolbar.style.display = '';
   preEl.scrollTop = 0;

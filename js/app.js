@@ -426,6 +426,7 @@ function setupEvents() {
     try {
       localDirHandle = await window.showDirectoryPicker({mode: 'read'});
       Object.keys(sourceCache).forEach(k => delete sourceCache[k]);
+      Object.keys(sourceStatus).forEach(k => delete sourceStatus[k]);
       const btn = document.getElementById('btn-folder');
       btn.textContent = `✓ ${localDirHandle.name}`;
       btn.classList.add('loaded');
@@ -551,16 +552,60 @@ function setupEvents() {
 
   // ── Hover preview card (FEAT-014) ──────────────────────────────────────
   (function () {
-    const card  = document.getElementById('hover-preview');
-    let timer   = null;
+    const card = document.getElementById('hover-preview');
+    const HOVER_DELAY_MS = 400;
+    let hoverTimer = null;
+    let hideTimer = null;
     let lastFqn = null;
+    let hoveredSourcePath = '';
+
+    function applyHoverState(state, cls, errorMessage = '') {
+      const sourcePath = cls?.source_file || '';
+      hoveredSourcePath = sourcePath;
+      card.dataset.prefetchState = state;
+      card.dataset.prefetchPath = sourcePath;
+      card.dataset.prefetchFqn = cls ? (cls.name || cls.simple_name || '') : '';
+      if (errorMessage) card.dataset.prefetchError = errorMessage;
+      else delete card.dataset.prefetchError;
+    }
+
+    function syncHoverStateFromSource(cls) {
+      if (!cls?.source_file) {
+        applyHoverState('idle', cls);
+        return;
+      }
+      const status = getSourceStatus(cls.source_file);
+      applyHoverState(status.state, cls, status.error || '');
+    }
+
+    function positionCard(anchorEl) {
+      const rect = anchorEl.getBoundingClientRect();
+      const vw   = window.innerWidth;
+      const vh   = window.innerHeight;
+      let top  = rect.bottom + 6;
+      let left = rect.left;
+
+      card.style.visibility = 'hidden';
+      card.style.display    = 'block';
+      const cw = card.offsetWidth;
+      const ch = card.offsetHeight;
+      card.style.display    = '';
+      card.style.visibility = '';
+
+      if (left + cw > vw - 8) left = vw - cw - 8;
+      if (left < 8) left = 8;
+      if (top + ch > vh - 8) top = rect.top - ch - 6;
+      if (top < 8) top = 8;
+
+      card.style.left = `${left}px`;
+      card.style.top  = `${top}px`;
+    }
 
     function showCard(fqn, anchorEl) {
-      const cls = API && API.classes && API.classes[fqn];
+      const cls = API?.classes?.[fqn];
       if (!cls) return;
       lastFqn = fqn;
 
-      // Build content
       const badges = [
         cls.set_exposed ? '<span class="hp-badge hp-badge-exposed">setExposed</span>' : '',
         cls.lua_tagged  ? '<span class="hp-badge hp-badge-tagged">@UsedFromLua</span>'  : '',
@@ -569,8 +614,6 @@ function setupEvents() {
 
       const methodCount = cls.methods ? cls.methods.length : 0;
       const fieldCount  = cls.fields  ? cls.fields.length  : 0;
-
-      // First 3 callable methods alphabetically (lua_tagged first, then others)
       const sorted = (cls.methods || [])
         .filter(m => m.lua_tagged || cls.set_exposed)
         .sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0)
@@ -598,67 +641,76 @@ function setupEvents() {
         <div class="hp-hint">Click to open · Ctrl+click or middle-click for new tab</div>
       `;
 
-      // Position near the anchor element, clamped to viewport
-      const rect = anchorEl.getBoundingClientRect();
-      const vw   = window.innerWidth;
-      const vh   = window.innerHeight;
-      // Preferred: just below the link
-      let top  = rect.bottom + 6;
-      let left = rect.left;
-
-      card.style.visibility = 'hidden';
-      card.style.display    = 'block';
-      const cw = card.offsetWidth;
-      const ch = card.offsetHeight;
-      card.style.display    = '';
-      card.style.visibility = '';
-
-      // Clamp right edge
-      if (left + cw > vw - 8) left = vw - cw - 8;
-      if (left < 8) left = 8;
-      // If not enough space below, flip above
-      if (top + ch > vh - 8) top = rect.top - ch - 6;
-      if (top < 8) top = 8;
-
-      card.style.left = `${left}px`;
-      card.style.top  = `${top}px`;
+      syncHoverStateFromSource(cls);
+      positionCard(anchorEl);
       card.classList.add('visible');
     }
 
+    async function prefetchHoverSource(fqn) {
+      const cls = API?.classes?.[fqn];
+      if (!cls?.source_file) {
+        applyHoverState('idle', cls || null);
+        return;
+      }
+      if (isSourceReady(cls.source_file)) {
+        applyHoverState('ready', cls);
+        return;
+      }
+
+      const alreadyPending = isSourcePending(cls.source_file);
+      applyHoverState(alreadyPending ? 'pending' : 'pending', cls);
+      try {
+        await fetchSource(cls.source_file);
+        if (lastFqn === fqn && hoveredSourcePath === cls.source_file) applyHoverState('ready', cls);
+      } catch (error) {
+        if (lastFqn === fqn && hoveredSourcePath === cls.source_file) applyHoverState('error', cls, error.message || String(error));
+      }
+    }
+
+    function clearHoverTimers() {
+      clearTimeout(hoverTimer);
+      clearTimeout(hideTimer);
+      hoverTimer = null;
+      hideTimer = null;
+    }
+
     function hideCard() {
-      clearTimeout(timer);
-      timer   = null;
+      clearHoverTimers();
       lastFqn = null;
+      hoveredSourcePath = '';
       card.classList.remove('visible');
+      applyHoverState('idle', null);
     }
 
     document.addEventListener('mouseover', e => {
       const el = e.target.closest('[data-fqn]');
       if (!el) return;
       const fqn = el.dataset.fqn;
-      if (!fqn || fqn === lastFqn) return;
-      clearTimeout(timer);
-      timer = setTimeout(() => showCard(fqn, el), 400);
+      if (!fqn) return;
+      clearHoverTimers();
+      hoverTimer = setTimeout(() => {
+        showCard(fqn, el);
+        prefetchHoverSource(fqn);
+      }, HOVER_DELAY_MS);
     });
 
     document.addEventListener('mouseout', e => {
       const el = e.target.closest('[data-fqn]');
       if (!el) return;
-      // Only hide if we're actually leaving the element (not moving to a child)
       if (!el.contains(e.relatedTarget)) {
-        clearTimeout(timer);
-        timer = null;
-        // Small grace period so the card doesn't flicker when moving to a child text node
+        clearTimeout(hoverTimer);
+        hoverTimer = null;
         if (card.classList.contains('visible')) {
-          timer = setTimeout(hideCard, 80);
+          hideTimer = setTimeout(hideCard, 80);
+        } else {
+          applyHoverState('idle', null);
         }
       }
     });
 
-    // Clicking anything hides the card
     document.addEventListener('click', hideCard);
-    // Scrolling hides the card
     document.addEventListener('scroll', hideCard, true);
+    applyHoverState('idle', null);
   })();
 
   // Delegated click for source class refs and method links in source panels

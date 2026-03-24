@@ -29,15 +29,64 @@ async function getLocalFileHandle(relPath) {
   } catch { return null; }
 }
 
+function setSourceStatus(relPath, state, errorMessage = '') {
+  sourceStatus[relPath] = {
+    state,
+    error: errorMessage,
+    updatedAt: Date.now(),
+  };
+}
+
+function getSourceStatus(relPath) {
+  return sourceStatus[relPath] || { state: sourceCache[relPath] ? 'ready' : 'idle', error: '', updatedAt: 0 };
+}
+
+function isSourceReady(relPath) {
+  return !!sourceCache[relPath];
+}
+
+function isSourcePending(relPath) {
+  return !!sourcePending[relPath];
+}
+
 async function fetchSource(relPath) {
-  if (sourceCache[relPath]) return sourceCache[relPath];
-  const fh = await getLocalFileHandle(relPath);
-  if (fh) { const text = await (await fh.getFile()).text(); sourceCache[relPath] = text; return text; }
-  const resp = await fetch('./sources/' + relPath);
-  if (!resp.ok) throw new Error(`Source not found: ${relPath}`);
-  const ct = resp.headers.get('content-type') || '';
-  if (ct.includes('text/html')) throw new Error(`Path resolved to a directory listing — source file unavailable: ${relPath}`);
-  const text = await resp.text();
-  sourceCache[relPath] = text;
-  return text;
+  if (sourceCache[relPath]) {
+    setSourceStatus(relPath, 'ready');
+    return sourceCache[relPath];
+  }
+  if (sourcePending[relPath]) {
+    return sourcePending[relPath];
+  }
+
+  const request = (async () => {
+    setSourceStatus(relPath, 'pending');
+
+    const fh = await getLocalFileHandle(relPath);
+    if (fh) {
+      const text = await (await fh.getFile()).text();
+      sourceCache[relPath] = text;
+      setSourceStatus(relPath, 'ready');
+      return text;
+    }
+
+    const resp = await fetch('./sources/' + relPath);
+    if (!resp.ok) throw new Error(`Source not found: ${relPath}`);
+    const ct = resp.headers.get('content-type') || '';
+    if (ct.includes('text/html')) throw new Error(`Path resolved to a directory listing — source file unavailable: ${relPath}`);
+    const text = await resp.text();
+    sourceCache[relPath] = text;
+    setSourceStatus(relPath, 'ready');
+    return text;
+  })();
+
+  sourcePending[relPath] = request;
+
+  try {
+    return await request;
+  } catch (error) {
+    setSourceStatus(relPath, 'error', error.message || String(error));
+    throw error;
+  } finally {
+    delete sourcePending[relPath];
+  }
 }

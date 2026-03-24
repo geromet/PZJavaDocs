@@ -11,6 +11,8 @@ let methodSearch  = '';
 let fieldSearch   = '';
 
 const sourceCache  = {};
+const sourcePending = {};
+const sourceStatus = {};
 let localDirHandle = null;
 
 // Global functions group folding

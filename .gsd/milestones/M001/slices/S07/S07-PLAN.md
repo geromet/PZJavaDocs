@@ -22,6 +22,7 @@
 
 - `python .gsd/test/run.py`
 - `python -m pytest .gsd/test/s07_ux_polish.py`
+- `python -m pytest .gsd/test/s07_ux_polish.py -k "loading_state or failure or diagnostics"`
 - `python - <<'PY'
 import json
 from pathlib import Path
@@ -46,7 +47,7 @@ PY`
 
 ## Tasks
 
-- [ ] **T01: Wire hover prefetch and inspectable loading state** `est:1.5h`
+- [x] **T01: Wire hover prefetch and inspectable loading state** `est:1.5h`
   - Why: This closes the runtime part of the slice. Prefetch has to reuse the real source-loading path, and the UI needs inspectable state so failures are diagnosable instead of feeling random.
   - Files: `js/app.js`, `js/source-viewer.js`, `.gsd/test/s07_ux_polish.py`, `.gsd/test/run.py`
   - Do: Add delayed hover prefetch for `[data-fqn]` links using the existing delegated hover flow and `sourceCache`, cancel short hovers cleanly, avoid duplicate fetches, and expose durable DOM state for pending/success/error so automated tests can assert it. Extend the browser tests to cover hover warming and at least one diagnostic/failure-state assertion.

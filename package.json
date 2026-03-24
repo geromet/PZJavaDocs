@@ -1,0 +1,10 @@
+{
+  "name": "pz-lua-api-viewer",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Static web app for browsing the Project Zomboid Lua API.",
+  "scripts": {
+    "start": "python server/serve.py",
+    "test": "python .gsd/test/run.py"
+  }
+}
