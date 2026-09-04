@@ -29,3 +29,28 @@ jobs:
 
       - name: Run LuaLS exporter tests
         run: python3 -m unittest -v test_export_luals.py
+
+      - name: Verify full-corpus LuaLS export is deterministic
+        run: |
+          rm -rf /tmp/luals-a /tmp/luals-b
+          python3 export_luals.py --input lua_api.json --output-dir /tmp/luals-a --build-id ci-current-snapshot
+          python3 export_luals.py --input lua_api.json --output-dir /tmp/luals-b --build-id ci-current-snapshot
+          cmp /tmp/luals-a/library.lua /tmp/luals-b/library.lua
+          cmp /tmp/luals-a/metadata.json /tmp/luals-b/metadata.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          metadata = json.loads(Path('/tmp/luals-a/metadata.json').read_text(encoding='utf-8'))
+          library = Path('/tmp/luals-a/library.lua')
+
+          assert metadata['class_count'] > 0
+          assert metadata['global_function_count'] > 0
+          assert library.stat().st_size > 0
+          print(
+              'full-corpus export:',
+              f"classes={metadata['class_count']}",
+              f"globals={metadata['global_function_count']}",
+              f"library_bytes={library.stat().st_size}",
+          )
+          PY
