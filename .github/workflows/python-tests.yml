@@ -1,0 +1,31 @@
+name: Python tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Show Python version
+        run: python3 --version
+
+      - name: Compile deterministic tooling
+        run: |
+          python3 -m py_compile compare_api.py export_luals.py test_export_luals.py tests/test_compare_api.py
+
+      - name: Run API comparison tests
+        run: python3 -m unittest discover -s tests -p "test_compare_api.py" -v
+
+      - name: Run LuaLS exporter tests
+        run: python3 -m unittest -v test_export_luals.py
