@@ -1,25 +1,27 @@
-# PZ Lua API Viewer — Claude Working Instructions
+# PZ Lua API Viewer — Agent Working Instructions
 
 ## Cohabitation Notice
 
-This project is shared between **Claude Code** (you) and **Pi / GSD** (another AI agent). Both agents work on the same codebase for the same user.
+This project is shared by multiple development agents/tools working on the same codebase for the same user.
 
-| Agent | Config location | Instruction file |
+| Agent/tool | Config location | Instruction file |
 |-------|----------------|-----------------|
-| **Claude Code** | `.claude/` | `pz-lua-api-viewer/CLAUDE.md` (this file) |
+| **Claude Code** | `.claude/` | repository `CLAUDE.md` / Claude-specific config where present |
 | **Pi (GSD)** | `.gsd/` | `.gsd/PI.md` |
 
 **Rules:**
-- Never modify `.gsd/` or anything inside it.
-- Both agents share the same `docs/` task system and `docs/Knowledge_Base/` conventions.
-- The full cohabitation rules are in `.gsd/COHABITATION.md` — read it if in doubt.
-- Commit attribution: always use `Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>`.
+- Never modify `.gsd/` or anything inside it unless the user explicitly asks for GSD configuration changes.
+- Agents share the same `docs/` task system and `docs/Knowledge_Base/` conventions.
+- The full cohabitation rules are in `.gsd/COHABITATION.md` — read them when working in a checkout that contains that file.
+- Commit attribution must be accurate. Do not add a `Co-Authored-By` line naming Claude, ChatGPT, Codex, Pi, or another tool unless that tool actually contributed to the commit and its attribution is appropriate.
 
 ## Project Overview
 
-A static web app for browsing the Project Zomboid Lua API. The viewer is deployed to GitHub Pages from the `main` branch. All development happens on feature branches (currently `liability-machine`).
+A static web app for browsing the Project Zomboid Lua API. The viewer is deployed to GitHub Pages from the `main` branch.
 
-**IMPORTANT: Do not push directly to `main`.** The site auto-deploys on push. Create a PR from your feature branch instead.
+**IMPORTANT: Do not push implementation changes directly to `main`.** The site auto-deploys on push. Reconcile current `main`, open PRs, and active branches first, then create a fresh purpose-named branch from current `main` for independent work and open a PR back to `main`.
+
+The long-lived `liability-machine` branch may contain historical or in-progress work. Do not use it as the base for unrelated new work, force-update it, or overwrite it unless the task explicitly belongs to that branch.
 
 ## Key Files
 
@@ -43,7 +45,7 @@ Use the Python dev server (port 8765):
 
 ```
 cd pz-lua-api-viewer
-python server.py
+python serve.py
 ```
 
 Then open `http://localhost:8765`.
@@ -110,13 +112,15 @@ When the user says "work on the tasks" (or similar), do this without further cla
    - Update `docs/STATUS.md` — remove the task from "Active Tasks" and the bug from "Open Bugs".
 4. **If a task is blocked** (missing data, unclear spec, prerequisite not met), note the blocker in the task file, leave it in `docs/Tasks/`, and move to the next task.
 5. **After all tasks** in a session are done:
-   - Stage and commit all changes: `git add -A && git commit -m "..."`
-   - Push to the remote: `git push`
-   - Then ask the user if they want to pick new tasks from the feature/bug lists or create new task files.
+   - Stage and commit the coherent changes.
+   - Push the current purpose-named branch without force.
+   - Open/update the PR to `main` as appropriate.
 
 ## Commit / PR Rules
 
-- Branch from `liability-machine` for new work.
-- One logical change per commit.
-- Never `--no-verify` or `--force` push.
-- PR `liability-machine → main` when a batch of work is shippable.
+- Reconcile current `main`, open PRs, and active branches before starting unrelated work.
+- Create a fresh purpose-named branch from current `main` for each independent change.
+- Never `--no-verify`, force-push, rewrite, rebase, or overwrite another contributor/agent's active branch.
+- One logical change per commit; keep PRs focused.
+- Open PRs to `main`; do not push implementation changes directly to `main`.
+- Use accurate commit/co-author attribution only.
