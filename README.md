@@ -26,6 +26,21 @@ https://geromet.github.io/PZJavaDocs/
 
 Run `extract_lua_api.py` from the `projectzomboid/` source directory. It writes `lua_api.json` directly into this folder.
 
+## Comparing API snapshots
+
+`compare_api.py` compares two generated `lua_api.json` snapshots without reparsing Java sources. Snapshot identities are required explicitly so reports never guess a Project Zomboid version from timestamps or paths:
+
+```bash
+python compare_api.py old/lua_api.json new/lua_api.json \
+  --old-id 42.19 --new-id 42.20 --out api_diff.json
+```
+
+The canonical JSON report has stable ordering and reports class/inheritance/exposure, field, method/overload, and global-function additions, removals, and structural changes. Run its dependency-free regression suite with:
+
+```bash
+python -m unittest discover -s tests -p "test_compare_api.py" -v
+```
+
 ## Features
 
 - Browse 900+ exposed Java classes callable from Lua
