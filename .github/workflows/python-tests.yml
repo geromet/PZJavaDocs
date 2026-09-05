@@ -22,7 +22,7 @@ jobs:
 
       - name: Compile deterministic tooling
         run: |
-          python3 -m py_compile compare_api.py export_luals.py test_export_luals.py tests/test_compare_api.py
+          python3 -m py_compile compare_api.py export_luals.py test_export_luals.py tests/test_compare_api.py tests/luals_smoke.py
 
       - name: Run API comparison tests
         run: python3 -m unittest discover -s tests -p "test_compare_api.py" -v
@@ -54,3 +54,46 @@ jobs:
               f"library_bytes={library.stat().st_size}",
           )
           PY
+
+      - name: Install pinned Lua Language Server
+        env:
+          LUALS_VERSION: 3.19.1
+          LUALS_SHA256: e9235d2d72ef55bc41cf8c99cda2ed64777682024b4bb81f5dea425060c5cbb8
+        run: |
+          curl --proto '=https' --tlsv1.2 --fail --location --silent --show-error \
+            "https://github.com/LuaLS/lua-language-server/releases/download/${LUALS_VERSION}/lua-language-server-${LUALS_VERSION}-linux-x64.tar.gz" \
+            --output /tmp/luals.tar.gz
+          echo "${LUALS_SHA256}  /tmp/luals.tar.gz" | sha256sum --check
+          rm -rf /tmp/luals-server
+          mkdir -p /tmp/luals-server
+          tar -xzf /tmp/luals.tar.gz -C /tmp/luals-server
+          /tmp/luals-server/bin/lua-language-server --version
+
+      - name: Verify generated definitions with real LuaLS
+        run: |
+          rm -rf /tmp/luals-full /tmp/luals-check
+          python3 export_luals.py --input lua_api.json --output-dir /tmp/luals-full --build-id ci-current-snapshot
+          mkdir -p /tmp/luals-check
+          /tmp/luals-server/bin/lua-language-server \
+            --check=/tmp/luals-full \
+            --checklevel=Error \
+            --check_format=json \
+            --check_out_path=/tmp/luals-check/check.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          report_path = Path('/tmp/luals-check/check.json')
+          report = json.loads(report_path.read_text(encoding='utf-8'))
+          diagnostics = [
+              (path, diagnostic)
+              for path, entries in report.items()
+              for diagnostic in entries
+          ]
+          if diagnostics:
+              for path, diagnostic in diagnostics[:20]:
+                  print(path, diagnostic)
+              raise SystemExit(f"LuaLS reported {len(diagnostics)} error diagnostic(s)")
+          print('full-corpus LuaLS check: 0 error diagnostics')
+          PY
+          python3 tests/luals_smoke.py --server /tmp/luals-server/bin/lua-language-server
