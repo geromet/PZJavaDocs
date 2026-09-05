@@ -90,16 +90,21 @@ jobs:
           if not report_path.is_file():
               raise SystemExit('LuaLS did not produce check.json')
           report = json.loads(report_path.read_text(encoding='utf-8'))
-          diagnostics = [
-              (path, diagnostic)
-              for path, entries in report.items()
-              for diagnostic in entries
-          ]
+          if isinstance(report, dict):
+              diagnostics = [
+                  (path, diagnostic)
+                  for path, entries in report.items()
+                  for diagnostic in entries
+              ]
+          elif isinstance(report, list):
+              diagnostics = [('', diagnostic) for diagnostic in report]
+          else:
+              raise SystemExit(f"unexpected LuaLS check report type: {type(report).__name__}")
           if diagnostics:
               for path, diagnostic in diagnostics[:20]:
                   start = diagnostic.get('range', {}).get('start', {})
                   print(
-                      f"{path}:{start.get('line', 0) + 1}:{start.get('character', 0) + 1}",
+                      f"{path or '<workspace>'}:{start.get('line', 0) + 1}:{start.get('character', 0) + 1}",
                       diagnostic.get('code'),
                       diagnostic.get('message'),
                   )
