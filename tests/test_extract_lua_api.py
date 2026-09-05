@@ -8,6 +8,7 @@ import unittest
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 EXTRACTOR = REPO_ROOT / "extract_lua_api.py"
+COMPARATOR = REPO_ROOT / "compare_api.py"
 
 
 class ExtractLuaApiTests(unittest.TestCase):
@@ -107,6 +108,43 @@ public class Foo {
             payload_a.pop("snapshot")
             payload_b.pop("snapshot")
             self.assertEqual(payload_a, payload_b)
+
+    def test_generated_snapshot_is_consumable_by_existing_comparator(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp)
+            src = self.make_fixture(root)
+            old_snapshot = root / "old.json"
+            new_snapshot = root / "new.json"
+            diff_path = root / "diff.json"
+
+            old_result = self.run_extract(src, old_snapshot, "42.20-old")
+            new_result = self.run_extract(src, new_snapshot, "42.20-new")
+            self.assertEqual(old_result.returncode, 0, old_result.stderr)
+            self.assertEqual(new_result.returncode, 0, new_result.stderr)
+
+            compare_result = subprocess.run(
+                [
+                    sys.executable,
+                    str(COMPARATOR),
+                    str(old_snapshot),
+                    str(new_snapshot),
+                    "--old-id",
+                    "42.20-old",
+                    "--new-id",
+                    "42.20-new",
+                    "--out",
+                    str(diff_path),
+                ],
+                cwd=REPO_ROOT,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(compare_result.returncode, 0, compare_result.stderr)
+            diff = json.loads(diff_path.read_text(encoding="utf-8"))
+            self.assertEqual(diff["old_snapshot"], "42.20-old")
+            self.assertEqual(diff["new_snapshot"], "42.20-new")
+            self.assertEqual(diff["changes"], [])
 
     def test_missing_source_root_fails_closed(self):
         with tempfile.TemporaryDirectory() as tmp:
