@@ -62,6 +62,19 @@ class ExportLuaLSTests(unittest.TestCase):
             entry["fields"] = list(reversed(entry.get("fields", [])))
         self.assertEqual(render_library(first, "42.20.4"), render_library(second, "42.20.4"))
 
+    def test_class_receivers_are_lexically_scoped_beyond_lua_local_limit(self):
+        api = {
+            "classes": {
+                f"pkg.C{i}": {"simple_name": f"C{i}", "fields": [], "methods": []}
+                for i in range(205)
+            },
+            "global_functions": [],
+        }
+        output = render_library(api, "test-build")
+        self.assertEqual(output.count("\ndo\n---@class pkg.C"), 205)
+        self.assertEqual(output.count("\nlocal _pz_"), 205)
+        self.assertEqual(output.count("\nend\n"), 205)
+
     def test_export_writes_stable_library_and_metadata(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
