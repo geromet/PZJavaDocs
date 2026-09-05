@@ -74,16 +74,21 @@ jobs:
           rm -rf /tmp/luals-full /tmp/luals-check
           python3 export_luals.py --input lua_api.json --output-dir /tmp/luals-full --build-id ci-current-snapshot
           mkdir -p /tmp/luals-check
+          set +e
           /tmp/luals-server/bin/lua-language-server \
             --check=/tmp/luals-full \
             --checklevel=Error \
             --check_format=json \
             --check_out_path=/tmp/luals-check/check.json
+          luals_status=$?
+          set -e
           python3 - <<'PY'
           import json
           from pathlib import Path
 
           report_path = Path('/tmp/luals-check/check.json')
+          if not report_path.is_file():
+              raise SystemExit('LuaLS did not produce check.json')
           report = json.loads(report_path.read_text(encoding='utf-8'))
           diagnostics = [
               (path, diagnostic)
@@ -92,8 +97,17 @@ jobs:
           ]
           if diagnostics:
               for path, diagnostic in diagnostics[:20]:
-                  print(path, diagnostic)
+                  start = diagnostic.get('range', {}).get('start', {})
+                  print(
+                      f"{path}:{start.get('line', 0) + 1}:{start.get('character', 0) + 1}",
+                      diagnostic.get('code'),
+                      diagnostic.get('message'),
+                  )
               raise SystemExit(f"LuaLS reported {len(diagnostics)} error diagnostic(s)")
           print('full-corpus LuaLS check: 0 error diagnostics')
           PY
+          if [ "$luals_status" -ne 0 ]; then
+            echo "LuaLS exited with status $luals_status despite an empty diagnostic report"
+            exit "$luals_status"
+          fi
           python3 tests/luals_smoke.py --server /tmp/luals-server/bin/lua-language-server
