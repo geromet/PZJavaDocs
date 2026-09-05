@@ -233,6 +233,9 @@ def _emit_class(
         if mapped not in parents:
             parents.append(mapped)
 
+    # Keep each generated receiver local in its own lexical scope. A full Project
+    # Zomboid corpus contains far more than Lua's 200 simultaneously active locals.
+    lines.append("do")
     class_line = f"---@class {type_name}"
     if parents:
         class_line += ": " + ", ".join(parents)
@@ -264,6 +267,7 @@ def _emit_class(
             quoted = json.dumps(method_name, ensure_ascii=False)
             lines.append(f"{receiver}[{quoted}] = function({args}) end")
 
+    lines.append("end")
     lines.append("")
 
 
