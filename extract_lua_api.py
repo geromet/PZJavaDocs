@@ -12,17 +12,86 @@ Both are tracked independently:
   set_exposed: true  -> registered in setExposed(), actually callable from Lua
   lua_tagged:  true  -> has @UsedFromLua annotation (developer intent)
 
-Output: lua_api.json
+Usage:
+  python extract_lua_api.py --src-root /path/to/projectzomboid \
+      --output /path/to/lua_api.json --build-id 42.20.0
 """
 
-import re
+import argparse
 import json
 import pathlib
+import re
+
 import javalang
 
-SRC_ROOT = pathlib.Path("E:/SteamLibrary/steamapps/common/ProjectZomboid/projectzomboid")
-LUA_MGR  = SRC_ROOT / "zombie/Lua/LuaManager.java"
-OUT_FILE = SRC_ROOT / "pz-lua-api-viewer/lua_api.json"
+SNAPSHOT_SCHEMA_VERSION = 1
+EXTRACTOR_NAME = "PZJavaDocs.extract_lua_api"
+EXTRACTOR_VERSION = "1"
+
+
+def _build_id(value):
+    value = value.strip()
+    if not value:
+        raise argparse.ArgumentTypeError("build ID must not be empty")
+    if len(value) > 256:
+        raise argparse.ArgumentTypeError("build ID must be at most 256 characters")
+    if any(ord(ch) < 32 or ord(ch) == 127 for ch in value):
+        raise argparse.ArgumentTypeError("build ID must not contain control characters")
+    return value
+
+
+def _parse_args():
+    parser = argparse.ArgumentParser(
+        description="Extract the Project Zomboid Lua API from a decompiled source tree."
+    )
+    parser.add_argument(
+        "--src-root",
+        required=True,
+        type=pathlib.Path,
+        help="Project Zomboid decompiled source root containing zombie/Lua/LuaManager.java",
+    )
+    parser.add_argument(
+        "--output",
+        required=True,
+        type=pathlib.Path,
+        help="Explicit JSON output file",
+    )
+    parser.add_argument(
+        "--build-id",
+        required=True,
+        type=_build_id,
+        help="Explicit Project Zomboid build identity; never inferred from paths or timestamps",
+    )
+    return parser.parse_args()
+
+
+def _validated_paths(args):
+    src_root = args.src_root.expanduser()
+    if not src_root.exists():
+        raise SystemExit(f"source root does not exist: {src_root}")
+    if not src_root.is_dir():
+        raise SystemExit(f"source root is not a directory: {src_root}")
+    src_root = src_root.resolve()
+
+    lua_mgr = src_root / "zombie/Lua/LuaManager.java"
+    if not lua_mgr.is_file():
+        raise SystemExit(f"required LuaManager.java not found: {lua_mgr}")
+
+    output = args.output.expanduser()
+    if output.exists() and output.is_dir():
+        raise SystemExit(f"output path is a directory: {output}")
+    parent = output.parent
+    if not parent.exists():
+        raise SystemExit(f"output parent directory does not exist: {parent}")
+    if not parent.is_dir():
+        raise SystemExit(f"output parent is not a directory: {parent}")
+    output = output.resolve()
+    return src_root, lua_mgr, output
+
+
+_ARGS = _parse_args()
+SRC_ROOT, LUA_MGR, OUT_FILE = _validated_paths(_ARGS)
+BUILD_ID = _ARGS.build_id
 
 # ---------------------------------------------------------------------------
 # Step 1: Parse LuaManager.java — get setExposed FQNs and @LuaMethod globals
@@ -35,12 +104,14 @@ for fqn in re.findall(r'^import\s+([\w.]+);', lua_mgr_src, re.MULTILINE):
     simple = fqn.rsplit(".", 1)[-1]
     import_map[simple] = fqn
 
+
 def resolve_fqn(name, imap):
     parts = name.split(".")
     base = imap.get(parts[0])
     if base:
         return ".".join([base] + parts[1:]) if len(parts) > 1 else base
     return name
+
 
 raw_exposed = re.findall(r'this\.setExposed\((\w[\w.]*?)\.class\)', lua_mgr_src)
 set_exposed_fqns = set(resolve_fqn(n, import_map) for n in raw_exposed)
@@ -51,25 +122,19 @@ lua_method_blocks = re.findall(
     lua_mgr_src
 )
 _CATEGORY_MAP = {
-    # Query
     'get': 'Query', 'is': 'Query', 'has': 'Query', 'can': 'Query',
     'check': 'Query', 'find': 'Query', 'count': 'Query', 'list': 'Query',
-    # Mutation
     'set': 'Mutation', 'add': 'Mutation', 'remove': 'Mutation',
     'delete': 'Mutation', 'create': 'Mutation', 'update': 'Mutation',
     'clear': 'Mutation', 'reset': 'Mutation', 'clone': 'Mutation',
     'replace': 'Mutation', 'change': 'Mutation', 'insert': 'Mutation',
-    # Network
     'send': 'Network', 'sync': 'Network', 'request': 'Network',
     'ban': 'Network', 'kick': 'Network', 'connect': 'Network',
     'disconnect': 'Network', 'broadcast': 'Network',
-    # Storage
     'load': 'Storage', 'save': 'Storage', 'reload': 'Storage',
     'cache': 'Storage', 'read': 'Storage', 'write': 'Storage',
-    # UI
     'show': 'UI', 'hide': 'UI', 'toggle': 'UI', 'screen': 'UI',
     'render': 'UI', 'draw': 'UI', 'display': 'UI',
-    # System
     'do': 'System', 'stop': 'System', 'start': 'System', 'end': 'System',
     'instance': 'System', 'process': 'System', 'execute': 'System',
     'run': 'System', 'init': 'System', 'debug': 'System', 'back': 'System',
@@ -78,13 +143,14 @@ _CATEGORY_MAP = {
     'steam': 'System', 'breakpoint': 'System',
 }
 
+
 def _method_group(lua_name):
-    """Return (category, subgroup) for a global function's display grouping.
-    Category is a broad bucket; subgroup is the verb prefix of the method name."""
+    """Return (category, subgroup) for a global function's display grouping."""
     m = re.match(r'^([a-z]+)', lua_name)
     prefix = m.group(1) if m else 'other'
     category = _CATEGORY_MAP.get(prefix, 'Other')
     return category, prefix
+
 
 global_functions = []
 for attrs, java_name in lua_method_blocks:
@@ -293,8 +359,8 @@ def build_class_entry(fqn, cls, set_exposed):
     return {
         "simple_name": fqn.rsplit(".", 1)[-1],
         "source_file": source,
-        "set_exposed": set_exposed,           # registered in LuaManager.setExposed() -> actually callable
-        "lua_tagged": has_annotation(cls, "UsedFromLua"),  # has @UsedFromLua annotation -> developer intent
+        "set_exposed": set_exposed,
+        "lua_tagged": has_annotation(cls, "UsedFromLua"),
         "is_enum": is_enum,
         "methods": get_public_methods(cls) if not is_enum else [],
         "fields": (enum_constants + get_public_fields(cls)) if is_enum else get_public_fields(cls),
@@ -321,9 +387,8 @@ if _lua_mgr_tree:
             for gf in global_functions:
                 sig = _go_sig_map.get(gf['java_method'], {})
                 gf['return_type'] = sig.get('return_type', '?')
-                gf['params']      = sig.get('params', [])
+                gf['params'] = sig.get('params', [])
             break
-# Ensure all entries have the fields even if parse failed or GlobalObject not found
 for gf in global_functions:
     gf.setdefault('return_type', '?')
     gf.setdefault('params', [])
@@ -334,9 +399,10 @@ print(f"  Enriched {_enriched}/{len(global_functions)} globals with type info")
 # Step 3: Process setExposed classes
 # ---------------------------------------------------------------------------
 print("Parsing setExposed classes...")
-all_classes = {}   # fqn -> entry
+all_classes = {}
 parse_errors = []
-file_cache = {}    # path -> tree | None
+file_cache = {}
+
 
 def get_tree(java_file):
     if java_file not in file_cache:
@@ -346,6 +412,7 @@ def get_tree(java_file):
             parse_errors.append(str(java_file.relative_to(SRC_ROOT)).replace("\\", "/"))
         file_cache[java_file] = tree
     return file_cache[java_file]
+
 
 unresolved = []
 for i, fqn in enumerate(sorted(set_exposed_fqns)):
@@ -372,8 +439,7 @@ print(f"  setExposed resolved: {len(all_classes)}")
 print("Scanning for @UsedFromLua classes not in setExposed...")
 lua_tagged_only = 0
 _viewer_dir = SRC_ROOT / "pz-lua-api-viewer"
-all_java_files = [p for p in SRC_ROOT.rglob("*.java")
-                  if not p.is_relative_to(_viewer_dir)]
+all_java_files = [p for p in SRC_ROOT.rglob("*.java") if not p.is_relative_to(_viewer_dir)]
 for i, java_file in enumerate(all_java_files):
     if i % 200 == 0: print(f"  {i}/{len(all_java_files)}...")
     src = java_file.read_text(errors="ignore")
@@ -382,9 +448,8 @@ for i, java_file in enumerate(all_java_files):
     tree = get_tree(java_file)
     if tree is None:
         continue
-    # Derive package from file path
     rel = java_file.relative_to(SRC_ROOT)
-    pkg_parts = list(rel.parts[:-1])  # directory parts = package parts
+    pkg_parts = list(rel.parts[:-1])
     for _, cls in list(tree.filter(javalang.tree.ClassDeclaration)) + \
                   list(tree.filter(javalang.tree.EnumDeclaration)) + \
                   list(tree.filter(javalang.tree.InterfaceDeclaration)):
@@ -392,7 +457,7 @@ for i, java_file in enumerate(all_java_files):
             continue
         fqn = ".".join(pkg_parts + [cls.name])
         if fqn in all_classes:
-            continue  # already added as setExposed
+            continue
         all_classes[fqn] = build_class_entry(fqn, cls, set_exposed=False)
         lua_tagged_only += 1
 
@@ -403,8 +468,9 @@ print(f"  @UsedFromLua-only (not setExposed): {lua_tagged_only}")
 # ---------------------------------------------------------------------------
 print("Extracting inheritance info...")
 
+
 def get_file_import_map(java_file):
-    """Build simple_name → FQN from the file's explicit (non-wildcard) imports."""
+    """Build simple_name -> FQN from the file's explicit (non-wildcard) imports."""
     tree = file_cache.get(java_file)
     if tree is None:
         return {}
@@ -415,9 +481,10 @@ def get_file_import_map(java_file):
             imap[fqn_i.rsplit('.', 1)[-1]] = fqn_i
     return imap
 
+
 def resolve_simple(name, imap, pkg, all_cls):
     """Resolve a simple/short class name to FQN."""
-    base = name.split('<')[0].strip()   # strip generics
+    base = name.split('<')[0].strip()
     if base in imap:
         return imap[base]
     same_pkg = (pkg + '.' + base) if pkg else base
@@ -425,10 +492,9 @@ def resolve_simple(name, imap, pkg, all_cls):
         return same_pkg
     if base in _global_simple_to_fqn:
         return _global_simple_to_fqn[base]
-    return base  # stdlib / unknown — return as-is
+    return base
 
-# Global simple→FQN from path structure: zombie/network/GameClient.java → zombie.network.GameClient
-# Built now (before step 5) by scanning source files directly.
+
 _global_simple_to_fqn = {}
 for _path in SRC_ROOT.rglob("*.java"):
     try:
@@ -450,9 +516,9 @@ for entry_fqn, entry in list(all_classes.items()):
         continue
 
     all_types = {}
-    for _, node in tree.filter(javalang.tree.ClassDeclaration):   all_types[node.name] = node
+    for _, node in tree.filter(javalang.tree.ClassDeclaration): all_types[node.name] = node
     for _, node in tree.filter(javalang.tree.InterfaceDeclaration): all_types[node.name] = node
-    for _, node in tree.filter(javalang.tree.EnumDeclaration):     all_types[node.name] = node
+    for _, node in tree.filter(javalang.tree.EnumDeclaration): all_types[node.name] = node
 
     cls_name = inner_path[-1] if inner_path else entry['simple_name']
     cls = all_types.get(cls_name)
@@ -460,15 +526,13 @@ for entry_fqn, entry in list(all_classes.items()):
         continue
 
     imap = get_file_import_map(java_file)
-    pkg  = '.'.join(entry_fqn.split('.')[:-1])
+    pkg = '.'.join(entry_fqn.split('.')[:-1])
 
-    # extends (ClassDeclaration only — not enums, not interfaces)
     if isinstance(cls, javalang.tree.ClassDeclaration) and cls.extends:
         resolved = resolve_simple(cls.extends.name, imap, pkg, all_classes)
         if resolved not in ('java.lang.Object', 'Object'):
             entry['extends'] = resolved
 
-    # implements
     impl_list = getattr(cls, 'implements', None) or []
     if impl_list:
         impls = [resolve_simple(i.name, imap, pkg, all_classes) for i in impl_list]
@@ -478,11 +542,9 @@ for entry_fqn, entry in list(all_classes.items()):
 # ---------------------------------------------------------------------------
 # Step 4.6: Build _extends_map for non-API intermediate classes in chains
 # ---------------------------------------------------------------------------
-# BFS from any extends value not in all_classes, walking upward until we hit
-# a known class or a stdlib/unresolvable root.
 from collections import deque
 
-_extends_map = {}  # non-API fqn → parent fqn
+_extends_map = {}
 _resolve_queue = deque()
 _resolve_visited = set()
 
@@ -519,8 +581,8 @@ while _resolve_queue:
     if cls_r is None or not isinstance(cls_r, javalang.tree.ClassDeclaration) or not cls_r.extends:
         continue
 
-    imap_r  = get_file_import_map(java_file_r)
-    pkg_r   = '.'.join(fqn_r.split('.')[:-1])
+    imap_r = get_file_import_map(java_file_r)
+    pkg_r = '.'.join(fqn_r.split('.')[:-1])
     parent_r = resolve_simple(cls_r.extends.name, imap_r, pkg_r, all_classes)
     if parent_r not in ('java.lang.Object', 'Object'):
         _extends_map[fqn_r] = parent_r
@@ -529,12 +591,10 @@ while _resolve_queue:
 
 print(f"  Non-API extends-map entries: {len(_extends_map)}")
 
-# Build subclasses inverse map — include both API children and non-API intermediates
 for entry_fqn, entry in all_classes.items():
     parent = entry.get('extends')
     if parent and parent in all_classes:
         all_classes[parent].setdefault('subclasses', []).append(entry_fqn)
-# Also add non-API intermediates as subclasses of their API parents
 for child_fqn, parent_fqn in _extends_map.items():
     if parent_fqn in all_classes:
         all_classes[parent_fqn].setdefault('subclasses', []).append(child_fqn)
@@ -547,13 +607,12 @@ print(f"  Classes with implements: {sum(1 for v in all_classes.values() if 'impl
 print(f"  Classes with subclasses: {sum(1 for v in all_classes.values() if 'subclasses' in v)}")
 
 # ---------------------------------------------------------------------------
-# Step 4.7: Build _interface_extends map — interface FQN → [parent interface FQNs]
-# BFS from every interface that appears in any class's implements list.
+# Step 4.7: Build _interface_extends map — interface FQN -> [parent interface FQNs]
 # ---------------------------------------------------------------------------
 print("Extracting interface extends chains...")
 
-_interface_extends = {}  # interface_fqn → [parent_interface_fqn, ...]
-_iface_queue   = deque()
+_interface_extends = {}
+_iface_queue = deque()
 _iface_visited = set()
 
 for entry in all_classes.values():
@@ -582,7 +641,7 @@ while _iface_queue:
 
     iface_name_i = inner_path_i[-1] if inner_path_i else iface_fqn.rsplit('.', 1)[-1]
     imap_i = get_file_import_map(java_file_i)
-    pkg_i  = '.'.join(iface_fqn.split('.')[:-1])
+    pkg_i = '.'.join(iface_fqn.split('.')[:-1])
 
     iface_node_i = None
     for _, node in tree_i.filter(javalang.tree.InterfaceDeclaration):
@@ -608,8 +667,6 @@ while _iface_queue:
 
 print(f"  Interfaces with extends: {len(_interface_extends)}")
 
-# Build FQN → path map for all visited interfaces that are NOT in the API.
-# Using FQN as the key avoids simple-name collisions with API classes.
 _interface_paths = {}
 for _iface_fqn in _iface_visited:
     if _iface_fqn not in all_classes:
@@ -623,15 +680,15 @@ print(f"  Interface source paths:  {len(_interface_paths)}")
 # ---------------------------------------------------------------------------
 print("Building source index...")
 
+
 def build_source_index(root):
-    """Map simple class name -> relative .java path for all .java files under root.
-    Skips the pz-lua-api-viewer/ subtree to avoid double-counting copied sources."""
+    """Map simple class name -> relative .java path for all .java files under root."""
     viewer_dir = root / "pz-lua-api-viewer"
     index = {}
     for path in root.rglob("*.java"):
         try:
             path.relative_to(viewer_dir)
-            continue  # inside pz-lua-api-viewer/, skip
+            continue
         except ValueError:
             pass
         simple = path.stem
@@ -639,16 +696,24 @@ def build_source_index(root):
             index[simple] = str(path.relative_to(root)).replace("\\", "/")
     return index
 
+
 all_source_files = build_source_index(SRC_ROOT)
 api_simple_names = {v["simple_name"] for v in all_classes.values()}
-source_index = {simple: path for simple, path in all_source_files.items()
-                if simple not in api_simple_names}
+source_index = {simple: path for simple, path in all_source_files.items() if simple not in api_simple_names}
 print(f"  Source-only entries: {len(source_index)}")
 
 # ---------------------------------------------------------------------------
 # Step 6: Save
 # ---------------------------------------------------------------------------
 api = {
+    "snapshot": {
+        "schema_version": SNAPSHOT_SCHEMA_VERSION,
+        "build_id": BUILD_ID,
+        "extractor": {
+            "name": EXTRACTOR_NAME,
+            "version": EXTRACTOR_VERSION,
+        },
+    },
     "classes": all_classes,
     "global_functions": global_functions,
     "_source_index": source_index,
@@ -671,7 +736,8 @@ api = {
     },
 }
 
-print(f"\nSummary:")
+print("\nSummary:")
+print(f"  Build ID:              {BUILD_ID}")
 print(f"  Total classes:         {api['_meta']['total_classes']}")
 print(f"  setExposed + tagged:   {api['_meta']['both_count']}")
 print(f"  setExposed only:       {api['_meta']['set_exposed_only_count']}")
