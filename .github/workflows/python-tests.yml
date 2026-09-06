@@ -1,0 +1,118 @@
+name: Python tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Show Python version
+        run: python3 --version
+
+      - name: Compile deterministic tooling
+        run: |
+          python3 -m py_compile compare_api.py export_luals.py test_export_luals.py tests/test_compare_api.py tests/luals_smoke.py
+
+      - name: Run API comparison tests
+        run: python3 -m unittest discover -s tests -p "test_compare_api.py" -v
+
+      - name: Run LuaLS exporter tests
+        run: python3 -m unittest -v test_export_luals.py
+
+      - name: Verify full-corpus LuaLS export is deterministic
+        run: |
+          rm -rf /tmp/luals-a /tmp/luals-b
+          python3 export_luals.py --input lua_api.json --output-dir /tmp/luals-a --build-id ci-current-snapshot
+          python3 export_luals.py --input lua_api.json --output-dir /tmp/luals-b --build-id ci-current-snapshot
+          cmp /tmp/luals-a/library.lua /tmp/luals-b/library.lua
+          cmp /tmp/luals-a/metadata.json /tmp/luals-b/metadata.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          metadata = json.loads(Path('/tmp/luals-a/metadata.json').read_text(encoding='utf-8'))
+          library = Path('/tmp/luals-a/library.lua')
+
+          assert metadata['class_count'] > 0
+          assert metadata['global_function_count'] > 0
+          assert library.stat().st_size > 0
+          print(
+              'full-corpus export:',
+              f"classes={metadata['class_count']}",
+              f"globals={metadata['global_function_count']}",
+              f"library_bytes={library.stat().st_size}",
+          )
+          PY
+
+      - name: Install pinned Lua Language Server
+        env:
+          LUALS_VERSION: 3.19.1
+          LUALS_SHA256: e9235d2d72ef55bc41cf8c99cda2ed64777682024b4bb81f5dea425060c5cbb8
+        run: |
+          curl --proto '=https' --tlsv1.2 --fail --location --silent --show-error \
+            "https://github.com/LuaLS/lua-language-server/releases/download/${LUALS_VERSION}/lua-language-server-${LUALS_VERSION}-linux-x64.tar.gz" \
+            --output /tmp/luals.tar.gz
+          echo "${LUALS_SHA256}  /tmp/luals.tar.gz" | sha256sum --check
+          rm -rf /tmp/luals-server
+          mkdir -p /tmp/luals-server
+          tar -xzf /tmp/luals.tar.gz -C /tmp/luals-server
+          /tmp/luals-server/bin/lua-language-server --version
+
+      - name: Verify generated definitions with real LuaLS
+        run: |
+          rm -rf /tmp/luals-full /tmp/luals-check
+          python3 export_luals.py --input lua_api.json --output-dir /tmp/luals-full --build-id ci-current-snapshot
+          mkdir -p /tmp/luals-check
+          set +e
+          /tmp/luals-server/bin/lua-language-server \
+            --check=/tmp/luals-full \
+            --checklevel=Error \
+            --check_format=json \
+            --check_out_path=/tmp/luals-check/check.json
+          luals_status=$?
+          set -e
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          report_path = Path('/tmp/luals-check/check.json')
+          if not report_path.is_file():
+              raise SystemExit('LuaLS did not produce check.json')
+          report = json.loads(report_path.read_text(encoding='utf-8'))
+          if isinstance(report, dict):
+              diagnostics = [
+                  (path, diagnostic)
+                  for path, entries in report.items()
+                  for diagnostic in entries
+              ]
+          elif isinstance(report, list):
+              diagnostics = [('', diagnostic) for diagnostic in report]
+          else:
+              raise SystemExit(f"unexpected LuaLS check report type: {type(report).__name__}")
+          if diagnostics:
+              for path, diagnostic in diagnostics[:20]:
+                  start = diagnostic.get('range', {}).get('start', {})
+                  print(
+                      f"{path or '<workspace>'}:{start.get('line', 0) + 1}:{start.get('character', 0) + 1}",
+                      diagnostic.get('code'),
+                      diagnostic.get('message'),
+                  )
+              raise SystemExit(f"LuaLS reported {len(diagnostics)} error diagnostic(s)")
+          print('full-corpus LuaLS check: 0 error diagnostics')
+          PY
+          if [ "$luals_status" -ne 0 ]; then
+            echo "LuaLS exited with status $luals_status despite an empty diagnostic report"
+            exit "$luals_status"
+          fi
+          PYTHONPATH="$GITHUB_WORKSPACE" python3 tests/luals_smoke.py --server /tmp/luals-server/bin/lua-language-server
