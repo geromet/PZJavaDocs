@@ -168,11 +168,16 @@ def completion_labels(result: Any) -> set[str]:
         result = result.get("items", [])
     if not isinstance(result, list):
         return set()
-    return {
-        str(item["label"])
-        for item in result
-        if isinstance(item, dict) and "label" in item
-    }
+
+    labels: set[str] = set()
+    for item in result:
+        if not isinstance(item, dict) or "label" not in item:
+            continue
+        label = str(item["label"])
+        labels.add(label)
+        if "(" in label:
+            labels.add(label.split("(", 1)[0].rstrip())
+    return labels
 
 
 def definition_uris(result: Any) -> set[str]:
