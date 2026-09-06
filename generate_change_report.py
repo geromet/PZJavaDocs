@@ -32,38 +32,86 @@ def _non_empty(value: str, label: str) -> str:
     return normalized
 
 
+def _acquire_lock(lock_file) -> None:
+    if os.name == "nt":
+        import msvcrt
+
+        lock_file.seek(0, os.SEEK_END)
+        if lock_file.tell() == 0:
+            lock_file.write(b"\0")
+            lock_file.flush()
+        lock_file.seek(0)
+        msvcrt.locking(lock_file.fileno(), msvcrt.LK_NBLCK, 1)
+    else:
+        import fcntl
+
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+
+
+def _release_lock(lock_file) -> None:
+    if os.name == "nt":
+        import msvcrt
+
+        lock_file.seek(0)
+        msvcrt.locking(lock_file.fileno(), msvcrt.LK_UNLCK, 1)
+    else:
+        import fcntl
+
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+
+
 @contextmanager
 def _reserve_output_dir(output_dir: Path):
     resolved = output_dir.resolve()
     if not resolved.is_dir():
         raise ValueError(f"output directory does not exist or is not a directory: {resolved}")
     lock_path = resolved / LOCK_NAME
+    lock_file = lock_path.open("a+b")
     try:
-        lock_fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
-    except FileExistsError as exc:
-        raise ValueError(f"another report run owns the output directory: {resolved}") from exc
-    os.close(lock_fd)
-    try:
+        try:
+            _acquire_lock(lock_file)
+        except OSError as exc:
+            raise ValueError(f"another report run owns the output directory: {resolved}") from exc
         occupied = [name for name in OUTPUT_NAMES if (resolved / name).exists()]
         if occupied:
             raise ValueError("refusing to overwrite report artifacts: " + ", ".join(occupied))
         yield resolved
     finally:
-        lock_path.unlink(missing_ok=True)
+        try:
+            _release_lock(lock_file)
+        finally:
+            lock_file.close()
 
 
 def _publish(staging: Path, output_dir: Path) -> None:
     created: list[Path] = []
+    temporary: list[Path] = []
     try:
         for name in OUTPUT_NAMES:
             destination = output_dir / name
-            with (staging / name).open("rb") as source, destination.open("xb") as target:
-                created.append(destination)
+            with (staging / name).open("rb") as source, tempfile.NamedTemporaryFile(
+                mode="wb", dir=output_dir, prefix=f".{name}.", suffix=".tmp", delete=False
+            ) as target:
+                temporary_path = Path(target.name)
+                temporary.append(temporary_path)
                 shutil.copyfileobj(source, target)
+                target.flush()
+                os.fsync(target.fileno())
+            try:
+                os.link(temporary_path, destination)
+            except FileExistsError as exc:
+                raise ValueError(f"refusing to overwrite report artifact: {name}") from exc
+            else:
+                created.append(destination)
+                temporary_path.unlink()
+                temporary.remove(temporary_path)
     except BaseException:
         for path in created:
             path.unlink(missing_ok=True)
         raise
+    finally:
+        for path in temporary:
+            path.unlink(missing_ok=True)
 
 
 def _run(command: list[str]) -> None:
