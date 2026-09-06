@@ -1,10 +1,12 @@
 import contextlib
 import json
 import pathlib
+import shutil
 import tempfile
 import unittest
+from unittest import mock
 
-from generate_change_report import generate_report
+from generate_change_report import LOCK_NAME, OUTPUT_NAMES, _publish, _reserve_output_dir, generate_report
 
 
 class GenerateChangeReportTests(unittest.TestCase):
@@ -46,7 +48,7 @@ public class Foo {{
             summary = generate_report(old_src, " 42.19 ", new_src, "\t42.20\n", output)
 
             self.assertEqual(
-                sorted(path.name for path in output.iterdir()),
+                sorted(path.name for path in output.iterdir() if path.name != LOCK_NAME),
                 ["api-diff.json", "new-lua-api.json", "old-lua-api.json", "summary.json"],
             )
             self.assertEqual(summary["old_snapshot"], "42.19")
@@ -89,7 +91,7 @@ public class Foo {{
             with self.assertRaisesRegex(ValueError, "refusing to overwrite"):
                 generate_report(old_src, "42.19", new_src, "42.20", output)
             self.assertEqual((output / "api-diff.json").read_text(encoding="utf-8"), "keep")
-            self.assertEqual([path.name for path in output.iterdir()], ["api-diff.json"])
+            self.assertEqual(sorted(path.name for path in output.iterdir()), [LOCK_NAME, "api-diff.json"])
 
     def test_failed_extraction_leaves_no_partial_report_artifacts(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -101,7 +103,7 @@ public class Foo {{
 
             with self.assertRaises(Exception):
                 generate_report(old_src, "42.19", missing_new_src, "42.20", output)
-            self.assertEqual(list(output.iterdir()), [])
+            self.assertEqual([path.name for path in output.iterdir()], [LOCK_NAME])
 
     def test_active_report_lock_rejects_a_concurrent_writer(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -110,13 +112,54 @@ public class Foo {{
             new_src = self.make_source(root / "new", field_name="value")
             output = root / "report"
             output.mkdir()
-            lock = output / ".pzjavadocs-report.lock"
-            lock.write_text("owned by another run", encoding="utf-8")
+            with _reserve_output_dir(output):
+                with self.assertRaisesRegex(ValueError, "another report run owns"):
+                    generate_report(old_src, "42.19", new_src, "42.20", output)
 
-            with self.assertRaisesRegex(ValueError, "another report run owns"):
-                generate_report(old_src, "42.19", new_src, "42.20", output)
-            self.assertEqual(lock.read_text(encoding="utf-8"), "owned by another run")
-            self.assertEqual([path.name for path in output.iterdir()], [lock.name])
+            summary = generate_report(old_src, "42.19", new_src, "42.20", output)
+            self.assertEqual(summary["change_counts"]["total"], 0)
+
+    def test_stale_lock_file_does_not_block_a_new_run(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp)
+            old_src = self.make_source(root / "old", field_name="value")
+            new_src = self.make_source(root / "new", field_name="value")
+            output = root / "report"
+            output.mkdir()
+            (output / LOCK_NAME).write_text("left by a terminated process", encoding="utf-8")
+
+            summary = generate_report(old_src, "42.19", new_src, "42.20", output)
+            self.assertEqual(summary["change_counts"]["total"], 0)
+
+    def test_publish_exposes_only_complete_destination_files(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp)
+            staging = root / "staging"
+            output = root / "output"
+            staging.mkdir()
+            output.mkdir()
+            expected = {}
+            for index, name in enumerate(OUTPUT_NAMES):
+                payload = ((json.dumps({"index": index}) + "\n") * 1000).encode()
+                expected[name] = payload
+                (staging / name).write_bytes(payload)
+
+            real_copy = shutil.copyfileobj
+
+            def copy_while_observing(source, target):
+                destination = output / pathlib.Path(source.name).name
+                target.write(source.read(16))
+                target.flush()
+                self.assertFalse(destination.exists())
+                real_copy(source, target)
+
+            with mock.patch("generate_change_report.shutil.copyfileobj", side_effect=copy_while_observing):
+                _publish(staging, output)
+
+            self.assertEqual(
+                {path.name: path.read_bytes() for path in output.iterdir()},
+                expected,
+            )
 
 
 if __name__ == "__main__":
