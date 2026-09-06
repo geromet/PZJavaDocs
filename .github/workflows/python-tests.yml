@@ -115,4 +115,4 @@ jobs:
             echo "LuaLS exited with status $luals_status despite an empty diagnostic report"
             exit "$luals_status"
           fi
-          python3 tests/luals_smoke.py --server /tmp/luals-server/bin/lua-language-server
+          PYTHONPATH="$GITHUB_WORKSPACE" python3 tests/luals_smoke.py --server /tmp/luals-server/bin/lua-language-server
