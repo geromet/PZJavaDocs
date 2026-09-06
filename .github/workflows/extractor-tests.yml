@@ -23,8 +23,8 @@ jobs:
       - name: Install pinned extractor dependency
         run: python3 -m pip install --disable-pip-version-check javalang==0.13.0
 
-      - name: Compile extractor and tests
-        run: python3 -m py_compile extract_lua_api.py tests/test_extract_lua_api.py
+      - name: Compile extractor, report harness, and tests
+        run: python3 -m py_compile extract_lua_api.py generate_change_report.py tests/test_extract_lua_api.py tests/test_generate_change_report.py
 
       - name: Run portable extractor regression suite
-        run: python3 -m unittest -v tests.test_extract_lua_api
+        run: python3 -m unittest -v tests.test_extract_lua_api tests.test_generate_change_report
