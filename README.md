@@ -2,6 +2,7 @@
 
 A static web app for browsing the Project Zomboid Lua API extracted from decompiled Java sources.
 https://geromet.github.io/PZJavaDocs/
+
 ## Files
 
 - `index.html` — the viewer app
@@ -24,7 +25,16 @@ https://geromet.github.io/PZJavaDocs/
 
 ## Regenerating the API data
 
-Run `extract_lua_api.py` from the `projectzomboid/` source directory. It writes `lua_api.json` directly into this folder.
+Provide the source tree, output file, and exact build identity explicitly:
+
+```bash
+python extract_lua_api.py \
+  --src-root /path/to/project-zomboid-source \
+  --output lua_api.json \
+  --build-id 42.20
+```
+
+The source root must contain `zombie/Lua/LuaManager.java`. The extractor does not infer versions from paths or timestamps.
 
 ## Comparing API snapshots
 
@@ -35,10 +45,28 @@ python compare_api.py old/lua_api.json new/lua_api.json \
   --old-id 42.19 --new-id 42.20 --out api_diff.json
 ```
 
-The canonical JSON report has stable ordering and reports class/inheritance/exposure, field, method/overload, and global-function additions, removals, and structural changes. Run its dependency-free regression suite with:
+The canonical JSON report has stable ordering and reports class/inheritance/exposure, field, method/overload, and global-function additions, removals, and structural changes.
+
+For a reproducible two-build evidence run, create an empty output directory and use the orchestration harness:
 
 ```bash
-python -m unittest discover -s tests -p "test_compare_api.py" -v
+mkdir p evidence/42.19-to-42.20
+python generate_change_report.py \
+  --old-src-root /path/to/project-zomboid-42.19-source \
+  --old-build-id 42.19 \
+  --new-src-root /path/to/project-zomboid-42.20-source \
+  --new-build-id 42.20 \
+  --output-dir evidence/42.19-to-42.20
+```
+
+It publishes `old-lua-api.json`, `new-lua-api.json`, `api-diff.json`, and `summary.json` only after both extractions and comparison succeed. It refuses to overwrite any report artifact. The summary records build identities, class/global counts, and deterministic change counts; it does not claim Java binary or runtime compatibility.
+
+Run the dependency-free comparator tests and the extractor/report tests with:
+
+```bash
+python -m unittest -v tests.test_compare_api
+python -m pip install javalang==0.13.0
+python -m unittest -v tests.test_extract_lua_api tests.test_generate_change_report
 ```
 
 ## Features
@@ -50,6 +78,6 @@ python -m unittest discover -s tests -p "test_compare_api.py" -v
 - URL hash navigation (shareable links to specific classes)
 - Press `/` to focus the search box
 
-
 ## Project Zomboid Terms-Conditions
+
 https://projectzomboid.com/blog/support/terms-conditions/
