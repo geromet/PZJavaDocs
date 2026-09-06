@@ -1,3 +1,4 @@
+import contextlib
 import json
 import pathlib
 import tempfile
@@ -42,7 +43,7 @@ public class Foo {{
             output = root / "report"
             output.mkdir()
 
-            summary = generate_report(old_src, "42.19", new_src, "42.20", output)
+            summary = generate_report(old_src, " 42.19 ", new_src, "\t42.20\n", output)
 
             self.assertEqual(
                 sorted(path.name for path in output.iterdir()),
@@ -56,6 +57,25 @@ public class Foo {{
             self.assertEqual(summary["change_counts"]["by_change_kind"], {"added": 1, "removed": 1})
             self.assertEqual(summary["change_counts"]["by_entity_kind"], {"class": 2})
             self.assertEqual(json.loads((output / "summary.json").read_text(encoding="utf-8")), summary)
+            old_snapshot = json.loads((output / "old-lua-api.json").read_text(encoding="utf-8"))
+            new_snapshot = json.loads((output / "new-lua-api.json").read_text(encoding="utf-8"))
+            self.assertEqual(old_snapshot["snapshot"]["build_id"], summary["old_snapshot"])
+            self.assertEqual(new_snapshot["snapshot"]["build_id"], summary["new_snapshot"])
+
+    def test_resolves_relative_source_roots_before_repository_cwd_change(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp)
+            self.make_source(root / "old", field_name="value")
+            self.make_source(root / "new", field_name="value")
+            (root / "report").mkdir()
+
+            with contextlib.chdir(root):
+                summary = generate_report(
+                    pathlib.Path("old/source"), "42.19",
+                    pathlib.Path("new/source"), "42.20",
+                    pathlib.Path("report"),
+                )
+            self.assertEqual(summary["change_counts"]["total"], 0)
 
     def test_refuses_to_overwrite_any_existing_artifact(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -82,6 +102,21 @@ public class Foo {{
             with self.assertRaises(Exception):
                 generate_report(old_src, "42.19", missing_new_src, "42.20", output)
             self.assertEqual(list(output.iterdir()), [])
+
+    def test_active_report_lock_rejects_a_concurrent_writer(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp)
+            old_src = self.make_source(root / "old", field_name="value")
+            new_src = self.make_source(root / "new", field_name="value")
+            output = root / "report"
+            output.mkdir()
+            lock = output / ".pzjavadocs-report.lock"
+            lock.write_text("owned by another run", encoding="utf-8")
+
+            with self.assertRaisesRegex(ValueError, "another report run owns"):
+                generate_report(old_src, "42.19", new_src, "42.20", output)
+            self.assertEqual(lock.read_text(encoding="utf-8"), "owned by another run")
+            self.assertEqual([path.name for path in output.iterdir()], [lock.name])
 
 
 if __name__ == "__main__":
